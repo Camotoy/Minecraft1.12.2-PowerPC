@@ -1,0 +1,127 @@
+From aa53a1b98e9b04a34cec22a5db61db7f342964f1 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 17:00:26 -0400
+Subject: [PATCH 14/14] Fall back on image reading if fails
+
+---
+ .../renderer/texture/SimpleTexture.java       | 10 ++++++-
+ .../renderer/texture/TextureAtlasSprite.java  | 27 ++++++++++++++++---
+ .../client/renderer/texture/TextureMap.java   |  7 ++++-
+ .../client/renderer/texture/TextureUtil.java  | 17 ++++++++++++
+ 4 files changed, 55 insertions(+), 6 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/SimpleTexture.java b/src/minecraft/net/minecraft/client/renderer/texture/SimpleTexture.java
+index 6ee4bd2..80ad698 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/SimpleTexture.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/SimpleTexture.java
+@@ -34,7 +34,15 @@ public class SimpleTexture extends AbstractTexture
+         try
+         {
+             iresource = resourceManager.getResource(this.textureLocation);
+-            BufferedImage bufferedimage = TextureUtil.readBufferedImage(iresource.getInputStream());
++            // Start Sanselan image support
++            BufferedImage bufferedimage;
++            try {
++                bufferedimage = TextureUtil.readBufferedImage(iresource.getInputStream());
++            } catch (IOException e) {
++                iresource = resourceManager.getResource(this.textureLocation); // Needed to re-initialize the input stream
++                bufferedimage = TextureUtil.readSanselanBufferedImage(iresource.getInputStream());
++            }
++            // End
+             boolean flag = false;
+             boolean flag1 = false;
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureAtlasSprite.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureAtlasSprite.java
+index 24f7b3b..461b059 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureAtlasSprite.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureAtlasSprite.java
+@@ -385,9 +385,23 @@ public class TextureAtlasSprite
+         }
+     }
+ 
+-    public void loadSpriteFrames(IResource resource, int mipmaplevels) throws IOException
+-    {
+-        BufferedImage bufferedimage = TextureUtil.readBufferedImage(resource.getInputStream());
++    // Start Sanselan image reading fallback
++    public boolean loadSpriteFrames(IResource resource, int mipmapLevels) throws IOException {
++        BufferedImage bufferedImage;
++        try {
++            bufferedImage = TextureUtil.readBufferedImage(resource.getInputStream());
++        } catch (IOException e) {
++            return false;
++        }
++        loadSpriteFrames(resource, bufferedImage, mipmapLevels);
++        return true;
++    }
++    public void loadSpriteFramesSanselan(IResource resource, int mipmapLevels) throws IOException {
++        BufferedImage bufferedImage = TextureUtil.readSanselanBufferedImage(resource.getInputStream());
++        loadSpriteFrames(resource, bufferedImage, mipmapLevels);
++    }
++    public void loadSpriteFrames(IResource resource, BufferedImage bufferedimage, int mipmaplevels) throws IOException {
++    // End
+ 
+         if (this.width != bufferedimage.getWidth())
+         {
+@@ -464,7 +478,12 @@ public class TextureAtlasSprite
+             if (this.spriteSingle != null)
+             {
+                 IResource iresource = Config.getResourceManager().getResource(resource.getResourceLocation());
+-                this.spriteSingle.loadSpriteFrames(iresource, mipmaplevels);
++                // Start Sanselan support
++                if (!this.spriteSingle.loadSpriteFrames(iresource, mipmaplevels)) {
++                    iresource = Config.getResourceManager().getResource(resource.getResourceLocation());
++                    this.spriteSingle.loadSpriteFramesSanselan(iresource, mipmapLevels);
++                }
++                // End
+             }
+         }
+     }
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+index 58514cf..32c1150 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+@@ -431,7 +431,12 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+                 try
+                 {
+                     iresource1 = resourceManager.getResource(resourcelocation1);
+-                    texture.loadSpriteFrames(iresource1, this.mipmapLevels + 1);
++                    // Start Sanselan image support
++                    if (!texture.loadSpriteFrames(iresource1, this.mipmapLevels + 1)) {
++                        iresource1 = resourceManager.getResource(resourcelocation1);
++                        texture.loadSpriteFramesSanselan(iresource1, this.mipmapLevels + 1);
++                    }
++                    // End
+                     break label60;
+                 }
+                 catch (RuntimeException runtimeexception1)
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+index b04fa85..31952f8 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+@@ -323,6 +323,23 @@ public class TextureUtil
+         }
+     }
+ 
++    public static BufferedImage readSanselanBufferedImage(InputStream imageStream) throws IOException {
++        // It's possible to also re-convert all affected images, and is probably more effective
++        // But, this fix will ensure resource packs added also work
++        BufferedImage bufferedimage;
++
++        try {
++            bufferedimage = org.apache.sanselan.Sanselan.getBufferedImage(imageStream);
++        } catch (org.apache.sanselan.ImageReadException e) {
++            throw new IOException();
++        } finally {
++            IOUtils.closeQuietly(imageStream);
++        }
++
++        return bufferedimage;
++    }
++
++
+     public static int[] updateAnaglyph(int[] p_110985_0_)
+     {
+         int[] aint = new int[p_110985_0_.length];
+-- 
+2.35.3
+

@@ -1,0 +1,60 @@
+From 63fff42b8297235216be38705efdcc6fedf11920 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Tue, 16 Aug 2022 22:44:57 -0400
+Subject: [PATCH 03/14] Replace Validate.inclusiveBetween with primitive
+ alternative
+
+---
+ .../minecraft/entity/ai/attributes/AttributeModifier.java | 2 +-
+ src/minecraft/net/minecraft/util/BitArray.java            | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/entity/ai/attributes/AttributeModifier.java b/src/minecraft/net/minecraft/entity/ai/attributes/AttributeModifier.java
+index 613ca37..d72c3d9 100644
+--- a/src/minecraft/net/minecraft/entity/ai/attributes/AttributeModifier.java
++++ b/src/minecraft/net/minecraft/entity/ai/attributes/AttributeModifier.java
+@@ -30,7 +30,7 @@ public class AttributeModifier
+         this.amount = amountIn;
+         this.operation = operationIn;
+         Validate.notEmpty(nameIn, "Modifier name cannot be empty");
+-        Validate.inclusiveBetween(0L, 2L, (long)operationIn, "Invalid operation");
++        net.camotoy.minecraft.util.JavaBackportUtil.validateInclusiveBetween(0L, 2L, (long)operationIn, "Invalid operation");
+     }
+ 
+     public UUID getID()
+diff --git a/src/minecraft/net/minecraft/util/BitArray.java b/src/minecraft/net/minecraft/util/BitArray.java
+index c141af2..4f7a44c 100644
+--- a/src/minecraft/net/minecraft/util/BitArray.java
++++ b/src/minecraft/net/minecraft/util/BitArray.java
+@@ -24,7 +24,7 @@ public class BitArray
+ 
+     public BitArray(int bitsPerEntryIn, int arraySizeIn)
+     {
+-        Validate.inclusiveBetween(1L, 32L, (long)bitsPerEntryIn);
++        net.camotoy.minecraft.util.JavaBackportUtil.validateInclusiveBetween(1L, 32L, (long)bitsPerEntryIn);
+         this.arraySize = arraySizeIn;
+         this.bitsPerEntry = bitsPerEntryIn;
+         this.maxEntryValue = (1L << bitsPerEntryIn) - 1L;
+@@ -36,8 +36,8 @@ public class BitArray
+      */
+     public void setAt(int index, int value)
+     {
+-        Validate.inclusiveBetween(0L, (long)(this.arraySize - 1), (long)index);
+-        Validate.inclusiveBetween(0L, this.maxEntryValue, (long)value);
++        net.camotoy.minecraft.util.JavaBackportUtil.validateInclusiveBetween(0L, (long)(this.arraySize - 1), (long)index);
++        net.camotoy.minecraft.util.JavaBackportUtil.validateInclusiveBetween(0L, this.maxEntryValue, (long)value);
+         int i = index * this.bitsPerEntry;
+         int j = i / 64;
+         int k = ((index + 1) * this.bitsPerEntry - 1) / 64;
+@@ -57,7 +57,7 @@ public class BitArray
+      */
+     public int getAt(int index)
+     {
+-        Validate.inclusiveBetween(0L, (long)(this.arraySize - 1), (long)index);
++        net.camotoy.minecraft.util.JavaBackportUtil.validateInclusiveBetween(0L, (long)(this.arraySize - 1), (long)index);
+         int i = index * this.bitsPerEntry;
+         int j = i / 64;
+         int k = ((index + 1) * this.bitsPerEntry - 1) / 64;
+-- 
+2.35.3
+

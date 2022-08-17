@@ -1,0 +1,11 @@
+- Download MCP from http://www.modcoderpack.com/files/mcp940.zip
+- Unzip
+- https://gist.github.com/Pokechu22/97bf5bd528eeadef09dcbae8a15b009f and use
+https://github.com/ModCoderPack/MCPMappingsArchive/tree/master/mcp_stable/39-1.12 for mappings
+- `bash decompile.sh`
+- Go into jars, remove assets because WOW that's bulky
+- Optifine download time: https://optifine.net/adloadx?f=OptiFine_1.12.2_HD_U_G5.jar
+- Open it up and extract.
+- Open up the Minecraft jar in jars/versions/1.12.2 and paste in the contents of the MOD Optifine jar you just created
+- `bash cleanup.sh`
+- `bash decompile.sh` again

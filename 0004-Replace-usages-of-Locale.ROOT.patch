@@ -1,0 +1,510 @@
+From 78824e2b8a3939f089244df4898c30c1d681d3e5 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Tue, 16 Aug 2022 22:45:40 -0400
+Subject: [PATCH 04/14] Replace usages of Locale.ROOT
+
+---
+ src/minecraft/net/minecraft/client/Minecraft.java      |  2 +-
+ .../net/minecraft/client/gui/FontRenderer.java         |  2 +-
+ src/minecraft/net/minecraft/client/gui/GuiScreen.java  |  4 ++--
+ .../client/gui/inventory/GuiContainerCreative.java     |  2 +-
+ .../minecraft/client/gui/recipebook/GuiRecipeBook.java |  4 ++--
+ .../net/minecraft/client/renderer/OpenGlHelper.java    |  2 +-
+ .../client/renderer/block/model/BlockPart.java         |  2 +-
+ .../renderer/block/model/ModelResourceLocation.java    |  2 +-
+ .../minecraft/client/resources/FileResourcePack.java   |  2 +-
+ .../minecraft/client/resources/FolderResourcePack.java |  2 +-
+ .../client/resources/ResourcePackRepository.java       |  2 +-
+ .../net/minecraft/client/util/JsonBlendingMode.java    |  4 ++--
+ .../net/minecraft/client/util/SearchTree.java          |  4 ++--
+ .../minecraft/command/server/CommandScoreboard.java    |  2 +-
+ .../net/minecraft/entity/passive/EntityVillager.java   |  2 +-
+ .../minecraft/network/play/server/SPacketTitle.java    |  2 +-
+ .../server/management/PlayerProfileCache.java          | 10 +++++-----
+ src/minecraft/net/minecraft/util/EnumFacing.java       |  8 ++++----
+ .../net/minecraft/util/EnumTypeAdapterFactory.java     |  2 +-
+ src/minecraft/net/minecraft/util/LowerStringMap.java   |  8 ++++----
+ src/minecraft/net/minecraft/util/ResourceLocation.java |  4 ++--
+ src/minecraft/net/minecraft/util/Session.java          |  2 +-
+ src/minecraft/net/minecraft/util/Util.java             |  2 +-
+ .../util/datafix/fixes/OptionsLowerCaseLanguage.java   |  2 +-
+ .../net/minecraft/util/text/TextFormatting.java        |  4 ++--
+ .../net/minecraft/world/gen/FlatGeneratorInfo.java     |  4 ++--
+ src/minecraft/net/optifine/util/ResUtils.java          |  2 +-
+ 27 files changed, 44 insertions(+), 44 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/Minecraft.java b/src/minecraft/net/minecraft/client/Minecraft.java
+index 23905d7..5d27f55 100644
+--- a/src/minecraft/net/minecraft/client/Minecraft.java
++++ b/src/minecraft/net/minecraft/client/Minecraft.java
+@@ -445,7 +445,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+         }
+ 
+         ImageIO.setUseCache(false);
+-        Locale.setDefault(Locale.ROOT);
++        Locale.setDefault(Locale.US);
+         Bootstrap.register();
+         TextComponentKeybind.displaySupplierFunction = KeyBinding::getDisplayString;
+         this.dataFixer = DataFixesManager.createFixer();
+diff --git a/src/minecraft/net/minecraft/client/gui/FontRenderer.java b/src/minecraft/net/minecraft/client/gui/FontRenderer.java
+index 370054c..8afa095 100644
+--- a/src/minecraft/net/minecraft/client/gui/FontRenderer.java
++++ b/src/minecraft/net/minecraft/client/gui/FontRenderer.java
+@@ -470,7 +470,7 @@ public class FontRenderer implements IResourceManagerReloadListener
+ 
+             if (c0 == 167 && i + 1 < text.length())
+             {
+-                int l = "0123456789abcdefklmnor".indexOf(String.valueOf(text.charAt(i + 1)).toLowerCase(Locale.ROOT).charAt(0));
++                int l = "0123456789abcdefklmnor".indexOf(String.valueOf(text.charAt(i + 1)).toLowerCase(Locale.US).charAt(0));
+ 
+                 if (l < 16)
+                 {
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiScreen.java b/src/minecraft/net/minecraft/client/gui/GuiScreen.java
+index c20bd18..db99c31 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiScreen.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiScreen.java
+@@ -394,9 +394,9 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
+                             throw new URISyntaxException(clickevent.getValue(), "Missing protocol");
+                         }
+ 
+-                        if (!PROTOCOLS.contains(s.toLowerCase(Locale.ROOT)))
++                        if (!PROTOCOLS.contains(s.toLowerCase(Locale.US)))
+                         {
+-                            throw new URISyntaxException(clickevent.getValue(), "Unsupported protocol: " + s.toLowerCase(Locale.ROOT));
++                            throw new URISyntaxException(clickevent.getValue(), "Unsupported protocol: " + s.toLowerCase(Locale.US));
+                         }
+ 
+                         if (this.mc.gameSettings.chatLinksPrompt)
+diff --git a/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java b/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
+index cb4020f..077dcbc 100644
+--- a/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
++++ b/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
+@@ -380,7 +380,7 @@ public class GuiContainerCreative extends InventoryEffectRenderer
+         }
+         else
+         {
+-            guicontainercreative$containercreative.itemList.addAll(this.mc.getSearchTree(SearchTreeManager.ITEMS).search(this.searchField.getText().toLowerCase(Locale.ROOT)));
++            guicontainercreative$containercreative.itemList.addAll(this.mc.getSearchTree(SearchTreeManager.ITEMS).search(this.searchField.getText().toLowerCase(Locale.US)));
+         }
+ 
+         this.currentScroll = 0.0F;
+diff --git a/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java b/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
+index 4b50f23..b88c940 100644
+--- a/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
++++ b/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
+@@ -174,7 +174,7 @@ public class GuiRecipeBook extends Gui implements IRecipeUpdateListener
+ 
+         if (!s.isEmpty())
+         {
+-            ObjectSet<RecipeList> objectset = new ObjectLinkedOpenHashSet<RecipeList>(this.mc.getSearchTree(SearchTreeManager.RECIPES).search(s.toLowerCase(Locale.ROOT)));
++            ObjectSet<RecipeList> objectset = new ObjectLinkedOpenHashSet<RecipeList>(this.mc.getSearchTree(SearchTreeManager.RECIPES).search(s.toLowerCase(Locale.US)));
+             list1.removeIf((p_193947_1_) ->
+             {
+                 return !objectset.contains(p_193947_1_);
+@@ -414,7 +414,7 @@ public class GuiRecipeBook extends Gui implements IRecipeUpdateListener
+                 }
+                 else if (this.searchBar.textboxKeyTyped(typedChar, keycode))
+                 {
+-                    String s1 = this.searchBar.getText().toLowerCase(Locale.ROOT);
++                    String s1 = this.searchBar.getText().toLowerCase(Locale.US);
+                     this.pirateRecipe(s1);
+ 
+                     if (!s1.equals(this.lastSearch))
+diff --git a/src/minecraft/net/minecraft/client/renderer/OpenGlHelper.java b/src/minecraft/net/minecraft/client/renderer/OpenGlHelper.java
+index 2b4af6f..2a04f99 100644
+--- a/src/minecraft/net/minecraft/client/renderer/OpenGlHelper.java
++++ b/src/minecraft/net/minecraft/client/renderer/OpenGlHelper.java
+@@ -316,7 +316,7 @@ public class OpenGlHelper
+         }
+ 
+         shadersSupported = framebufferSupported && shadersAvailable;
+-        String s1 = GL11.glGetString(GL11.GL_VENDOR).toLowerCase(Locale.ROOT);
++        String s1 = GL11.glGetString(GL11.GL_VENDOR).toLowerCase(Locale.US);
+         nvidia = s1.contains("nvidia");
+         arbVbo = !contextcapabilities.OpenGL15 && contextcapabilities.GL_ARB_vertex_buffer_object;
+         vboSupported = contextcapabilities.OpenGL15 || arbVbo;
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/BlockPart.java b/src/minecraft/net/minecraft/client/renderer/block/model/BlockPart.java
+index 23f30d1..bc693a2 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/BlockPart.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/BlockPart.java
+@@ -121,7 +121,7 @@ public class BlockPart
+         private EnumFacing.Axis parseAxis(JsonObject object)
+         {
+             String s = JsonUtils.getString(object, "axis");
+-            EnumFacing.Axis enumfacing$axis = EnumFacing.Axis.byName(s.toLowerCase(Locale.ROOT));
++            EnumFacing.Axis enumfacing$axis = EnumFacing.Axis.byName(s.toLowerCase(Locale.US));
+ 
+             if (enumfacing$axis == null)
+             {
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelResourceLocation.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelResourceLocation.java
+index 7a4aca6..bbcedac 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelResourceLocation.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelResourceLocation.java
+@@ -11,7 +11,7 @@ public class ModelResourceLocation extends ResourceLocation
+     protected ModelResourceLocation(int unused, String... resourceName)
+     {
+         super(0, resourceName[0], resourceName[1]);
+-        this.variant = StringUtils.isEmpty(resourceName[2]) ? "normal" : resourceName[2].toLowerCase(Locale.ROOT);
++        this.variant = StringUtils.isEmpty(resourceName[2]) ? "normal" : resourceName[2].toLowerCase(Locale.US);
+     }
+ 
+     public ModelResourceLocation(String pathIn)
+diff --git a/src/minecraft/net/minecraft/client/resources/FileResourcePack.java b/src/minecraft/net/minecraft/client/resources/FileResourcePack.java
+index 1f721a6..270b565 100644
+--- a/src/minecraft/net/minecraft/client/resources/FileResourcePack.java
++++ b/src/minecraft/net/minecraft/client/resources/FileResourcePack.java
+@@ -90,7 +90,7 @@ public class FileResourcePack extends AbstractResourcePack implements Closeable
+                 {
+                     String s1 = list.get(1);
+ 
+-                    if (s1.equals(s1.toLowerCase(java.util.Locale.ROOT)))
++                    if (s1.equals(s1.toLowerCase(java.util.Locale.US)))
+                     {
+                         set.add(s1);
+                     }
+diff --git a/src/minecraft/net/minecraft/client/resources/FolderResourcePack.java b/src/minecraft/net/minecraft/client/resources/FolderResourcePack.java
+index 34cb5bd..a06000f 100644
+--- a/src/minecraft/net/minecraft/client/resources/FolderResourcePack.java
++++ b/src/minecraft/net/minecraft/client/resources/FolderResourcePack.java
+@@ -85,7 +85,7 @@ public class FolderResourcePack extends AbstractResourcePack
+             {
+                 String s = getRelativeName(file1, file2);
+ 
+-                if (s.equals(s.toLowerCase(java.util.Locale.ROOT)))
++                if (s.equals(s.toLowerCase(java.util.Locale.US)))
+                 {
+                     set.add(s.substring(0, s.length() - 1));
+                 }
+diff --git a/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java b/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
+index 9704a8b..5386bab 100644
+--- a/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
++++ b/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
+@@ -318,7 +318,7 @@ public class ResourcePackRepository
+ 
+             if (!p_190113_1_.isEmpty())
+             {
+-                if (s.toLowerCase(java.util.Locale.ROOT).equals(p_190113_1_.toLowerCase(java.util.Locale.ROOT)))
++                if (s.toLowerCase(java.util.Locale.US).equals(p_190113_1_.toLowerCase(java.util.Locale.US)))
+                 {
+                     LOGGER.info("Found file {} matching requested hash {}", p_190113_2_, p_190113_1_);
+                     flag = true;
+diff --git a/src/minecraft/net/minecraft/client/util/JsonBlendingMode.java b/src/minecraft/net/minecraft/client/util/JsonBlendingMode.java
+index 14021ce..d749aff 100644
+--- a/src/minecraft/net/minecraft/client/util/JsonBlendingMode.java
++++ b/src/minecraft/net/minecraft/client/util/JsonBlendingMode.java
+@@ -220,7 +220,7 @@ public class JsonBlendingMode
+      */
+     private static int stringToBlendFunction(String funcName)
+     {
+-        String s = funcName.trim().toLowerCase(Locale.ROOT);
++        String s = funcName.trim().toLowerCase(Locale.US);
+ 
+         if ("add".equals(s))
+         {
+@@ -250,7 +250,7 @@ public class JsonBlendingMode
+ 
+     private static int stringToBlendFactor(String factorName)
+     {
+-        String s = factorName.trim().toLowerCase(Locale.ROOT);
++        String s = factorName.trim().toLowerCase(Locale.US);
+         s = s.replaceAll("_", "");
+         s = s.replaceAll("one", "1");
+         s = s.replaceAll("zero", "0");
+diff --git a/src/minecraft/net/minecraft/client/util/SearchTree.java b/src/minecraft/net/minecraft/client/util/SearchTree.java
+index c955602..c914bb8 100644
+--- a/src/minecraft/net/minecraft/client/util/SearchTree.java
++++ b/src/minecraft/net/minecraft/client/util/SearchTree.java
+@@ -66,11 +66,11 @@ public class SearchTree<T> implements ISearchTree<T>
+     {
+         (this.idFunc.apply(element)).forEach((p_194039_2_) ->
+         {
+-            this.byId.add(element, p_194039_2_.toString().toLowerCase(Locale.ROOT));
++            this.byId.add(element, p_194039_2_.toString().toLowerCase(Locale.US));
+         });
+         (this.nameFunc.apply(element)).forEach((p_194041_2_) ->
+         {
+-            this.byName.add(element, p_194041_2_.toLowerCase(Locale.ROOT));
++            this.byName.add(element, p_194041_2_.toLowerCase(Locale.US));
+         });
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/command/server/CommandScoreboard.java b/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
+index 6e44c99..0939387 100644
+--- a/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
++++ b/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
+@@ -498,7 +498,7 @@ public class CommandScoreboard extends CommandBase
+ 
+         if (scoreplayerteam != null)
+         {
+-            String s = args[startIndex++].toLowerCase(Locale.ROOT);
++            String s = args[startIndex++].toLowerCase(Locale.US);
+ 
+             if (!"color".equalsIgnoreCase(s) && !"friendlyfire".equalsIgnoreCase(s) && !"seeFriendlyInvisibles".equalsIgnoreCase(s) && !"nametagVisibility".equalsIgnoreCase(s) && !"deathMessageVisibility".equalsIgnoreCase(s) && !"collisionRule".equalsIgnoreCase(s))
+             {
+diff --git a/src/minecraft/net/minecraft/entity/passive/EntityVillager.java b/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
+index 0e9c832..293b19a 100644
+--- a/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
++++ b/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
+@@ -1273,7 +1273,7 @@ public class EntityVillager extends EntityAgeable implements INpc, IMerchant
+                 ItemStack itemstack = ItemMap.setupNewMap(world, (double)blockpos.getX(), (double)blockpos.getZ(), (byte)2, true, true);
+                 ItemMap.renderBiomePreviewMap(world, itemstack);
+                 MapData.addTargetDecoration(itemstack, blockpos, "+", this.destinationType);
+-                itemstack.setTranslatableName("filled_map." + this.destination.toLowerCase(Locale.ROOT));
++                itemstack.setTranslatableName("filled_map." + this.destination.toLowerCase(Locale.US));
+                 recipeList.add(new MerchantRecipe(new ItemStack(Items.EMERALD, i), new ItemStack(Items.COMPASS), itemstack));
+             }
+         }
+diff --git a/src/minecraft/net/minecraft/network/play/server/SPacketTitle.java b/src/minecraft/net/minecraft/network/play/server/SPacketTitle.java
+index 9044a7f..5f09cb4 100644
+--- a/src/minecraft/net/minecraft/network/play/server/SPacketTitle.java
++++ b/src/minecraft/net/minecraft/network/play/server/SPacketTitle.java
+@@ -141,7 +141,7 @@ public class SPacketTitle implements Packet<INetHandlerPlayClient>
+ 
+             for (SPacketTitle.Type spackettitle$type : values())
+             {
+-                astring[i++] = spackettitle$type.name().toLowerCase(Locale.ROOT);
++                astring[i++] = spackettitle$type.name().toLowerCase(Locale.US);
+             }
+ 
+             return astring;
+diff --git a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+index 239c635..059e8fd 100644
+--- a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
++++ b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+@@ -136,17 +136,17 @@ public class PlayerProfileCache
+             expirationDate = calendar.getTime();
+         }
+ 
+-        String s = gameProfile.getName().toLowerCase(Locale.ROOT);
++        String s = gameProfile.getName().toLowerCase(Locale.US);
+         PlayerProfileCache.ProfileEntry playerprofilecache$profileentry = new PlayerProfileCache.ProfileEntry(gameProfile, expirationDate);
+ 
+         if (this.uuidToProfileEntryMap.containsKey(uuid))
+         {
+             PlayerProfileCache.ProfileEntry playerprofilecache$profileentry1 = this.uuidToProfileEntryMap.get(uuid);
+-            this.usernameToProfileEntryMap.remove(playerprofilecache$profileentry1.getGameProfile().getName().toLowerCase(Locale.ROOT));
++            this.usernameToProfileEntryMap.remove(playerprofilecache$profileentry1.getGameProfile().getName().toLowerCase(Locale.US));
+             this.gameProfiles.remove(gameProfile);
+         }
+ 
+-        this.usernameToProfileEntryMap.put(gameProfile.getName().toLowerCase(Locale.ROOT), playerprofilecache$profileentry);
++        this.usernameToProfileEntryMap.put(gameProfile.getName().toLowerCase(Locale.US), playerprofilecache$profileentry);
+         this.uuidToProfileEntryMap.put(uuid, playerprofilecache$profileentry);
+         this.gameProfiles.addFirst(gameProfile);
+         this.save();
+@@ -160,13 +160,13 @@ public class PlayerProfileCache
+      */
+     public GameProfile getGameProfileForUsername(String username)
+     {
+-        String s = username.toLowerCase(Locale.ROOT);
++        String s = username.toLowerCase(Locale.US);
+         PlayerProfileCache.ProfileEntry playerprofilecache$profileentry = this.usernameToProfileEntryMap.get(s);
+ 
+         if (playerprofilecache$profileentry != null && (new Date()).getTime() >= playerprofilecache$profileentry.expirationDate.getTime())
+         {
+             this.uuidToProfileEntryMap.remove(playerprofilecache$profileentry.getGameProfile().getId());
+-            this.usernameToProfileEntryMap.remove(playerprofilecache$profileentry.getGameProfile().getName().toLowerCase(Locale.ROOT));
++            this.usernameToProfileEntryMap.remove(playerprofilecache$profileentry.getGameProfile().getName().toLowerCase(Locale.US));
+             this.gameProfiles.remove(playerprofilecache$profileentry.getGameProfile());
+             playerprofilecache$profileentry = null;
+         }
+diff --git a/src/minecraft/net/minecraft/util/EnumFacing.java b/src/minecraft/net/minecraft/util/EnumFacing.java
+index 5ccbba6..a421b39 100644
+--- a/src/minecraft/net/minecraft/util/EnumFacing.java
++++ b/src/minecraft/net/minecraft/util/EnumFacing.java
+@@ -267,7 +267,7 @@ public enum EnumFacing implements IStringSerializable
+      */
+     public static EnumFacing byName(String name)
+     {
+-        return name == null ? null : (EnumFacing)NAME_LOOKUP.get(name.toLowerCase(Locale.ROOT));
++        return name == null ? null : (EnumFacing)NAME_LOOKUP.get(name.toLowerCase(Locale.US));
+     }
+ 
+     /**
+@@ -393,7 +393,7 @@ public enum EnumFacing implements IStringSerializable
+                 HORIZONTALS[enumfacing.horizontalIndex] = enumfacing;
+             }
+ 
+-            NAME_LOOKUP.put(enumfacing.getName2().toLowerCase(Locale.ROOT), enumfacing);
++            NAME_LOOKUP.put(enumfacing.getName2().toLowerCase(Locale.US), enumfacing);
+         }
+     }
+ 
+@@ -415,7 +415,7 @@ public enum EnumFacing implements IStringSerializable
+         @Nullable
+         public static EnumFacing.Axis byName(String name)
+         {
+-            return name == null ? null : (EnumFacing.Axis)NAME_LOOKUP.get(name.toLowerCase(Locale.ROOT));
++            return name == null ? null : (EnumFacing.Axis)NAME_LOOKUP.get(name.toLowerCase(Locale.US));
+         }
+ 
+         public String getName2()
+@@ -456,7 +456,7 @@ public enum EnumFacing implements IStringSerializable
+         static {
+             for (EnumFacing.Axis enumfacing$axis : values())
+             {
+-                NAME_LOOKUP.put(enumfacing$axis.getName2().toLowerCase(Locale.ROOT), enumfacing$axis);
++                NAME_LOOKUP.put(enumfacing$axis.getName2().toLowerCase(Locale.US), enumfacing$axis);
+             }
+         }
+     }
+diff --git a/src/minecraft/net/minecraft/util/EnumTypeAdapterFactory.java b/src/minecraft/net/minecraft/util/EnumTypeAdapterFactory.java
+index fee0407..4a29215 100644
+--- a/src/minecraft/net/minecraft/util/EnumTypeAdapterFactory.java
++++ b/src/minecraft/net/minecraft/util/EnumTypeAdapterFactory.java
+@@ -65,6 +65,6 @@ public class EnumTypeAdapterFactory implements TypeAdapterFactory
+ 
+     private String getName(Object objectIn)
+     {
+-        return objectIn instanceof Enum ? ((Enum)objectIn).name().toLowerCase(Locale.ROOT) : objectIn.toString().toLowerCase(Locale.ROOT);
++        return objectIn instanceof Enum ? ((Enum)objectIn).name().toLowerCase(Locale.US) : objectIn.toString().toLowerCase(Locale.US);
+     }
+ }
+diff --git a/src/minecraft/net/minecraft/util/LowerStringMap.java b/src/minecraft/net/minecraft/util/LowerStringMap.java
+index a3fcf06..a4e5d11 100644
+--- a/src/minecraft/net/minecraft/util/LowerStringMap.java
++++ b/src/minecraft/net/minecraft/util/LowerStringMap.java
+@@ -23,7 +23,7 @@ public class LowerStringMap<V> implements Map<String, V>
+ 
+     public boolean containsKey(Object p_containsKey_1_)
+     {
+-        return this.internalMap.containsKey(p_containsKey_1_.toString().toLowerCase(Locale.ROOT));
++        return this.internalMap.containsKey(p_containsKey_1_.toString().toLowerCase(Locale.US));
+     }
+ 
+     public boolean containsValue(Object p_containsValue_1_)
+@@ -33,17 +33,17 @@ public class LowerStringMap<V> implements Map<String, V>
+ 
+     public V get(Object p_get_1_)
+     {
+-        return this.internalMap.get(p_get_1_.toString().toLowerCase(Locale.ROOT));
++        return this.internalMap.get(p_get_1_.toString().toLowerCase(Locale.US));
+     }
+ 
+     public V put(String p_put_1_, V p_put_2_)
+     {
+-        return this.internalMap.put(p_put_1_.toLowerCase(Locale.ROOT), p_put_2_);
++        return this.internalMap.put(p_put_1_.toLowerCase(Locale.US), p_put_2_);
+     }
+ 
+     public V remove(Object p_remove_1_)
+     {
+-        return this.internalMap.remove(p_remove_1_.toString().toLowerCase(Locale.ROOT));
++        return this.internalMap.remove(p_remove_1_.toString().toLowerCase(Locale.US));
+     }
+ 
+     public void putAll(Map <? extends String, ? extends V > p_putAll_1_)
+diff --git a/src/minecraft/net/minecraft/util/ResourceLocation.java b/src/minecraft/net/minecraft/util/ResourceLocation.java
+index 9bbca06..35cd27f 100644
+--- a/src/minecraft/net/minecraft/util/ResourceLocation.java
++++ b/src/minecraft/net/minecraft/util/ResourceLocation.java
+@@ -18,8 +18,8 @@ public class ResourceLocation implements Comparable<ResourceLocation>
+ 
+     protected ResourceLocation(int unused, String... resourceName)
+     {
+-        this.namespace = org.apache.commons.lang3.StringUtils.isEmpty(resourceName[0]) ? "minecraft" : resourceName[0].toLowerCase(Locale.ROOT);
+-        this.path = resourceName[1].toLowerCase(Locale.ROOT);
++        this.namespace = org.apache.commons.lang3.StringUtils.isEmpty(resourceName[0]) ? "minecraft" : resourceName[0].toLowerCase(Locale.US);
++        this.path = resourceName[1].toLowerCase(Locale.US);
+         Validate.notNull(this.path);
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/util/Session.java b/src/minecraft/net/minecraft/util/Session.java
+index b007106..9efe9a6 100644
+--- a/src/minecraft/net/minecraft/util/Session.java
++++ b/src/minecraft/net/minecraft/util/Session.java
+@@ -72,7 +72,7 @@ public class Session
+         @Nullable
+         public static Session.Type setSessionType(String sessionTypeIn)
+         {
+-            return SESSION_TYPES.get(sessionTypeIn.toLowerCase(Locale.ROOT));
++            return SESSION_TYPES.get(sessionTypeIn.toLowerCase(Locale.US));
+         }
+ 
+         static {
+diff --git a/src/minecraft/net/minecraft/util/Util.java b/src/minecraft/net/minecraft/util/Util.java
+index 62d5a92..4a28ff6 100644
+--- a/src/minecraft/net/minecraft/util/Util.java
++++ b/src/minecraft/net/minecraft/util/Util.java
+@@ -11,7 +11,7 @@ public class Util
+ {
+     public static Util.EnumOS getOSType()
+     {
+-        String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
++        String s = System.getProperty("os.name").toLowerCase(Locale.US);
+ 
+         if (s.contains("win"))
+         {
+diff --git a/src/minecraft/net/minecraft/util/datafix/fixes/OptionsLowerCaseLanguage.java b/src/minecraft/net/minecraft/util/datafix/fixes/OptionsLowerCaseLanguage.java
+index f536c55..b6971b1 100644
+--- a/src/minecraft/net/minecraft/util/datafix/fixes/OptionsLowerCaseLanguage.java
++++ b/src/minecraft/net/minecraft/util/datafix/fixes/OptionsLowerCaseLanguage.java
+@@ -15,7 +15,7 @@ public class OptionsLowerCaseLanguage implements IFixableData
+     {
+         if (compound.hasKey("lang", 8))
+         {
+-            compound.setString("lang", compound.getString("lang").toLowerCase(Locale.ROOT));
++            compound.setString("lang", compound.getString("lang").toLowerCase(Locale.US));
+         }
+ 
+         return compound;
+diff --git a/src/minecraft/net/minecraft/util/text/TextFormatting.java b/src/minecraft/net/minecraft/util/text/TextFormatting.java
+index 446e4de..eaadcbd 100644
+--- a/src/minecraft/net/minecraft/util/text/TextFormatting.java
++++ b/src/minecraft/net/minecraft/util/text/TextFormatting.java
+@@ -60,7 +60,7 @@ public enum TextFormatting
+ 
+     private static String lowercaseAlpha(String p_175745_0_)
+     {
+-        return p_175745_0_.toLowerCase(Locale.ROOT).replaceAll("[^a-z]", "");
++        return p_175745_0_.toLowerCase(Locale.US).replaceAll("[^a-z]", "");
+     }
+ 
+     private TextFormatting(String formattingName, char formattingCodeIn, int colorIndex)
+@@ -111,7 +111,7 @@ public enum TextFormatting
+      */
+     public String getFriendlyName()
+     {
+-        return this.name().toLowerCase(Locale.ROOT);
++        return this.name().toLowerCase(Locale.US);
+     }
+ 
+     public String toString()
+diff --git a/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java b/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
+index c4b8125..c960b3d 100644
+--- a/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
++++ b/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
+@@ -90,7 +90,7 @@ public class FlatGeneratorInfo
+                     stringbuilder.append(",");
+                 }
+ 
+-                stringbuilder.append(((String)entry.getKey()).toLowerCase(Locale.ROOT));
++                stringbuilder.append(((String)entry.getKey()).toLowerCase(Locale.US));
+                 Map<String, String> map = (Map)entry.getValue();
+ 
+                 if (!map.isEmpty())
+@@ -269,7 +269,7 @@ public class FlatGeneratorInfo
+ 
+                     if (i > 0 && astring.length > j)
+                     {
+-                        String[] astring1 = astring[j++].toLowerCase(Locale.ROOT).split(",");
++                        String[] astring1 = astring[j++].toLowerCase(Locale.US).split(",");
+ 
+                         for (String s : astring1)
+                         {
+diff --git a/src/minecraft/net/optifine/util/ResUtils.java b/src/minecraft/net/optifine/util/ResUtils.java
+index 1e9e405..b990d3b 100644
+--- a/src/minecraft/net/optifine/util/ResUtils.java
++++ b/src/minecraft/net/optifine/util/ResUtils.java
+@@ -242,7 +242,7 @@ public class ResUtils
+ 
+     private static boolean isLowercase(String str)
+     {
+-        return str.equals(str.toLowerCase(Locale.ROOT));
++        return str.equals(str.toLowerCase(Locale.US));
+     }
+ 
+     public static Properties readProperties(String path, String module)
+-- 
+2.35.3
+

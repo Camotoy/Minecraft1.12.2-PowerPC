@@ -1,0 +1,61 @@
+From c974d20f85d614c06244bfb3d3725b92e460c773 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 16:40:59 -0400
+Subject: [PATCH 12/14] Fix endian coloring issues
+
+---
+ .../net/minecraft/client/renderer/BufferBuilder.java     | 9 +++++----
+ .../client/renderer/block/model/FaceBakery.java          | 3 ++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/renderer/BufferBuilder.java b/src/minecraft/net/minecraft/client/renderer/BufferBuilder.java
+index ec3d557..957eef3 100644
+--- a/src/minecraft/net/minecraft/client/renderer/BufferBuilder.java
++++ b/src/minecraft/net/minecraft/client/renderer/BufferBuilder.java
+@@ -552,20 +552,21 @@ public class BufferBuilder
+ 
+                 case UBYTE:
+                 case BYTE:
+-                    if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN)
+-                    {
++                    // I have no idea why this doesn't work, but I shall not complain. Possibly LWJGL bug.
++                    //if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN)
++                    //{
+                         this.byteBuffer.put(i, (byte)red);
+                         this.byteBuffer.put(i + 1, (byte)green);
+                         this.byteBuffer.put(i + 2, (byte)blue);
+                         this.byteBuffer.put(i + 3, (byte)alpha);
+-                    }
++                    /*}
+                     else
+                     {
+                         this.byteBuffer.put(i, (byte)alpha);
+                         this.byteBuffer.put(i + 1, (byte)blue);
+                         this.byteBuffer.put(i + 2, (byte)green);
+                         this.byteBuffer.put(i + 3, (byte)red);
+-                    }
++                    }*/
+             }
+ 
+             this.nextVertexFormatIndex();
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+index e69d73f..6f400ad 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+@@ -115,11 +115,12 @@ public class FaceBakery
+         return aint;
+     }
+ 
++    private static final boolean LITTLE_ENDIAN = java.nio.ByteOrder.nativeOrder() == java.nio.ByteOrder.LITTLE_ENDIAN;
+     private int getFaceShadeColor(EnumFacing facing)
+     {
+         float f = getFaceBrightness(facing);
+         int i = MathHelper.clamp((int)(f * 255.0F), 0, 255);
+-        return -16777216 | i << 16 | i << 8 | i;
++        return LITTLE_ENDIAN ? (-16777216 | i << 16 | i << 8 | i) : (i << 24 | i << 16 | i << 8 | 255);
+     }
+ 
+     public static float getFaceBrightness(EnumFacing p_178412_0_)
+-- 
+2.35.3
+

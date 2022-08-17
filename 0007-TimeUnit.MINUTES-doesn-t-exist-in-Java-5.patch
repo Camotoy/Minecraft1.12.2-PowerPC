@@ -1,0 +1,39 @@
+From ca7bbad10b9425b98bfb06d32df6269b61923aa1 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 11:11:52 -0400
+Subject: [PATCH 07/14] TimeUnit.MINUTES doesn't exist in Java 5
+
+---
+ src/minecraft/net/minecraft/client/resources/SkinManager.java  | 2 +-
+ src/minecraft/net/minecraft/world/biome/BiomeEndDecorator.java | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/resources/SkinManager.java b/src/minecraft/net/minecraft/client/resources/SkinManager.java
+index 5aac33b..3ba3f3d 100644
+--- a/src/minecraft/net/minecraft/client/resources/SkinManager.java
++++ b/src/minecraft/net/minecraft/client/resources/SkinManager.java
+@@ -27,7 +27,7 @@ import net.minecraft.util.ResourceLocation;
+ 
+ public class SkinManager
+ {
+-    private static final ExecutorService THREAD_POOL = new ThreadPoolExecutor(0, 2, 1L, TimeUnit.MINUTES, new LinkedBlockingQueue());
++    private static final ExecutorService THREAD_POOL = new ThreadPoolExecutor(0, 2, 1L * 60, TimeUnit.SECONDS, new LinkedBlockingQueue()); // TimeUnit.MINUTES doesn't exist in Java 5
+     private final TextureManager textureManager;
+     private final File skinCacheDir;
+     private final MinecraftSessionService sessionService;
+diff --git a/src/minecraft/net/minecraft/world/biome/BiomeEndDecorator.java b/src/minecraft/net/minecraft/world/biome/BiomeEndDecorator.java
+index 2afd7e4..5828425 100644
+--- a/src/minecraft/net/minecraft/world/biome/BiomeEndDecorator.java
++++ b/src/minecraft/net/minecraft/world/biome/BiomeEndDecorator.java
+@@ -17,7 +17,7 @@ import net.minecraft.world.gen.feature.WorldGenSpikes;
+ 
+ public class BiomeEndDecorator extends BiomeDecorator
+ {
+-    private static final LoadingCache<Long, WorldGenSpikes.EndSpike[]> SPIKE_CACHE = CacheBuilder.newBuilder().expireAfterWrite(5L, TimeUnit.MINUTES).<Long, WorldGenSpikes.EndSpike[]>build(new BiomeEndDecorator.SpikeCacheLoader());
++    private static final LoadingCache<Long, WorldGenSpikes.EndSpike[]> SPIKE_CACHE = CacheBuilder.newBuilder().expireAfterWrite(5L * 60, TimeUnit.SECONDS).<Long, WorldGenSpikes.EndSpike[]>build(new BiomeEndDecorator.SpikeCacheLoader()); // TimeUnit.MINUTES doesn't exist in Java 5
+     private final WorldGenSpikes spikeGen = new WorldGenSpikes();
+ 
+     protected void genDecorations(Biome biomeIn, World worldIn, Random random)
+-- 
+2.35.3
+

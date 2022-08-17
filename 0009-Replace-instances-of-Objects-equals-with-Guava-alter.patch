@@ -1,0 +1,128 @@
+From a5719653078b7a2dca745acad24120a2bdd1f51d Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 11:31:15 -0400
+Subject: [PATCH 09/14] Replace instances of Objects#equals with Guava
+ alternative
+
+---
+ .../net/minecraft/client/renderer/ItemRenderer.java       | 8 ++++----
+ .../net/minecraft/client/renderer/ItemRenderer.java.orig  | 8 ++++----
+ .../net/minecraft/command/CommandSenderWrapper.java       | 2 +-
+ src/minecraft/net/minecraft/nbt/NBTTagCompound.java       | 2 +-
+ src/minecraft/net/minecraft/nbt/NBTTagList.java           | 2 +-
+ src/minecraft/net/minecraft/nbt/NBTTagString.java         | 2 +-
+ 6 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
+index a27b6d9..5c79b22 100644
+--- a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
++++ b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
+@@ -657,12 +657,12 @@ public class ItemRenderer
+                 boolean flag = Reflector.callBoolean(Reflector.ForgeHooksClient_shouldCauseReequipAnimation, this.itemStackMainHand, itemstack, entityplayersp.inventory.currentItem);
+                 boolean flag1 = Reflector.callBoolean(Reflector.ForgeHooksClient_shouldCauseReequipAnimation, this.itemStackOffHand, itemstack1, Integer.valueOf(-1));
+ 
+-                if (!flag && !Objects.equals(this.itemStackMainHand, itemstack))
++                if (!flag && !com.google.common.base.Objects.equal(this.itemStackMainHand, itemstack))
+                 {
+                     this.itemStackMainHand = itemstack;
+                 }
+ 
+-                if (!flag && !Objects.equals(this.itemStackOffHand, itemstack1))
++                if (!flag && !com.google.common.base.Objects.equal(this.itemStackOffHand, itemstack1))
+                 {
+                     this.itemStackOffHand = itemstack1;
+                 }
+@@ -672,8 +672,8 @@ public class ItemRenderer
+             }
+             else
+             {
+-                this.equippedProgressMainHand += MathHelper.clamp((Objects.equals(this.itemStackMainHand, itemstack) ? f * f * f : 0.0F) - this.equippedProgressMainHand, -0.4F, 0.4F);
+-                this.equippedProgressOffHand += MathHelper.clamp((float)(Objects.equals(this.itemStackOffHand, itemstack1) ? 1 : 0) - this.equippedProgressOffHand, -0.4F, 0.4F);
++                this.equippedProgressMainHand += MathHelper.clamp((com.google.common.base.Objects.equal(this.itemStackMainHand, itemstack) ? f * f * f : 0.0F) - this.equippedProgressMainHand, -0.4F, 0.4F);
++                this.equippedProgressOffHand += MathHelper.clamp((float)(com.google.common.base.Objects.equal(this.itemStackOffHand, itemstack1) ? 1 : 0) - this.equippedProgressOffHand, -0.4F, 0.4F);
+             }
+         }
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java.orig b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java.orig
+index b552ec5..106b450 100644
+--- a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java.orig
++++ b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java.orig
+@@ -535,19 +535,19 @@ public class ItemRenderer {
+          if (Reflector.ForgeHooksClient_shouldCauseReequipAnimation.exists()) {
+             boolean flag = Reflector.callBoolean(Reflector.ForgeHooksClient_shouldCauseReequipAnimation, this.field_187467_d, itemstack, entityplayersp.field_71071_by.field_70461_c);
+             boolean flag1 = Reflector.callBoolean(Reflector.ForgeHooksClient_shouldCauseReequipAnimation, this.field_187468_e, itemstack1, Integer.valueOf(-1));
+-            if (!flag && !Objects.equals(this.field_187467_d, itemstack)) {
++            if (!flag && !com.google.common.base.Objects.equal(this.field_187467_d, itemstack)) {
+                this.field_187467_d = itemstack;
+             }
+ 
+-            if (!flag && !Objects.equals(this.field_187468_e, itemstack1)) {
++            if (!flag && !com.google.common.base.Objects.equal(this.field_187468_e, itemstack1)) {
+                this.field_187468_e = itemstack1;
+             }
+ 
+             this.field_187469_f += MathHelper.func_76131_a((!flag ? f * f * f : 0.0F) - this.field_187469_f, -0.4F, 0.4F);
+             this.field_187471_h += MathHelper.func_76131_a((float)(!flag1 ? 1 : 0) - this.field_187471_h, -0.4F, 0.4F);
+          } else {
+-            this.field_187469_f += MathHelper.func_76131_a((Objects.equals(this.field_187467_d, itemstack) ? f * f * f : 0.0F) - this.field_187469_f, -0.4F, 0.4F);
+-            this.field_187471_h += MathHelper.func_76131_a((float)(Objects.equals(this.field_187468_e, itemstack1) ? 1 : 0) - this.field_187471_h, -0.4F, 0.4F);
++            this.field_187469_f += MathHelper.func_76131_a((com.google.common.base.Objects.equal(this.field_187467_d, itemstack) ? f * f * f : 0.0F) - this.field_187469_f, -0.4F, 0.4F);
++            this.field_187471_h += MathHelper.func_76131_a((float)(com.google.common.base.Objects.equal(this.field_187468_e, itemstack1) ? 1 : 0) - this.field_187471_h, -0.4F, 0.4F);
+          }
+       }
+ 
+diff --git a/src/minecraft/net/minecraft/command/CommandSenderWrapper.java b/src/minecraft/net/minecraft/command/CommandSenderWrapper.java
+index 1566452..89299bb 100644
+--- a/src/minecraft/net/minecraft/command/CommandSenderWrapper.java
++++ b/src/minecraft/net/minecraft/command/CommandSenderWrapper.java
+@@ -40,7 +40,7 @@ public class CommandSenderWrapper implements ICommandSender
+ 
+     public CommandSenderWrapper withEntity(Entity entityIn, Vec3d p_193997_2_)
+     {
+-        return this.entity == entityIn && Objects.equals(this.positionVector, p_193997_2_) ? this : new CommandSenderWrapper(this.delegate, p_193997_2_, new BlockPos(p_193997_2_), this.permissionLevel, entityIn, this.sendCommandFeedback);
++        return this.entity == entityIn && com.google.common.base.Objects.equal(this.positionVector, p_193997_2_) ? this : new CommandSenderWrapper(this.delegate, p_193997_2_, new BlockPos(p_193997_2_), this.permissionLevel, entityIn, this.sendCommandFeedback);
+     }
+ 
+     public CommandSenderWrapper withPermissionLevel(int level)
+diff --git a/src/minecraft/net/minecraft/nbt/NBTTagCompound.java b/src/minecraft/net/minecraft/nbt/NBTTagCompound.java
+index b7f6c1d..249101b 100644
+--- a/src/minecraft/net/minecraft/nbt/NBTTagCompound.java
++++ b/src/minecraft/net/minecraft/nbt/NBTTagCompound.java
+@@ -559,7 +559,7 @@ public class NBTTagCompound extends NBTBase
+ 
+     public boolean equals(Object p_equals_1_)
+     {
+-        return super.equals(p_equals_1_) && Objects.equals(this.tagMap.entrySet(), ((NBTTagCompound)p_equals_1_).tagMap.entrySet());
++        return super.equals(p_equals_1_) && com.google.common.base.Objects.equal(this.tagMap.entrySet(), ((NBTTagCompound)p_equals_1_).tagMap.entrySet());
+     }
+ 
+     public int hashCode()
+diff --git a/src/minecraft/net/minecraft/nbt/NBTTagList.java b/src/minecraft/net/minecraft/nbt/NBTTagList.java
+index 4427ef0..0fdcf0b 100644
+--- a/src/minecraft/net/minecraft/nbt/NBTTagList.java
++++ b/src/minecraft/net/minecraft/nbt/NBTTagList.java
+@@ -306,7 +306,7 @@ public class NBTTagList extends NBTBase
+         else
+         {
+             NBTTagList nbttaglist = (NBTTagList)p_equals_1_;
+-            return this.tagType == nbttaglist.tagType && Objects.equals(this.tagList, nbttaglist.tagList);
++            return this.tagType == nbttaglist.tagType && com.google.common.base.Objects.equal(this.tagList, nbttaglist.tagList);
+         }
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/nbt/NBTTagString.java b/src/minecraft/net/minecraft/nbt/NBTTagString.java
+index 92d2b2a..3741dc7 100644
+--- a/src/minecraft/net/minecraft/nbt/NBTTagString.java
++++ b/src/minecraft/net/minecraft/nbt/NBTTagString.java
+@@ -74,7 +74,7 @@ public class NBTTagString extends NBTBase
+         else
+         {
+             NBTTagString nbttagstring = (NBTTagString)p_equals_1_;
+-            return this.data == null && nbttagstring.data == null || Objects.equals(this.data, nbttagstring.data);
++            return this.data == null && nbttagstring.data == null || com.google.common.base.Objects.equal(this.data, nbttagstring.data);
+         }
+     }
+ 
+-- 
+2.35.3
+

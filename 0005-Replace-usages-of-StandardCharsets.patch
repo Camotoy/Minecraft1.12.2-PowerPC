@@ -1,0 +1,419 @@
+From 3e0331c9e1a26f0c7e348a6ea5e48c371f33d2f0 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Tue, 16 Aug 2022 22:48:31 -0400
+Subject: [PATCH 05/14] Replace usages of StandardCharsets
+
+---
+ .../net/minecraft/advancements/FunctionManager.java         | 2 +-
+ .../net/minecraft/advancements/PlayerAdvancements.java      | 4 ++--
+ src/minecraft/net/minecraft/client/audio/SoundHandler.java  | 2 +-
+ src/minecraft/net/minecraft/client/gui/GuiMainMenu.java     | 2 +-
+ src/minecraft/net/minecraft/client/gui/GuiWinGame.java      | 4 ++--
+ .../net/minecraft/client/gui/ServerListEntryNormal.java     | 2 +-
+ .../minecraft/client/multiplayer/ThreadLanServerPing.java   | 2 +-
+ .../net/minecraft/client/network/LanServerDetector.java     | 2 +-
+ .../net/minecraft/client/network/NetHandlerPlayClient.java  | 2 +-
+ .../minecraft/client/renderer/block/model/ModelBakery.java  | 6 +++---
+ .../minecraft/client/resources/AbstractResourcePack.java    | 2 +-
+ .../net/minecraft/client/resources/ResourceIndex.java       | 2 +-
+ .../net/minecraft/client/resources/SimpleResource.java      | 2 +-
+ .../net/minecraft/client/settings/GameSettings.java         | 6 +++---
+ src/minecraft/net/minecraft/command/CommandDebug.java       | 2 +-
+ src/minecraft/net/minecraft/crash/CrashReport.java          | 2 +-
+ src/minecraft/net/minecraft/entity/player/EntityPlayer.java | 2 +-
+ src/minecraft/net/minecraft/network/PacketBuffer.java       | 4 ++--
+ src/minecraft/net/minecraft/server/MinecraftServer.java     | 4 ++--
+ .../net/minecraft/server/management/PlayerProfileCache.java | 4 ++--
+ src/minecraft/net/minecraft/server/management/UserList.java | 2 +-
+ .../net/minecraft/server/network/NetHandlerLoginServer.java | 2 +-
+ .../net/minecraft/world/storage/loot/LootTableManager.java  | 4 ++--
+ 23 files changed, 33 insertions(+), 33 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/advancements/FunctionManager.java b/src/minecraft/net/minecraft/advancements/FunctionManager.java
+index a037fb2..1e5525e 100644
+--- a/src/minecraft/net/minecraft/advancements/FunctionManager.java
++++ b/src/minecraft/net/minecraft/advancements/FunctionManager.java
+@@ -178,7 +178,7 @@ public class FunctionManager implements ITickable
+ 
+                     try
+                     {
+-                        this.functions.put(resourcelocation, FunctionObject.create(this, Files.readLines(file1, StandardCharsets.UTF_8)));
++                        this.functions.put(resourcelocation, FunctionObject.create(this, Files.readLines(file1, com.google.common.base.Charsets.UTF_8)));
+                     }
+                     catch (Throwable throwable)
+                     {
+diff --git a/src/minecraft/net/minecraft/advancements/PlayerAdvancements.java b/src/minecraft/net/minecraft/advancements/PlayerAdvancements.java
+index 85c3ac8..dd3d1cc 100644
+--- a/src/minecraft/net/minecraft/advancements/PlayerAdvancements.java
++++ b/src/minecraft/net/minecraft/advancements/PlayerAdvancements.java
+@@ -126,7 +126,7 @@ public class PlayerAdvancements
+         {
+             try
+             {
+-                String s = Files.toString(this.progressFile, StandardCharsets.UTF_8);
++                String s = Files.toString(this.progressFile, com.google.common.base.Charsets.UTF_8);
+                 Map<ResourceLocation, AdvancementProgress> map = (Map)JsonUtils.gsonDeserialize(GSON, s, MAP_TOKEN.getType());
+ 
+                 if (map == null)
+@@ -186,7 +186,7 @@ public class PlayerAdvancements
+ 
+         try
+         {
+-            Files.write(GSON.toJson(map), this.progressFile, StandardCharsets.UTF_8);
++            Files.write(GSON.toJson(map), this.progressFile, com.google.common.base.Charsets.UTF_8);
+         }
+         catch (IOException ioexception)
+         {
+diff --git a/src/minecraft/net/minecraft/client/audio/SoundHandler.java b/src/minecraft/net/minecraft/client/audio/SoundHandler.java
+index 87d8fdf..3aa130f 100644
+--- a/src/minecraft/net/minecraft/client/audio/SoundHandler.java
++++ b/src/minecraft/net/minecraft/client/audio/SoundHandler.java
+@@ -124,7 +124,7 @@ public class SoundHandler implements IResourceManagerReloadListener, ITickable
+ 
+         try
+         {
+-            map = (Map)JsonUtils.fromJson(GSON, new InputStreamReader(stream, StandardCharsets.UTF_8), TYPE);
++            map = (Map)JsonUtils.fromJson(GSON, new InputStreamReader(stream, com.google.common.base.Charsets.UTF_8), TYPE);
+         }
+         finally
+         {
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+index 4f1c733..9477c95 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+@@ -131,7 +131,7 @@ public class GuiMainMenu extends GuiScreen
+         {
+             List<String> list = Lists.<String>newArrayList();
+             iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
+-            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
++            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), com.google.common.base.Charsets.UTF_8));
+             String s;
+ 
+             while ((s = bufferedreader.readLine()) != null)
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiWinGame.java b/src/minecraft/net/minecraft/client/gui/GuiWinGame.java
+index 4c32b36..f3f39a5 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiWinGame.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiWinGame.java
+@@ -105,7 +105,7 @@ public class GuiWinGame extends GuiScreen
+                 {
+                     iresource = this.mc.getResourceManager().getResource(new ResourceLocation("texts/end.txt"));
+                     InputStream inputstream = iresource.getInputStream();
+-                    BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(inputstream, StandardCharsets.UTF_8));
++                    BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(inputstream, com.google.common.base.Charsets.UTF_8));
+                     Random random = new Random(8124371L);
+                     String s1;
+ 
+@@ -134,7 +134,7 @@ public class GuiWinGame extends GuiScreen
+                 }
+ 
+                 InputStream inputstream1 = this.mc.getResourceManager().getResource(new ResourceLocation("texts/credits.txt")).getInputStream();
+-                BufferedReader bufferedreader1 = new BufferedReader(new InputStreamReader(inputstream1, StandardCharsets.UTF_8));
++                BufferedReader bufferedreader1 = new BufferedReader(new InputStreamReader(inputstream1, com.google.common.base.Charsets.UTF_8));
+                 String s4;
+ 
+                 while ((s4 = bufferedreader1.readLine()) != null)
+diff --git a/src/minecraft/net/minecraft/client/gui/ServerListEntryNormal.java b/src/minecraft/net/minecraft/client/gui/ServerListEntryNormal.java
+index 54483a9..f17bfde 100644
+--- a/src/minecraft/net/minecraft/client/gui/ServerListEntryNormal.java
++++ b/src/minecraft/net/minecraft/client/gui/ServerListEntryNormal.java
+@@ -251,7 +251,7 @@ public class ServerListEntryNormal implements GuiListExtended.IGuiListEntry
+         }
+         else
+         {
+-            ByteBuf bytebuf = Unpooled.copiedBuffer((CharSequence)this.server.getBase64EncodedIconData(), StandardCharsets.UTF_8);
++            ByteBuf bytebuf = Unpooled.copiedBuffer((CharSequence)this.server.getBase64EncodedIconData(), com.google.common.base.Charsets.UTF_8);
+             ByteBuf bytebuf1 = null;
+             BufferedImage bufferedimage;
+             label99:
+diff --git a/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java b/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
+index 9f8b847..23b3319 100644
+--- a/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
++++ b/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
+@@ -32,7 +32,7 @@ public class ThreadLanServerPing extends Thread
+     public void run()
+     {
+         String s = getPingResponse(this.motd, this.address);
+-        byte[] abyte = s.getBytes(StandardCharsets.UTF_8);
++        byte[] abyte = s.getBytes(com.google.common.base.Charsets.UTF_8);
+ 
+         while (!this.isInterrupted() && this.isStopping)
+         {
+diff --git a/src/minecraft/net/minecraft/client/network/LanServerDetector.java b/src/minecraft/net/minecraft/client/network/LanServerDetector.java
+index 20f6fef..b796d5c 100644
+--- a/src/minecraft/net/minecraft/client/network/LanServerDetector.java
++++ b/src/minecraft/net/minecraft/client/network/LanServerDetector.java
+@@ -107,7 +107,7 @@ public class LanServerDetector
+                     break;
+                 }
+ 
+-                String s = new String(datagrampacket.getData(), datagrampacket.getOffset(), datagrampacket.getLength(), StandardCharsets.UTF_8);
++                String s = new String(datagrampacket.getData(), datagrampacket.getOffset(), datagrampacket.getLength(), com.google.common.base.Charsets.UTF_8);
+                 LanServerDetector.LOGGER.debug("{}: {}", datagrampacket.getAddress(), s);
+                 this.localServerList.addServer(s, datagrampacket.getAddress());
+             }
+diff --git a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+index fcfa8c0..08ffaf0 100644
+--- a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
++++ b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+@@ -1847,7 +1847,7 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient
+             {
+                 try
+                 {
+-                    String s2 = URLDecoder.decode(s.substring("level://".length()), StandardCharsets.UTF_8.toString());
++                    String s2 = URLDecoder.decode(s.substring("level://".length()), com.google.common.base.Charsets.UTF_8.toString());
+                     File file1 = new File(this.client.gameDir, "saves");
+                     File file2 = new File(file1, s2);
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+index 769816e..ea3806a 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+@@ -250,11 +250,11 @@ public class ModelBakery
+ 
+             if (Reflector.ForgeModelBlockDefinition_parseFromReader2.exists())
+             {
+-                modelblockdefinition = (ModelBlockDefinition)Reflector.call(Reflector.ForgeModelBlockDefinition_parseFromReader2, new InputStreamReader(inputstream, StandardCharsets.UTF_8), location);
++                modelblockdefinition = (ModelBlockDefinition)Reflector.call(Reflector.ForgeModelBlockDefinition_parseFromReader2, new InputStreamReader(inputstream, com.google.common.base.Charsets.UTF_8), location);
+             }
+             else
+             {
+-                modelblockdefinition = ModelBlockDefinition.parseFromReader(new InputStreamReader(inputstream, StandardCharsets.UTF_8));
++                modelblockdefinition = ModelBlockDefinition.parseFromReader(new InputStreamReader(inputstream, com.google.common.base.Charsets.UTF_8));
+             }
+         }
+         catch (Exception exception)
+@@ -349,7 +349,7 @@ public class ModelBakery
+                 {
+                     location = this.getModelLocation(location);
+                     iresource = this.resourceManager.getResource(location);
+-                    reader = new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8);
++                    reader = new InputStreamReader(iresource.getInputStream(), com.google.common.base.Charsets.UTF_8);
+                 }
+ 
+                 ModelBlock modelblock3 = ModelBlock.deserialize(reader);
+diff --git a/src/minecraft/net/minecraft/client/resources/AbstractResourcePack.java b/src/minecraft/net/minecraft/client/resources/AbstractResourcePack.java
+index 73203d7..c6e97f0 100644
+--- a/src/minecraft/net/minecraft/client/resources/AbstractResourcePack.java
++++ b/src/minecraft/net/minecraft/client/resources/AbstractResourcePack.java
+@@ -70,7 +70,7 @@ public abstract class AbstractResourcePack implements IResourcePack
+ 
+         try
+         {
+-            bufferedreader = new BufferedReader(new InputStreamReader(p_110596_1_, StandardCharsets.UTF_8));
++            bufferedreader = new BufferedReader(new InputStreamReader(p_110596_1_, com.google.common.base.Charsets.UTF_8));
+             jsonobject = (new JsonParser()).parse(bufferedreader).getAsJsonObject();
+         }
+         catch (RuntimeException runtimeexception)
+diff --git a/src/minecraft/net/minecraft/client/resources/ResourceIndex.java b/src/minecraft/net/minecraft/client/resources/ResourceIndex.java
+index 527aeb6..5615ffd 100644
+--- a/src/minecraft/net/minecraft/client/resources/ResourceIndex.java
++++ b/src/minecraft/net/minecraft/client/resources/ResourceIndex.java
+@@ -37,7 +37,7 @@ public class ResourceIndex
+ 
+         try
+         {
+-            bufferedreader = Files.newReader(file2, StandardCharsets.UTF_8);
++            bufferedreader = Files.newReader(file2, com.google.common.base.Charsets.UTF_8);
+             JsonObject jsonobject = (new JsonParser()).parse(bufferedreader).getAsJsonObject();
+             JsonObject jsonobject1 = JsonUtils.getJsonObject(jsonobject, "objects", (JsonObject)null);
+ 
+diff --git a/src/minecraft/net/minecraft/client/resources/SimpleResource.java b/src/minecraft/net/minecraft/client/resources/SimpleResource.java
+index 71c103e..9b4fde6 100644
+--- a/src/minecraft/net/minecraft/client/resources/SimpleResource.java
++++ b/src/minecraft/net/minecraft/client/resources/SimpleResource.java
+@@ -67,7 +67,7 @@ public class SimpleResource implements IResource
+ 
+                 try
+                 {
+-                    bufferedreader = new BufferedReader(new InputStreamReader(this.mcmetaInputStream, StandardCharsets.UTF_8));
++                    bufferedreader = new BufferedReader(new InputStreamReader(this.mcmetaInputStream, com.google.common.base.Charsets.UTF_8));
+                     this.mcmetaJson = (new JsonParser()).parse(bufferedreader).getAsJsonObject();
+                 }
+                 finally
+diff --git a/src/minecraft/net/minecraft/client/settings/GameSettings.java b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+index e7b6590..99c882f 100644
+--- a/src/minecraft/net/minecraft/client/settings/GameSettings.java
++++ b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+@@ -1468,7 +1468,7 @@ public class GameSettings
+ 
+         try
+         {
+-            printwriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(this.optionsFile), StandardCharsets.UTF_8));
++            printwriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(this.optionsFile), com.google.common.base.Charsets.UTF_8));
+             printwriter.println("version:1343");
+             printwriter.println("invertYMouse:" + this.invertMouse);
+             printwriter.println("mouseSensitivity:" + this.mouseSensitivity);
+@@ -2832,7 +2832,7 @@ public class GameSettings
+                 return;
+             }
+ 
+-            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(new FileInputStream(file1), StandardCharsets.UTF_8));
++            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(new FileInputStream(file1), com.google.common.base.Charsets.UTF_8));
+             String s = "";
+ 
+             while ((s = bufferedreader.readLine()) != null)
+@@ -3263,7 +3263,7 @@ public class GameSettings
+     {
+         try
+         {
+-            PrintWriter printwriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(this.optionsFileOF), StandardCharsets.UTF_8));
++            PrintWriter printwriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(this.optionsFileOF), com.google.common.base.Charsets.UTF_8));
+             printwriter.println("ofFogType:" + this.ofFogType);
+             printwriter.println("ofFogStart:" + this.ofFogStart);
+             printwriter.println("ofMipmapType:" + this.ofMipmapType);
+diff --git a/src/minecraft/net/minecraft/command/CommandDebug.java b/src/minecraft/net/minecraft/command/CommandDebug.java
+index 2cf1adf..e115bc3 100644
+--- a/src/minecraft/net/minecraft/command/CommandDebug.java
++++ b/src/minecraft/net/minecraft/command/CommandDebug.java
+@@ -110,7 +110,7 @@ public class CommandDebug extends CommandBase
+ 
+         try
+         {
+-            writer = new OutputStreamWriter(new FileOutputStream(file1), StandardCharsets.UTF_8);
++            writer = new OutputStreamWriter(new FileOutputStream(file1), com.google.common.base.Charsets.UTF_8);
+             writer.write(this.getProfilerResults(timeSpan, tickSpan, server));
+         }
+         catch (Throwable throwable)
+diff --git a/src/minecraft/net/minecraft/crash/CrashReport.java b/src/minecraft/net/minecraft/crash/CrashReport.java
+index a12d46e..27792de 100644
+--- a/src/minecraft/net/minecraft/crash/CrashReport.java
++++ b/src/minecraft/net/minecraft/crash/CrashReport.java
+@@ -299,7 +299,7 @@ public class CrashReport
+ 
+             try
+             {
+-                writer = new OutputStreamWriter(new FileOutputStream(toFile), StandardCharsets.UTF_8);
++                writer = new OutputStreamWriter(new FileOutputStream(toFile), com.google.common.base.Charsets.UTF_8);
+                 writer.write(this.getCompleteReport());
+                 this.crashReportFile = toFile;
+                 boolean flag1 = true;
+diff --git a/src/minecraft/net/minecraft/entity/player/EntityPlayer.java b/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
+index 69b0625..ca806c8 100644
+--- a/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
++++ b/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
+@@ -2576,7 +2576,7 @@ public abstract class EntityPlayer extends EntityLivingBase
+ 
+     public static UUID getOfflineUUID(String username)
+     {
+-        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
++        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(com.google.common.base.Charsets.UTF_8));
+     }
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/network/PacketBuffer.java b/src/minecraft/net/minecraft/network/PacketBuffer.java
+index 2f6fb25..727d58d 100644
+--- a/src/minecraft/net/minecraft/network/PacketBuffer.java
++++ b/src/minecraft/net/minecraft/network/PacketBuffer.java
+@@ -414,7 +414,7 @@ public class PacketBuffer extends ByteBuf
+         }
+         else
+         {
+-            String s = this.toString(this.readerIndex(), i, StandardCharsets.UTF_8);
++            String s = this.toString(this.readerIndex(), i, com.google.common.base.Charsets.UTF_8);
+             this.readerIndex(this.readerIndex() + i);
+ 
+             if (s.length() > maxLength)
+@@ -430,7 +430,7 @@ public class PacketBuffer extends ByteBuf
+ 
+     public PacketBuffer writeString(String string)
+     {
+-        byte[] abyte = string.getBytes(StandardCharsets.UTF_8);
++        byte[] abyte = string.getBytes(com.google.common.base.Charsets.UTF_8);
+ 
+         if (abyte.length > 32767)
+         {
+diff --git a/src/minecraft/net/minecraft/server/MinecraftServer.java b/src/minecraft/net/minecraft/server/MinecraftServer.java
+index 3e89d78..0e52431 100644
+--- a/src/minecraft/net/minecraft/server/MinecraftServer.java
++++ b/src/minecraft/net/minecraft/server/MinecraftServer.java
+@@ -379,7 +379,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
+         {
+             try
+             {
+-                this.setResourcePack("level://" + URLEncoder.encode(worldNameIn, StandardCharsets.UTF_8.toString()) + "/" + "resources.zip", "");
++                this.setResourcePack("level://" + URLEncoder.encode(worldNameIn, com.google.common.base.Charsets.UTF_8.toString()) + "/" + "resources.zip", "");
+             }
+             catch (UnsupportedEncodingException var5)
+             {
+@@ -641,7 +641,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
+                 Validate.validState(bufferedimage.getHeight() == 64, "Must be 64 pixels high");
+                 ImageIO.write(bufferedimage, "PNG", new ByteBufOutputStream(bytebuf));
+                 ByteBuf bytebuf1 = Base64.encode(bytebuf);
+-                response.setFavicon("data:image/png;base64," + bytebuf1.toString(StandardCharsets.UTF_8));
++                response.setFavicon("data:image/png;base64," + bytebuf1.toString(com.google.common.base.Charsets.UTF_8));
+             }
+             catch (Exception exception)
+             {
+diff --git a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+index 059e8fd..d593ac8 100644
+--- a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
++++ b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+@@ -238,7 +238,7 @@ public class PlayerProfileCache
+ 
+         try
+         {
+-            bufferedreader = Files.newReader(this.usercacheFile, StandardCharsets.UTF_8);
++            bufferedreader = Files.newReader(this.usercacheFile, com.google.common.base.Charsets.UTF_8);
+             List<PlayerProfileCache.ProfileEntry> list = (List)JsonUtils.fromJson(this.gson, bufferedreader, TYPE);
+             this.usernameToProfileEntryMap.clear();
+             this.uuidToProfileEntryMap.clear();
+@@ -279,7 +279,7 @@ public class PlayerProfileCache
+ 
+         try
+         {
+-            bufferedwriter = Files.newWriter(this.usercacheFile, StandardCharsets.UTF_8);
++            bufferedwriter = Files.newWriter(this.usercacheFile, com.google.common.base.Charsets.UTF_8);
+             bufferedwriter.write(s);
+             return;
+         }
+diff --git a/src/minecraft/net/minecraft/server/management/UserList.java b/src/minecraft/net/minecraft/server/management/UserList.java
+index 31d5a77..784b5e7 100644
+--- a/src/minecraft/net/minecraft/server/management/UserList.java
++++ b/src/minecraft/net/minecraft/server/management/UserList.java
+@@ -161,7 +161,7 @@ public class UserList<K, V extends UserListEntry<K>>
+ 
+         try
+         {
+-            bufferedwriter = Files.newWriter(this.saveFile, StandardCharsets.UTF_8);
++            bufferedwriter = Files.newWriter(this.saveFile, com.google.common.base.Charsets.UTF_8);
+             bufferedwriter.write(s);
+         }
+         finally
+diff --git a/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java b/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
+index cbafa92..907ea86 100644
+--- a/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
++++ b/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
+@@ -240,7 +240,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable
+ 
+     protected GameProfile getOfflineProfile(GameProfile original)
+     {
+-        UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + original.getName()).getBytes(StandardCharsets.UTF_8));
++        UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + original.getName()).getBytes(com.google.common.base.Charsets.UTF_8));
+         return new GameProfile(uuid, original.getName());
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/world/storage/loot/LootTableManager.java b/src/minecraft/net/minecraft/world/storage/loot/LootTableManager.java
+index 3ce3765..99946b2 100644
+--- a/src/minecraft/net/minecraft/world/storage/loot/LootTableManager.java
++++ b/src/minecraft/net/minecraft/world/storage/loot/LootTableManager.java
+@@ -101,7 +101,7 @@ public class LootTableManager
+ 
+                         try
+                         {
+-                            s = Files.toString(file1, StandardCharsets.UTF_8);
++                            s = Files.toString(file1, com.google.common.base.Charsets.UTF_8);
+                         }
+                         catch (IOException ioexception)
+                         {
+@@ -143,7 +143,7 @@ public class LootTableManager
+ 
+                 try
+                 {
+-                    s = Resources.toString(url, StandardCharsets.UTF_8);
++                    s = Resources.toString(url, com.google.common.base.Charsets.UTF_8);
+                 }
+                 catch (IOException ioexception)
+                 {
+-- 
+2.35.3
+

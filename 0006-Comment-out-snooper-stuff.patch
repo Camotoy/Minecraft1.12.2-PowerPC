@@ -1,0 +1,41 @@
+From 0b7b477e48e94a50c0c9cf0dbd7ca8ee6d410b7f Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 10:48:15 -0400
+Subject: [PATCH 06/14] Comment out snooper stuff
+
+---
+ src/minecraft/net/minecraft/client/Minecraft.java | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/minecraft/net/minecraft/client/Minecraft.java b/src/minecraft/net/minecraft/client/Minecraft.java
+index 5d27f55..d689293 100644
+--- a/src/minecraft/net/minecraft/client/Minecraft.java
++++ b/src/minecraft/net/minecraft/client/Minecraft.java
+@@ -201,7 +201,7 @@ import net.minecraft.world.chunk.storage.AnvilSaveConverter;
+ import net.minecraft.world.storage.ISaveFormat;
+ import net.minecraft.world.storage.ISaveHandler;
+ import net.minecraft.world.storage.WorldInfo;
+-import org.apache.commons.io.Charsets;
++//import org.apache.commons.io.Charsets; Doesn't exist in our library version
+ import org.apache.commons.io.IOUtils;
+ import org.apache.commons.lang3.Validate;
+ import org.apache.logging.log4j.LogManager;
+@@ -3090,6 +3090,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+ 
+     public void addServerTypeToSnooper(Snooper playerSnooper)
+     {
++        /* Just comment out this entire class since some of these values are missing in our LWJGL version anyway
+         playerSnooper.addStatToSnooper("opengl_version", GlStateManager.glGetString(7938));
+         playerSnooper.addStatToSnooper("opengl_vendor", GlStateManager.glGetString(7936));
+         playerSnooper.addStatToSnooper("client_brand", ClientBrandRetriever.getClientModName());
+@@ -3205,6 +3206,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+         {
+             playerSnooper.addStatToSnooper("uuid", Hashing.sha1().hashBytes(gameprofile.getId().toString().getBytes(Charsets.ISO_8859_1)).toString());
+         }
++        */
+     }
+ 
+     /**
+-- 
+2.35.3
+

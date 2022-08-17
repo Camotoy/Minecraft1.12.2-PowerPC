@@ -1,0 +1,1697 @@
+From a294cadbe69848221060daba90544a4ad15d7564 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Tue, 16 Aug 2022 19:02:43 -0400
+Subject: [PATCH 01/14] Compiles on Java 8
+
+---
+ .../minecraft/block/state/BlockStateBase.java |   4 +-
+ .../minecraft/client/gui/GuiOverlayDebug.java |   2 +-
+ .../client/renderer/RenderGlobal.java         |   6 +-
+ .../client/renderer/chunk/RenderChunk.java    |   2 +-
+ .../renderer/entity/RenderLivingBase.java     |   2 +-
+ .../client/renderer/entity/RenderManager.java |   4 +-
+ .../renderer/texture/TextureManager.java      |   2 +-
+ .../client/renderer/texture/TextureMap.java   |   6 +-
+ .../client/renderer/texture/TextureUtil.java  |   6 +-
+ .../TileEntityRendererDispatcher.java         |   2 +-
+ src/minecraft/net/minecraft/src/Config.java   |  10 +-
+ src/minecraft/net/optifine/BlockPosM.java     |   2 +-
+ .../net/optifine/ConnectedProperties.java     |   2 +-
+ .../net/optifine/ConnectedTextures.java       |  36 +++--
+ .../net/optifine/CustomBlockLayers.java       |   2 +-
+ src/minecraft/net/optifine/CustomColors.java  |  56 ++++----
+ .../net/optifine/CustomGuiProperties.java     |   3 +-
+ src/minecraft/net/optifine/CustomGuis.java    |   2 +-
+ .../net/optifine/CustomItemProperties.java    |  12 +-
+ src/minecraft/net/optifine/CustomItems.java   |  40 +++---
+ .../net/optifine/CustomLoadingScreens.java    |   2 +-
+ .../net/optifine/CustomPanorama.java          |  30 ++--
+ src/minecraft/net/optifine/Mipmaps.java       |   8 +-
+ src/minecraft/net/optifine/SmartLeaves.java   |   2 +-
+ .../net/optifine/TextureAnimation.java        |  29 ++--
+ .../net/optifine/config/ConnectedParser.java  |   2 +-
+ .../entity/model/CustomEntityModels.java      |  22 +--
+ .../net/optifine/expr/ExpressionParser.java   | 129 ++++++++----------
+ .../net/optifine/gui/GuiMessage.java          |   2 +-
+ .../net/optifine/http/HttpPipeline.java       |   2 +-
+ .../net/optifine/http/HttpUtils.java          |   2 +-
+ .../net/optifine/model/ModelUtils.java        |  10 +-
+ .../net/optifine/shaders/BlockAliases.java    |   5 +-
+ .../net/optifine/shaders/EntityAliases.java   |   3 +-
+ .../net/optifine/shaders/ItemAliases.java     |   3 +-
+ .../net/optifine/shaders/SVertexBuilder.java  |   6 +-
+ .../net/optifine/shaders/Shaders.java         |  28 ++--
+ .../net/optifine/shaders/ShadersTex.java      |   2 +-
+ .../shaders/config/ShaderPackParser.java      |  25 ++--
+ .../net/optifine/util/ArrayUtils.java         |   8 +-
+ .../net/optifine/util/CacheObjectArray.java   |   2 +-
+ .../net/optifine/util/ChunkUtils.java         |   2 +-
+ .../net/optifine/util/FontUtils.java          |   3 +-
+ .../net/optifine/util/IteratorCache.java      |   4 +-
+ .../net/optifine/util/LinkedList.java         |  54 ++++----
+ .../net/optifine/util/LinkedListTest.java     |   3 +-
+ .../net/optifine/util/NativeMemory.java       |   7 +-
+ 47 files changed, 299 insertions(+), 297 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/block/state/BlockStateBase.java b/src/minecraft/net/minecraft/block/state/BlockStateBase.java
+index 9b605df..aa77cee 100644
+--- a/src/minecraft/net/minecraft/block/state/BlockStateBase.java
++++ b/src/minecraft/net/minecraft/block/state/BlockStateBase.java
+@@ -32,7 +32,7 @@ public abstract class BlockStateBase implements IBlockState
+         }
+         private <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> entry)
+         {
+-            return property.getName(entry);
++            return property.getName((T)entry); // Compile error
+         }
+     };
+     private int blockId = -1;
+@@ -87,7 +87,7 @@ public abstract class BlockStateBase implements IBlockState
+ 
+     public <T extends Comparable<T>> IBlockState cycleProperty(IProperty<T> property)
+     {
+-        return this.withProperty(property, (Comparable)cyclePropertyValue(property.getAllowedValues(), this.getValue(property)));
++        return this.withProperty(property, cyclePropertyValue(property.getAllowedValues(), this.getValue(property))); //
+     }
+ 
+     protected static <T> T cyclePropertyValue(Collection<T> values, T currentValue)
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java b/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
+index 5576045..dc34800 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
+@@ -315,7 +315,7 @@ public class GuiOverlayDebug extends Gui
+                 {
+                     Entry < IProperty<?>, Comparable<? >> entry = (Entry)unmodifiableiterator.next();
+                     iproperty = (IProperty)entry.getKey();
+-                    T t = entry.getValue();
++                    T t = (T) entry.getValue(); //
+                     s1 = iproperty.getName(t);
+ 
+                     if (Boolean.TRUE.equals(t))
+diff --git a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+index fb0b6db..36c9ae8 100644
+--- a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
++++ b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+@@ -209,8 +209,8 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+     public Set chunksToUpdateForced = new LinkedHashSet();
+     private Set<RenderChunk> chunksToUpdatePrev = new ObjectLinkedOpenHashSet<RenderChunk>();
+     private Deque visibilityDeque = new ArrayDeque();
+-    private List renderInfosEntities = new ArrayList(1024);
+-    private List renderInfosTileEntities = new ArrayList(1024);
++    private List<RenderGlobal.ContainerLocalRenderInformation> renderInfosEntities = new ArrayList<RenderGlobal.ContainerLocalRenderInformation>(1024); // Compile
++    private List<RenderGlobal.ContainerLocalRenderInformation> renderInfosTileEntities = new ArrayList<RenderGlobal.ContainerLocalRenderInformation>(1024); // Compile
+     private List renderInfosNormal = new ArrayList(1024);
+     private List renderInfosEntitiesNormal = new ArrayList(1024);
+     private List renderInfosTileEntitiesNormal = new ArrayList(1024);
+@@ -1573,7 +1573,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+ 
+             this.mc.profiler.func_194339_b(() ->
+             {
+-                return "render_" + p_lambda$renderBlockLayer$0_0_;
++                return "render_" + blockLayerIn; // Compile error
+             });
+             this.renderBlockLayer(blockLayerIn);
+             this.mc.profiler.endSection();
+diff --git a/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java b/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
+index b620e81..994b0c1 100644
+--- a/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
++++ b/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
+@@ -205,7 +205,7 @@ public class RenderChunk
+             boolean flag = Reflector.ForgeBlock_canRenderInLayer.exists();
+             boolean flag1 = Reflector.ForgeHooksClient_setRenderLayer.exists();
+ 
+-            for (BlockPosM blockposm : BlockPosM.getAllInBoxMutable(blockpos, blockpos1))
++            for (BlockPosM blockposm : BlockPosM.getAllInBoxMutableOptifine(blockpos, blockpos1)) // Name change for compile error
+             {
+                 IBlockState iblockstate = chunkcacheof.getBlockState(blockposm);
+                 Block block = iblockstate.getBlock();
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java b/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
+index 4f01737..4a72ee5 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
+@@ -58,7 +58,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+ 
+     public <V extends EntityLivingBase, U extends LayerRenderer<V>> boolean addLayer(U layer)
+     {
+-        return this.layerRenderers.add(layer);
++        return this.layerRenderers.add((LayerRenderer<T>) layer); //
+     }
+ 
+     public ModelBase getMainModel()
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java b/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
+index 8f2abc5..49ef239 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
+@@ -261,7 +261,7 @@ public class RenderManager
+ 
+         if (render == null && entityClass != Entity.class)
+         {
+-            render = this.<T>getEntityClassRenderObject(entityClass.getSuperclass());
++            render = this.getEntityClassRenderObject((Class <? extends Entity >)entityClass.getSuperclass()); //
+             this.entityRenderMap.put(entityClass, render);
+         }
+ 
+@@ -570,7 +570,7 @@ public class RenderManager
+         this.renderOutlines = renderOutlinesIn;
+     }
+ 
+-    public Map<Class, Render> getEntityRenderMap()
++    public Map<Class<? extends Entity>, Render<? extends Entity>> getEntityRenderMap() // Decompile error
+     {
+         return this.entityRenderMap;
+     }
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureManager.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureManager.java
+index d58ad3a..9b2ed32 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureManager.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureManager.java
+@@ -225,7 +225,7 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
+ 
+     public void reloadBannerTextures()
+     {
+-        for (Entry<ResourceLocation, ITextureObject> entry : new HashSet(this.mapTextureObjects.entrySet()))
++        for (Entry<ResourceLocation, ITextureObject> entry : new HashSet<Entry<ResourceLocation, ITextureObject>>(this.mapTextureObjects.entrySet())) // Decompile error
+         {
+             ResourceLocation resourcelocation = entry.getKey();
+             ITextureObject itextureobject = entry.getValue();
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+index 5c5b347..58514cf 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+@@ -109,7 +109,7 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+         this.missingImage.setIconHeight(i);
+         int[][] aint1 = new int[this.mipmapLevels + 1][];
+         aint1[0] = aint;
+-        this.missingImage.setFramesTextureData(Lists.newArrayList(aint1));
++        this.missingImage.setFramesTextureData(Lists.<int[][]>newArrayList(aint1)); // Compile error
+         this.missingImage.setIndexInMap(this.counterIndexInMap.nextValue());
+     }
+ 
+@@ -774,7 +774,7 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+         return this.counterIndexInMap.getValue();
+     }
+ 
+-    private int detectMaxMipmapLevel(Map p_detectMaxMipmapLevel_1_, IResourceManager p_detectMaxMipmapLevel_2_)
++    private int detectMaxMipmapLevel(Map<String, TextureAtlasSprite> p_detectMaxMipmapLevel_1_, IResourceManager p_detectMaxMipmapLevel_2_) //
+     {
+         int i4 = this.detectMinimumSpriteSize(p_detectMaxMipmapLevel_1_, p_detectMaxMipmapLevel_2_, 20);
+ 
+@@ -800,7 +800,7 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+         return j4;
+     }
+ 
+-    private int detectMinimumSpriteSize(Map p_detectMinimumSpriteSize_1_, IResourceManager p_detectMinimumSpriteSize_2_, int p_detectMinimumSpriteSize_3_)
++    private int detectMinimumSpriteSize(Map<String, TextureAtlasSprite> p_detectMinimumSpriteSize_1_, IResourceManager p_detectMinimumSpriteSize_2_, int p_detectMinimumSpriteSize_3_) // Compile error
+     {
+         Map map1 = new HashMap();
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+index 518e97d..b04fa85 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+@@ -273,7 +273,7 @@ public class TextureUtil
+     public static int[] readImageData(IResourceManager resourceManager, ResourceLocation imageLocation) throws IOException
+     {
+         IResource iresource = null;
+-        Object i;
++        //Object i;
+ 
+         try
+         {
+@@ -290,14 +290,14 @@ public class TextureUtil
+                 return aint;
+             }
+ 
+-            i = null;
++            //i = null;
+         }
+         finally
+         {
+             IOUtils.closeQuietly((Closeable)iresource);
+         }
+ 
+-        return (int[])i;
++        return null; // Compile error
+     }
+ 
+     public static BufferedImage readBufferedImage(InputStream imageStream) throws IOException
+diff --git a/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java b/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
+index 0cf312c..e4ce4ea 100644
+--- a/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
++++ b/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
+@@ -95,7 +95,7 @@ public class TileEntityRendererDispatcher
+ 
+         if (tileentityspecialrenderer == null && teClass != TileEntity.class)
+         {
+-            tileentityspecialrenderer = this.<T>getRenderer(teClass.getSuperclass());
++            tileentityspecialrenderer = this.<T>getRenderer((Class <? extends TileEntity >) teClass.getSuperclass()); // Fix compile error
+             this.renderers.put(teClass, tileentityspecialrenderer);
+         }
+ 
+diff --git a/src/minecraft/net/minecraft/src/Config.java b/src/minecraft/net/minecraft/src/Config.java
+index b14d477..142e5a3 100644
+--- a/src/minecraft/net/minecraft/src/Config.java
++++ b/src/minecraft/net/minecraft/src/Config.java
+@@ -1136,7 +1136,7 @@ public class Config
+     public static IResourcePack[] getResourcePacks()
+     {
+         ResourcePackRepository resourcepackrepository = minecraft.getResourcePackRepository();
+-        List list = resourcepackrepository.getRepositoryEntries();
++        List<ResourcePackRepository.Entry> list = resourcepackrepository.getRepositoryEntries(); // Compile error
+         List list1 = new ArrayList();
+ 
+         for (ResourcePackRepository.Entry resourcepackrepository$entry : list)
+@@ -2292,7 +2292,7 @@ public class Config
+         {
+             int i = p_addObjectToArray_0_.length;
+             int j = i + 1;
+-            Object[] aobject = Array.newInstance(p_addObjectToArray_0_.getClass().getComponentType(), j);
++            Object[] aobject = (Object[]) Array.newInstance(p_addObjectToArray_0_.getClass().getComponentType(), j); //
+             System.arraycopy(p_addObjectToArray_0_, 0, aobject, 0, i);
+             aobject[i] = p_addObjectToArray_1_;
+             return aobject;
+@@ -2303,7 +2303,7 @@ public class Config
+     {
+         List list = new ArrayList(Arrays.asList(p_addObjectToArray_0_));
+         list.add(p_addObjectToArray_2_, p_addObjectToArray_1_);
+-        Object[] aobject = Array.newInstance(p_addObjectToArray_0_.getClass().getComponentType(), list.size());
++        Object[] aobject = (Object[]) Array.newInstance(p_addObjectToArray_0_.getClass().getComponentType(), list.size()); //
+         return list.toArray(aobject);
+     }
+ 
+@@ -2321,7 +2321,7 @@ public class Config
+         {
+             int i = p_addObjectsToArray_0_.length;
+             int j = i + p_addObjectsToArray_1_.length;
+-            Object[] aobject = Array.newInstance(p_addObjectsToArray_0_.getClass().getComponentType(), j);
++            Object[] aobject = (Object[]) Array.newInstance(p_addObjectsToArray_0_.getClass().getComponentType(), j); //
+             System.arraycopy(p_addObjectsToArray_0_, 0, aobject, 0, i);
+             System.arraycopy(p_addObjectsToArray_1_, 0, aobject, i, p_addObjectsToArray_1_.length);
+             return aobject;
+@@ -2352,7 +2352,7 @@ public class Config
+         }
+         else
+         {
+-            Object[] aobject = Array.newInstance(p_collectionToArray_1_, p_collectionToArray_0_.size());
++            Object[] aobject = (Object[]) Array.newInstance(p_collectionToArray_1_, p_collectionToArray_0_.size()); //
+             return p_collectionToArray_0_.toArray(aobject);
+         }
+     }
+diff --git a/src/minecraft/net/optifine/BlockPosM.java b/src/minecraft/net/optifine/BlockPosM.java
+index 767feb5..9ffe82c 100644
+--- a/src/minecraft/net/optifine/BlockPosM.java
++++ b/src/minecraft/net/optifine/BlockPosM.java
+@@ -146,7 +146,7 @@ public class BlockPosM extends BlockPos
+         return new BlockPos(this.mx, this.my, this.mz);
+     }
+ 
+-    public static Iterable getAllInBoxMutable(BlockPos from, BlockPos to)
++    public static Iterable<BlockPosM> getAllInBoxMutableOptifine(BlockPos from, BlockPos to) // Name change for compile error
+     {
+         final BlockPos blockpos = new BlockPos(Math.min(from.getX(), to.getX()), Math.min(from.getY(), to.getY()), Math.min(from.getZ(), to.getZ()));
+         final BlockPos blockpos1 = new BlockPos(Math.max(from.getX(), to.getX()), Math.max(from.getY(), to.getY()), Math.max(from.getZ(), to.getZ()));
+diff --git a/src/minecraft/net/optifine/ConnectedProperties.java b/src/minecraft/net/optifine/ConnectedProperties.java
+index efac46c..50c0848 100644
+--- a/src/minecraft/net/optifine/ConnectedProperties.java
++++ b/src/minecraft/net/optifine/ConnectedProperties.java
+@@ -471,7 +471,7 @@ public class ConnectedProperties
+         }
+     }
+ 
+-    public static IProperty getProperty(String key, Collection properties)
++    public static IProperty getProperty(String key, Collection<IProperty> properties) // Decompile error
+     {
+         for (IProperty iproperty : properties)
+         {
+diff --git a/src/minecraft/net/optifine/ConnectedTextures.java b/src/minecraft/net/optifine/ConnectedTextures.java
+index a8d3057..09f898c 100644
+--- a/src/minecraft/net/optifine/ConnectedTextures.java
++++ b/src/minecraft/net/optifine/ConnectedTextures.java
+@@ -2405,20 +2405,19 @@ public class ConnectedTextures
+ 
+     private static ConnectedProperties[][] propertyListToArray(List list)
+     {
+-        ConnectedProperties[][] aconnectedproperties = new ConnectedProperties[list.size()][];
++        // Paste in properly decompiled method
++        ConnectedProperties[][] propArr = new ConnectedProperties[list.size()][];
+ 
+-        for (int i = 0; i < list.size(); ++i)
+-        {
+-            List list = (List)list.get(i);
+-
+-            if (list != null)
+-            {
+-                ConnectedProperties[] aconnectedproperties1 = (ConnectedProperties[])list.toArray(new ConnectedProperties[list.size()]);
+-                aconnectedproperties[i] = aconnectedproperties1;
++        for(int i = 0; i < list.size(); ++i) {
++            List subList = (List)list.get(i);
++            if (subList != null) {
++                ConnectedProperties[] subArr = (ConnectedProperties[])((ConnectedProperties[])subList.toArray(new ConnectedProperties[subList.size()]));
++                propArr[i] = subArr;
+             }
+         }
+ 
+-        return aconnectedproperties;
++        return propArr;
++        // End
+     }
+ 
+     private static void addToTileList(ConnectedProperties cp, List tileList)
+@@ -2472,20 +2471,19 @@ public class ConnectedTextures
+ 
+     private static void addToList(ConnectedProperties cp, List list, int id)
+     {
+-        while (id >= list.size())
+-        {
++        // Paste in properly decompiled method
++        while(id >= list.size()) {
+             list.add((Object)null);
+         }
+ 
+-        List list = (List)list.get(id);
+-
+-        if (list == null)
+-        {
+-            list = new ArrayList();
+-            list.set(id, list);
++        List subList = (List)list.get(id);
++        if (subList == null) {
++            subList = new ArrayList();
++            list.set(id, subList);
+         }
+ 
+-        list.add(cp);
++        ((List)subList).add(cp);
++        // End
+     }
+ 
+     private static String[] getDefaultCtmPaths()
+diff --git a/src/minecraft/net/optifine/CustomBlockLayers.java b/src/minecraft/net/optifine/CustomBlockLayers.java
+index 370d5c2..28ff8c3 100644
+--- a/src/minecraft/net/optifine/CustomBlockLayers.java
++++ b/src/minecraft/net/optifine/CustomBlockLayers.java
+@@ -101,7 +101,7 @@ public class CustomBlockLayers
+                     {
+                         while (listLayers.size() < j + 1)
+                         {
+-                            listLayers.add((Object)null);
++                            listLayers.add(null); //
+                         }
+ 
+                         if (listLayers.get(j) != null)
+diff --git a/src/minecraft/net/optifine/CustomColors.java b/src/minecraft/net/optifine/CustomColors.java
+index 89ae88d..da753c2 100644
+--- a/src/minecraft/net/optifine/CustomColors.java
++++ b/src/minecraft/net/optifine/CustomColors.java
+@@ -331,7 +331,7 @@ public class CustomColors
+ 
+         if (ainteger.length <= 0)
+         {
+-            return new ImmutablePair<LightMapPack[], Integer>((Object)null, Integer.valueOf(0));
++            return new ImmutablePair<LightMapPack[], Integer>(null, Integer.valueOf(0)); // Decompile error
+         }
+         else
+         {
+@@ -469,8 +469,9 @@ public class CustomColors
+         String s = "palette.block.";
+         Map map = new HashMap();
+ 
+-        for (String s1 : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s1 = (String) o; //
+             String s2 = props.getProperty(s1);
+ 
+             if (s1.startsWith(s))
+@@ -619,38 +620,36 @@ public class CustomColors
+ 
+     private static void addToList(CustomColormap cm, List list, int id)
+     {
+-        while (id >= list.size())
+-        {
++        // Paste in proper method
++        while(id >= list.size()) {
+             list.add((Object)null);
+         }
+ 
+-        List list = (List)list.get(id);
+-
+-        if (list == null)
+-        {
+-            list = new ArrayList();
+-            list.set(id, list);
++        List subList = (List)list.get(id);
++        if (subList == null) {
++            subList = new ArrayList();
++            list.set(id, subList);
+         }
+ 
+-        list.add(cm);
++        ((List)subList).add(cm);
++        // End
+     }
+ 
+     private static CustomColormap[][] blockListToArray(List list)
+     {
+-        CustomColormap[][] acustomcolormap = new CustomColormap[list.size()][];
++        // Paste in proper method
++        CustomColormap[][] colArr = new CustomColormap[list.size()][];
+ 
+-        for (int i = 0; i < list.size(); ++i)
+-        {
+-            List list = (List)list.get(i);
+-
+-            if (list != null)
+-            {
+-                CustomColormap[] acustomcolormap1 = (CustomColormap[])list.toArray(new CustomColormap[list.size()]);
+-                acustomcolormap[i] = acustomcolormap1;
++        for(int i = 0; i < list.size(); ++i) {
++            List subList = (List)list.get(i);
++            if (subList != null) {
++                CustomColormap[] subArr = (CustomColormap[])((CustomColormap[])subList.toArray(new CustomColormap[subList.size()]));
++                colArr[i] = subArr;
+             }
+         }
+ 
+-        return acustomcolormap;
++        return colArr;
++        // End
+     }
+ 
+     private static int readColor(Properties props, String[] names)
+@@ -1377,8 +1376,9 @@ public class CustomColors
+         Set set = props.keySet();
+         int i = 0;
+ 
+-        for (String s : set)
++        for (Object o : set) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(prefix))
+@@ -1516,8 +1516,9 @@ public class CustomColors
+         float[][] afloat1 = new float[aenumdyecolor.length][];
+         int k = 0;
+ 
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(prefix))
+@@ -1589,8 +1590,9 @@ public class CustomColors
+         Arrays.fill(aint, -1);
+         int i = 0;
+ 
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(prefix))
+@@ -1645,8 +1647,9 @@ public class CustomColors
+         Arrays.fill(aint, -1);
+         int i = 0;
+ 
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(prefix))
+@@ -1684,8 +1687,9 @@ public class CustomColors
+         Arrays.fill(aint, -1);
+         int i = 0;
+ 
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(prefix))
+diff --git a/src/minecraft/net/optifine/CustomGuiProperties.java b/src/minecraft/net/optifine/CustomGuiProperties.java
+index 6aa761a..3efe6f1 100644
+--- a/src/minecraft/net/optifine/CustomGuiProperties.java
++++ b/src/minecraft/net/optifine/CustomGuiProperties.java
+@@ -209,8 +209,9 @@ public class CustomGuiProperties
+ 
+         String s5 = property + ".";
+ 
+-        for (String s1 : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s1 = (String) o; //
+             if (s1.startsWith(s5))
+             {
+                 String s2 = s1.substring(s5.length());
+diff --git a/src/minecraft/net/optifine/CustomGuis.java b/src/minecraft/net/optifine/CustomGuis.java
+index 0797389..bedab60 100644
+--- a/src/minecraft/net/optifine/CustomGuis.java
++++ b/src/minecraft/net/optifine/CustomGuis.java
+@@ -310,7 +310,7 @@ public class CustomGuis
+ 
+             while (listProps.size() <= i)
+             {
+-                listProps.add((Object)null);
++                listProps.add(null); //
+             }
+ 
+             List<CustomGuiProperties> list = (List)listProps.get(i);
+diff --git a/src/minecraft/net/optifine/CustomItemProperties.java b/src/minecraft/net/optifine/CustomItemProperties.java
+index 3b2f0c3..0cda20f 100644
+--- a/src/minecraft/net/optifine/CustomItemProperties.java
++++ b/src/minecraft/net/optifine/CustomItemProperties.java
+@@ -350,8 +350,9 @@ public class CustomItemProperties
+             Set set = map.keySet();
+             Map map1 = new LinkedHashMap();
+ 
+-            for (String s1 : set)
++            for (Object o : set) //
+             {
++                String s1 = (String) o; //
+                 String s2 = (String)map.get(s1);
+                 s2 = fixTextureName(s2, basePath);
+                 map1.put(s1, s2);
+@@ -431,8 +432,9 @@ public class CustomItemProperties
+             Set set = map.keySet();
+             Map map1 = new LinkedHashMap();
+ 
+-            for (String s1 : set)
++            for (Object o : set) //
+             {
++                String s1 = (String) o; //
+                 String s2 = (String)map.get(s1);
+                 s2 = fixModelName(s2, basePath);
+                 map1.put(s1, s2);
+@@ -639,8 +641,9 @@ public class CustomItemProperties
+         {
+             List list = new ArrayList();
+ 
+-            for (String s1 : map.keySet())
++            for (Object o : map.keySet()) //
+             {
++                String s1 = (String) o; //
+                 String s2 = (String)map.get(s1);
+                 String s3 = s1.substring(s.length());
+                 NbtTagValue nbttagvalue = new NbtTagValue(s3, s2);
+@@ -656,8 +659,9 @@ public class CustomItemProperties
+     {
+         Map map = new LinkedHashMap();
+ 
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = props.getProperty(s);
+ 
+             if (s.startsWith(keyPrefix))
+diff --git a/src/minecraft/net/optifine/CustomItems.java b/src/minecraft/net/optifine/CustomItems.java
+index 6e782ac..df17e2b 100644
+--- a/src/minecraft/net/optifine/CustomItems.java
++++ b/src/minecraft/net/optifine/CustomItems.java
+@@ -503,21 +503,20 @@ public class CustomItems
+ 
+     private static CustomItemProperties[][] propertyListToArray(List list)
+     {
+-        CustomItemProperties[][] acustomitemproperties = new CustomItemProperties[list.size()][];
+-
+-        for (int i = 0; i < list.size(); ++i)
+-        {
+-            List list = (List)list.get(i);
+-
+-            if (list != null)
+-            {
+-                CustomItemProperties[] acustomitemproperties1 = (CustomItemProperties[])list.toArray(new CustomItemProperties[list.size()]);
+-                Arrays.sort(acustomitemproperties1, new CustomItemsComparator());
+-                acustomitemproperties[i] = acustomitemproperties1;
++        // Copy a properly decompiled method
++        CustomItemProperties[][] propArr = new CustomItemProperties[list.size()][];
++
++        for(int i = 0; i < list.size(); ++i) {
++            List subList = (List)list.get(i);
++            if (subList != null) {
++                CustomItemProperties[] subArr = (CustomItemProperties[])((CustomItemProperties[])subList.toArray(new CustomItemProperties[subList.size()]));
++                Arrays.sort(subArr, new CustomItemsComparator());
++                propArr[i] = subArr;
+             }
+         }
+ 
+-        return acustomitemproperties;
++        return propArr;
++        // End
+     }
+ 
+     private static void addToItemList(CustomItemProperties cp, List itemList)
+@@ -559,20 +558,19 @@ public class CustomItems
+ 
+     private static void addToList(CustomItemProperties cp, List list, int id)
+     {
+-        while (id >= list.size())
+-        {
++        // Properly decompiled
++        while(id >= list.size()) {
+             list.add((Object)null);
+         }
+ 
+-        List list = (List)list.get(id);
+-
+-        if (list == null)
+-        {
+-            list = new ArrayList();
+-            list.set(id, list);
++        List subList = (List)list.get(id);
++        if (subList == null) {
++            subList = new ArrayList();
++            list.set(id, subList);
+         }
+ 
+-        list.add(cp);
++        ((List)subList).add(cp);
++        // End
+     }
+ 
+     public static IBakedModel getCustomItemModel(ItemStack itemStack, IBakedModel model, ResourceLocation modelLocation, boolean fullModel)
+diff --git a/src/minecraft/net/optifine/CustomLoadingScreens.java b/src/minecraft/net/optifine/CustomLoadingScreens.java
+index 1a53ca6..032fcb9 100644
+--- a/src/minecraft/net/optifine/CustomLoadingScreens.java
++++ b/src/minecraft/net/optifine/CustomLoadingScreens.java
+@@ -76,7 +76,7 @@ public class CustomLoadingScreens
+ 
+         if (ainteger.length <= 0)
+         {
+-            return new ImmutablePair<CustomLoadingScreen[], Integer>((Object)null, Integer.valueOf(0));
++            return new ImmutablePair<CustomLoadingScreen[], Integer>(null, Integer.valueOf(0)); // Decompile error
+         }
+         else
+         {
+diff --git a/src/minecraft/net/optifine/CustomPanorama.java b/src/minecraft/net/optifine/CustomPanorama.java
+index eb080d1..cbd8f79 100644
+--- a/src/minecraft/net/optifine/CustomPanorama.java
++++ b/src/minecraft/net/optifine/CustomPanorama.java
+@@ -113,29 +113,25 @@ public class CustomPanorama
+ 
+     private static int[] getWeights(Properties[] properties)
+     {
+-        int[] aint = new int[properties.length];
++        // Paste in properly decompiled method
++        int[] weights = new int[properties.length];
+ 
+-        for (int i = 0; i < aint.length; ++i)
+-        {
+-            Properties properties = properties[i];
+-
+-            if (properties == null)
+-            {
+-                properties = properties[0];
++        for(int i = 0; i < weights.length; ++i) {
++            Properties prop = properties[i];
++            if (prop == null) {
++                prop = properties[0];
+             }
+ 
+-            if (properties == null)
+-            {
+-                aint[i] = 1;
+-            }
+-            else
+-            {
+-                String s = properties.getProperty("weight", (String)null);
+-                aint[i] = Config.parseInt(s, 1);
++            if (prop == null) {
++                weights[i] = 1;
++            } else {
++                String str = prop.getProperty("weight", (String)null);
++                weights[i] = Config.parseInt(str, 1);
+             }
+         }
+ 
+-        return aint;
++        return weights;
++        // End
+     }
+ 
+     private static int getRandomIndex(int[] weights)
+diff --git a/src/minecraft/net/optifine/Mipmaps.java b/src/minecraft/net/optifine/Mipmaps.java
+index 5bd332f..1453370 100644
+--- a/src/minecraft/net/optifine/Mipmaps.java
++++ b/src/minecraft/net/optifine/Mipmaps.java
+@@ -173,9 +173,11 @@ public class Mipmaps
+ 
+     private int averageColor(int i, int j)
+     {
+-        int i = (i & -16777216) >> 24 & 255;
+-        int j = (j & -16777216) >> 24 & 255;
+-        return (i + j >> 1 << 24) + ((i & 16711422) + (j & 16711422) >> 1);
++        // Properly decompiled methods
++        int k = (i & -16777216) >> 24 & 255;
++        int l = (j & -16777216) >> 24 & 255;
++        return (k + l >> 1 << 24) + ((i & 16711422) + (j & 16711422) >> 1);
++        // End
+     }
+ 
+     public static IntBuffer[] makeMipmapBuffers(Dimension[] mipmapDimensions, int[][] mipmapDatas)
+diff --git a/src/minecraft/net/optifine/SmartLeaves.java b/src/minecraft/net/optifine/SmartLeaves.java
+index 0db83a9..2ad9a7e 100644
+--- a/src/minecraft/net/optifine/SmartLeaves.java
++++ b/src/minecraft/net/optifine/SmartLeaves.java
+@@ -164,7 +164,7 @@ public class SmartLeaves
+ 
+                     if (ibakedmodel != null && ibakedmodel != modelmanager.getMissingModel())
+                     {
+-                        List list = ibakedmodel.getQuads((IBlockState)null, (EnumFacing)null, 0L);
++                        List<BakedQuad> list = ibakedmodel.getQuads((IBlockState)null, (EnumFacing)null, 0L); // Decompile error
+ 
+                         if (list.size() == 0)
+                         {
+diff --git a/src/minecraft/net/optifine/TextureAnimation.java b/src/minecraft/net/optifine/TextureAnimation.java
+index 9ccab7b..c8802d9 100644
+--- a/src/minecraft/net/optifine/TextureAnimation.java
++++ b/src/minecraft/net/optifine/TextureAnimation.java
+@@ -203,25 +203,22 @@ public class TextureAnimation
+ 
+     private void updateTextureInerpolate(TextureAnimationFrame frame1, TextureAnimationFrame frame2, double k)
+     {
+-        int i = this.frameWidth * this.frameHeight * 4;
+-        int j = i * frame1.index;
+-
+-        if (j + i <= this.imageData.limit())
+-        {
+-            int k = i * frame2.index;
+-
+-            if (k + i <= this.imageData.limit())
+-            {
++        // Paste in properly decompiled method
++        int frameLen = this.frameWidth * this.frameHeight * 4;
++        int offset1 = frameLen * frame1.index;
++        if (offset1 + frameLen <= this.imageData.limit()) {
++            int offset2 = frameLen * frame2.index;
++            if (offset2 + frameLen <= this.imageData.limit()) {
+                 this.interpolateData.clear();
+ 
+-                for (int l = 0; l < i; ++l)
+-                {
+-                    int i1 = this.imageData.get(j + l) & 255;
+-                    int j1 = this.imageData.get(k + l) & 255;
+-                    int k1 = this.mix(i1, j1, k);
+-                    byte b0 = (byte)k1;
+-                    this.interpolateData.put(b0);
++                for(int i = 0; i < frameLen; ++i) {
++                    int c1 = this.imageData.get(offset1 + i) & 255;
++                    int c2 = this.imageData.get(offset2 + i) & 255;
++                    int c = this.mix(c1, c2, k);
++                    byte b = (byte)c;
++                    this.interpolateData.put(b);
+                 }
++                // End
+ 
+                 this.interpolateData.flip();
+                 GlStateManager.bindTexture(this.dstTextId);
+diff --git a/src/minecraft/net/optifine/config/ConnectedParser.java b/src/minecraft/net/optifine/config/ConnectedParser.java
+index 3945435..f8eee3c 100644
+--- a/src/minecraft/net/optifine/config/ConnectedParser.java
++++ b/src/minecraft/net/optifine/config/ConnectedParser.java
+@@ -448,7 +448,7 @@ public class ConnectedParser
+         return comparable;
+     }
+ 
+-    public static Comparable getPropertyValue(String value, Collection propertyValues)
++    public static Comparable getPropertyValue(String value, Collection<Comparable> propertyValues) // Decompile error
+     {
+         for (Comparable comparable : propertyValues)
+         {
+diff --git a/src/minecraft/net/optifine/entity/model/CustomEntityModels.java b/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
+index 3e1e539..a4201b7 100644
+--- a/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
++++ b/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
+@@ -19,7 +19,9 @@ import net.minecraft.client.renderer.entity.Render;
+ import net.minecraft.client.renderer.entity.RenderManager;
+ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
++import net.minecraft.entity.Entity;
+ import net.minecraft.src.Config;
++import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.util.ResourceLocation;
+ import net.optifine.entity.model.anim.ModelResolver;
+ import net.optifine.entity.model.anim.ModelUpdater;
+@@ -27,13 +29,13 @@ import net.optifine.entity.model.anim.ModelUpdater;
+ public class CustomEntityModels
+ {
+     private static boolean active = false;
+-    private static Map<Class, Render> originalEntityRenderMap = null;
+-    private static Map<Class, TileEntitySpecialRenderer> originalTileEntityRenderMap = null;
++    private static Map<Class<? extends Entity>, Render<? extends Entity>> originalEntityRenderMap = null; //
++    private static Map<Class<? extends TileEntity>, TileEntitySpecialRenderer<? extends TileEntity>> originalTileEntityRenderMap = null; // Decompile error
+ 
+     public static void update()
+     {
+-        Map<Class, Render> map = getEntityRenderMap();
+-        Map<Class, TileEntitySpecialRenderer> map1 = getTileEntityRenderMap();
++        Map<Class<? extends Entity>, Render<? extends Entity>> map = getEntityRenderMap(); //
++        Map<Class<? extends TileEntity>, TileEntitySpecialRenderer<? extends TileEntity>> map1 = getTileEntityRenderMap(); // Decompile error
+ 
+         if (map == null)
+         {
+@@ -88,10 +90,10 @@ public class CustomEntityModels
+         }
+     }
+ 
+-    private static Map<Class, Render> getEntityRenderMap()
++    private static Map<Class<? extends Entity>, Render<? extends Entity>> getEntityRenderMap() //
+     {
+         RenderManager rendermanager = Minecraft.getMinecraft().getRenderManager();
+-        Map<Class, Render> map = rendermanager.getEntityRenderMap();
++        Map<Class<? extends Entity>, Render<? extends Entity>> map = rendermanager.getEntityRenderMap(); //
+ 
+         if (map == null)
+         {
+@@ -101,20 +103,20 @@ public class CustomEntityModels
+         {
+             if (originalEntityRenderMap == null)
+             {
+-                originalEntityRenderMap = new HashMap<Class, Render>(map);
++                originalEntityRenderMap = new HashMap<Class<? extends Entity>, Render<? extends Entity>>(map); //
+             }
+ 
+             return map;
+         }
+     }
+ 
+-    private static Map<Class, TileEntitySpecialRenderer> getTileEntityRenderMap()
++    private static Map<Class<? extends TileEntity>, TileEntitySpecialRenderer<? extends TileEntity>> getTileEntityRenderMap() // Decompile error
+     {
+-        Map<Class, TileEntitySpecialRenderer> map = TileEntityRendererDispatcher.instance.renderers;
++        Map<Class<? extends TileEntity>, TileEntitySpecialRenderer<? extends TileEntity>> map = TileEntityRendererDispatcher.instance.renderers; // Decompile error
+ 
+         if (originalTileEntityRenderMap == null)
+         {
+-            originalTileEntityRenderMap = new HashMap<Class, TileEntitySpecialRenderer>(map);
++            originalTileEntityRenderMap = new HashMap<Class<? extends TileEntity>, TileEntitySpecialRenderer<? extends TileEntity>>(map); // Decompile error
+         }
+ 
+         return map;
+diff --git a/src/minecraft/net/optifine/expr/ExpressionParser.java b/src/minecraft/net/optifine/expr/ExpressionParser.java
+index d967cc4..c547677 100644
+--- a/src/minecraft/net/optifine/expr/ExpressionParser.java
++++ b/src/minecraft/net/optifine/expr/ExpressionParser.java
+@@ -244,68 +244,60 @@ public class ExpressionParser
+ 
+     private FunctionType getFunctionType(Token token, Deque<Token> deque) throws ParseException
+     {
+-        Token token = deque.peek();
+-
+-        if (token != null && token.getType() == TokenType.BRACKET_OPEN)
+-        {
+-            FunctionType functiontype1 = FunctionType.parse(token.getText());
+-            checkNull(functiontype1, "Unknown function: " + token);
+-            return functiontype1;
+-        }
+-        else
+-        {
+-            FunctionType functiontype = FunctionType.parse(token.getText());
+-
+-            if (functiontype == null)
+-            {
++        // Just copy the entire method decompiled properly
++        Token tokenNext = deque.peek();
++        FunctionType type;
++        if (tokenNext != null && tokenNext.getType() == TokenType.BRACKET_OPEN) {
++            type = FunctionType.parse(token.getText());
++            checkNull(type, "Unknown function: " + token);
++            return type;
++        } else {
++            type = FunctionType.parse(token.getText());
++            if (type == null) {
+                 return null;
+-            }
+-            else if (functiontype.getParameterCount(new IExpression[0]) > 0)
+-            {
+-                throw new ParseException("Missing arguments: " + functiontype);
+-            }
+-            else
+-            {
+-                return functiontype;
++            } else if (type.getParameterCount(new IExpression[0]) > 0) {
++                throw new ParseException("Missing arguments: " + type);
++            } else {
++                return type;
+             }
+         }
++        // End
+     }
+ 
+     private IExpression makeFunction(FunctionType type, Deque<Token> deque) throws ParseException
+     {
+-        if (type.getParameterCount(new IExpression[0]) == 0)
+-        {
+-            Token token = deque.peek();
+-
+-            if (token == null || token.getType() != TokenType.BRACKET_OPEN)
+-            {
++        // Just copy the entire method decompiled properly
++        Token tokenNext;
++        if (type.getParameterCount(new IExpression[0]) == 0) {
++            tokenNext = (Token)deque.peek();
++            if (tokenNext == null || tokenNext.getType() != TokenType.BRACKET_OPEN) {
+                 return makeFunction(type, new IExpression[0]);
+             }
+         }
+ 
+-        Token token1 = deque.poll();
+-        Deque<Token> deque = getGroup(deque, TokenType.BRACKET_CLOSE, true);
+-        IExpression[] aiexpression = this.parseExpressions(deque);
+-        return makeFunction(type, aiexpression);
++        tokenNext = (Token)deque.poll();
++        Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true);
++        IExpression[] exprs = this.parseExpressions(dequeBracketed);
++        return makeFunction(type, exprs);
++        // End
+     }
+ 
+     private IExpression[] parseExpressions(Deque<Token> deque) throws ParseException
+     {
+-        List<IExpression> list = new ArrayList<IExpression>();
+-
+-        while (true)
+-        {
+-            Deque<Token> deque = getGroup(deque, TokenType.COMMA, false);
+-            IExpression iexpression = this.parseInfix(deque);
+-
+-            if (iexpression == null)
+-            {
+-                IExpression[] aiexpression = (IExpression[])list.toArray(new IExpression[list.size()]);
+-                return aiexpression;
++        // Just copy the entire method decompiled properly
++        ArrayList list = new ArrayList();
++
++        while(true) {
++            Deque<Token> dequeArg = getGroup(deque, TokenType.COMMA, false);
++            IExpression expr = this.parseInfix(dequeArg);
++            if (expr == null) {
++                IExpression[] exprs = (IExpression[])((IExpression[])list.toArray(new IExpression[list.size()]));
++                return exprs;
+             }
+ 
+-            list.add(iexpression);
++            list.add(expr);
+         }
++        // End
+     }
+ 
+     private static IExpression makeFunction(FunctionType type, IExpression[] args) throws ParseException
+@@ -372,47 +364,40 @@ public class ExpressionParser
+ 
+     private IExpression makeBracketed(Token token, Deque<Token> deque) throws ParseException
+     {
+-        Deque<Token> deque = getGroup(deque, TokenType.BRACKET_CLOSE, true);
+-        return this.parseInfix(deque);
++        Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true); // Decompiled properly
++        return this.parseInfix(dequeBracketed); // Decompiled properly
+     }
+ 
+     private static Deque<Token> getGroup(Deque<Token> deque, TokenType tokenTypeEnd, boolean tokenEndRequired) throws ParseException
+     {
+-        Deque<Token> deque = new ArrayDeque<Token>();
+-        int i = 0;
+-        Iterator iterator = deque.iterator();
+-
+-        while (iterator.hasNext())
+-        {
+-            Token token = (Token)iterator.next();
+-            iterator.remove();
+-
+-            if (i == 0 && token.getType() == tokenTypeEnd)
+-            {
+-                return deque;
++        // Decompiled properly
++        Deque<Token> dequeGroup = new ArrayDeque();
++        int level = 0;
++        Iterator it = deque.iterator();
++
++        while(it.hasNext()) {
++            Token token = (Token)it.next();
++            it.remove();
++            if (level == 0 && token.getType() == tokenTypeEnd) {
++                return dequeGroup;
+             }
+ 
+-            deque.add(token);
+-
+-            if (token.getType() == TokenType.BRACKET_OPEN)
+-            {
+-                ++i;
++            dequeGroup.add(token);
++            if (token.getType() == TokenType.BRACKET_OPEN) {
++                ++level;
+             }
+ 
+-            if (token.getType() == TokenType.BRACKET_CLOSE)
+-            {
+-                --i;
++            if (token.getType() == TokenType.BRACKET_CLOSE) {
++                --level;
+             }
+         }
+ 
+-        if (tokenEndRequired)
+-        {
++        if (tokenEndRequired) {
+             throw new ParseException("Missing end token: " + tokenTypeEnd);
++        } else {
++            return dequeGroup;
+         }
+-        else
+-        {
+-            return deque;
+-        }
++        // End
+     }
+ 
+     private static void checkNull(Object obj, String message) throws ParseException
+diff --git a/src/minecraft/net/optifine/gui/GuiMessage.java b/src/minecraft/net/optifine/gui/GuiMessage.java
+index 833661a..cfcf8f2 100644
+--- a/src/minecraft/net/optifine/gui/GuiMessage.java
++++ b/src/minecraft/net/optifine/gui/GuiMessage.java
+@@ -14,7 +14,7 @@ public class GuiMessage extends GuiScreen
+     private GuiScreen parentScreen;
+     private String messageLine1;
+     private String messageLine2;
+-    private final List listLines2 = Lists.newArrayList();
++    private final List<String> listLines2 = Lists.newArrayList(); // Compile error
+     protected String confirmButtonText;
+     private int ticksUntilEnable;
+ 
+diff --git a/src/minecraft/net/optifine/http/HttpPipeline.java b/src/minecraft/net/optifine/http/HttpPipeline.java
+index 3254ac1..d0ff09b 100644
+--- a/src/minecraft/net/optifine/http/HttpPipeline.java
++++ b/src/minecraft/net/optifine/http/HttpPipeline.java
+@@ -12,7 +12,7 @@ import net.minecraft.src.Config;
+ 
+ public class HttpPipeline
+ {
+-    private static Map mapConnections = new HashMap();
++    private static Map<Object, HttpPipelineConnection> mapConnections = new HashMap<Object, HttpPipelineConnection>(); // Compile error
+     public static final String HEADER_USER_AGENT = "User-Agent";
+     public static final String HEADER_HOST = "Host";
+     public static final String HEADER_ACCEPT = "Accept";
+diff --git a/src/minecraft/net/optifine/http/HttpUtils.java b/src/minecraft/net/optifine/http/HttpUtils.java
+index a595d87..37c43ea 100644
+--- a/src/minecraft/net/optifine/http/HttpUtils.java
++++ b/src/minecraft/net/optifine/http/HttpUtils.java
+@@ -75,7 +75,7 @@ public class HttpUtils
+         return abyte1;
+     }
+ 
+-    public static String post(String urlStr, Map headers, byte[] content) throws IOException
++    public static String post(String urlStr, Map<String, Object> headers, byte[] content) throws IOException // Compile error
+     {
+         HttpURLConnection httpurlconnection = null;
+         String s3;
+diff --git a/src/minecraft/net/optifine/model/ModelUtils.java b/src/minecraft/net/optifine/model/ModelUtils.java
+index b1d0038..3b5098e 100644
+--- a/src/minecraft/net/optifine/model/ModelUtils.java
++++ b/src/minecraft/net/optifine/model/ModelUtils.java
+@@ -32,7 +32,7 @@ public class ModelUtils
+         }
+     }
+ 
+-    private static void dbgQuads(String name, List quads, String prefix)
++    private static void dbgQuads(String name, List<BakedQuad> quads, String prefix) // Compile error
+     {
+         for (BakedQuad bakedquad : quads)
+         {
+@@ -82,17 +82,17 @@ public class ModelUtils
+         return simplebakedmodel;
+     }
+ 
+-    public static List duplicateQuadList(List list)
++    public static List<BakedQuad> duplicateQuadList(List<BakedQuad> list) //
+     {
+-        List list = new ArrayList();
++        List<BakedQuad> list2 = new ArrayList<BakedQuad>(); //
+ 
+         for (BakedQuad bakedquad : list)
+         {
+             BakedQuad bakedquad1 = duplicateQuad(bakedquad);
+-            list.add(bakedquad1);
++            list2.add(bakedquad1); //
+         }
+ 
+-        return list;
++        return list2; //
+     }
+ 
+     public static BakedQuad duplicateQuad(BakedQuad quad)
+diff --git a/src/minecraft/net/optifine/shaders/BlockAliases.java b/src/minecraft/net/optifine/shaders/BlockAliases.java
+index 15e522c..9ccf2c0 100644
+--- a/src/minecraft/net/optifine/shaders/BlockAliases.java
++++ b/src/minecraft/net/optifine/shaders/BlockAliases.java
+@@ -132,8 +132,9 @@ public class BlockAliases
+                 Config.dbg("[Shaders] Parsing block mappings: " + path);
+                 ConnectedParser connectedparser = new ConnectedParser("Shaders");
+ 
+-                for (String s : properties.keySet())
++                for (Object o : properties.keySet()) //
+                 {
++                    String s = (String) o; //
+                     String s1 = properties.getProperty(s);
+ 
+                     if (s.startsWith("layer."))
+@@ -197,7 +198,7 @@ public class BlockAliases
+ 
+             while (j >= blocksAliases.size())
+             {
+-                blocksAliases.add((Object)null);
++                blocksAliases.add(null); //
+             }
+ 
+             List<BlockAlias> list = (List)blocksAliases.get(j);
+diff --git a/src/minecraft/net/optifine/shaders/EntityAliases.java b/src/minecraft/net/optifine/shaders/EntityAliases.java
+index e99326c..83ca6df 100644
+--- a/src/minecraft/net/optifine/shaders/EntityAliases.java
++++ b/src/minecraft/net/optifine/shaders/EntityAliases.java
+@@ -111,8 +111,9 @@ public class EntityAliases
+                 Config.dbg("[Shaders] Parsing entity mappings: " + path);
+                 ConnectedParser connectedparser = new ConnectedParser("Shaders");
+ 
+-                for (String s : properties.keySet())
++                for (Object o : properties.keySet()) //
+                 {
++                    String s = (String) o; //
+                     String s1 = properties.getProperty(s);
+                     String s2 = "entity.";
+ 
+diff --git a/src/minecraft/net/optifine/shaders/ItemAliases.java b/src/minecraft/net/optifine/shaders/ItemAliases.java
+index 1f30071..317828c 100644
+--- a/src/minecraft/net/optifine/shaders/ItemAliases.java
++++ b/src/minecraft/net/optifine/shaders/ItemAliases.java
+@@ -112,8 +112,9 @@ public class ItemAliases
+                 Config.dbg("[Shaders] Parsing item mappings: " + path);
+                 ConnectedParser connectedparser = new ConnectedParser("Shaders");
+ 
+-                for (String s : properties.keySet())
++                for (Object o : properties.keySet()) //
+                 {
++                    String s = (String) o;
+                     String s1 = properties.getProperty(s);
+                     String s2 = "item.";
+ 
+diff --git a/src/minecraft/net/optifine/shaders/SVertexBuilder.java b/src/minecraft/net/optifine/shaders/SVertexBuilder.java
+index aa6b01a..000a314 100644
+--- a/src/minecraft/net/optifine/shaders/SVertexBuilder.java
++++ b/src/minecraft/net/optifine/shaders/SVertexBuilder.java
+@@ -311,11 +311,11 @@ public class SVertexBuilder
+             {
+                 ByteBuffer bytebuffer = wrr.getByteBuffer();
+                 bytebuffer.position(32);
+-                GL20.glVertexAttribPointer(Shaders.midTexCoordAttrib, 2, GL11.GL_FLOAT, false, i, bytebuffer);
++                GL20.glVertexAttribPointer(Shaders.midTexCoordAttrib, 2, org.lwjgl.opengl.GL11.GL_FLOAT, false, i, bytebuffer); // Import
+                 bytebuffer.position(40);
+-                GL20.glVertexAttribPointer(Shaders.tangentAttrib, 4, GL11.GL_SHORT, false, i, bytebuffer);
++                GL20.glVertexAttribPointer(Shaders.tangentAttrib, 4, org.lwjgl.opengl.GL11.GL_SHORT, false, i, bytebuffer); // Import
+                 bytebuffer.position(48);
+-                GL20.glVertexAttribPointer(Shaders.entityAttrib, 3, GL11.GL_SHORT, false, i, bytebuffer);
++                GL20.glVertexAttribPointer(Shaders.entityAttrib, 3, org.lwjgl.opengl.GL11.GL_SHORT, false, i, bytebuffer); // Import
+                 bytebuffer.position(0);
+                 GL20.glEnableVertexAttribArray(Shaders.midTexCoordAttrib);
+                 GL20.glEnableVertexAttribArray(Shaders.tangentAttrib);
+diff --git a/src/minecraft/net/optifine/shaders/Shaders.java b/src/minecraft/net/optifine/shaders/Shaders.java
+index 9033548..2a07fac 100644
+--- a/src/minecraft/net/optifine/shaders/Shaders.java
++++ b/src/minecraft/net/optifine/shaders/Shaders.java
+@@ -1079,8 +1079,9 @@ public class Shaders
+         Set set = props.keySet();
+         List<ICustomTexture> list = new ArrayList<ICustomTexture>();
+ 
+-        for (String s1 : set)
++        for (Object o : set) //
+         {
++            String s1 = (String) o; //
+             if (s1.startsWith(s))
+             {
+                 String s2 = StrUtils.removePrefix(s1, s);
+@@ -1580,7 +1581,7 @@ public class Shaders
+ 
+                     if (shaderoption == null)
+                     {
+-                        list.add((Object)null);
++                        list.add(null); //
+                     }
+                     else if (shaderoption instanceof ShaderOptionRest)
+                     {
+@@ -2449,13 +2450,13 @@ public class Shaders
+         }
+     }
+ 
+-    private static int getDrawBuffer(Program p, String str, int i)
++    private static int getDrawBuffer(Program p, String str, final int i) // Not required but set to final for clarification
+     {
+-        int i = 0;
++        int drawBuffer = 0; // Use actual variable name
+ 
+         if (i >= str.length())
+         {
+-            return i;
++            return drawBuffer; // Use actual variable name
+         }
+         else
+         {
+@@ -2465,23 +2466,23 @@ public class Shaders
+             {
+                 if (j >= 0 && j <= 1)
+                 {
+-                    i = j + 36064;
++                    drawBuffer = j + 36064; // Use actual variable name
+                     usedShadowColorBuffers = Math.max(usedShadowColorBuffers, j);
+                 }
+ 
+-                return i;
++                return drawBuffer; // Use actual variable name
+             }
+             else
+             {
+                 if (j >= 0 && j <= 7)
+                 {
+                     p.getToggleColorTextures()[j] = true;
+-                    i = j + 36064;
++                    drawBuffer = j + 36064; // Use actual variable name
+                     usedColorAttachs = Math.max(usedColorAttachs, j);
+                     usedColorBuffers = Math.max(usedColorBuffers, j);
+                 }
+ 
+-                return i;
++                return drawBuffer; // Use actual variable name
+             }
+         }
+     }
+@@ -2832,7 +2833,7 @@ public class Shaders
+ 
+     private static int createFragShader(Program program, String filename)
+     {
+-        int i = ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
++        int i = ARBShaderObjects.glCreateShaderObjectARB(org.lwjgl.opengl.ARBFragmentShader.GL_FRAGMENT_SHADER_ARB); // Fix import
+ 
+         if (i == 0)
+         {
+@@ -4287,10 +4288,10 @@ public class Shaders
+     {
+         if (currentWorld != world)
+         {
+-            World world = currentWorld;
++            World oldWorld = currentWorld; // Use actual variable name
+             currentWorld = world;
+             setCameraOffset(mc.getRenderViewEntity());
+-            int i = getDimensionId(world);
++            int i = getDimensionId(oldWorld); // Use actual variable name
+             int j = getDimensionId(world);
+ 
+             if (j != i)
+@@ -5780,8 +5781,9 @@ public class Shaders
+                         Lang.loadLocaleData(inputstream, properties);
+                         inputstream.close();
+ 
+-                        for (String s4 : properties.keySet())
++                        for (Object o : properties.keySet()) //
+                         {
++                            String s4 = (String) o; //
+                             String s5 = properties.getProperty(s4);
+                             shaderPackResources.put(s4, s5);
+                         }
+diff --git a/src/minecraft/net/optifine/shaders/ShadersTex.java b/src/minecraft/net/optifine/shaders/ShadersTex.java
+index f950fe6..80966fc 100644
+--- a/src/minecraft/net/optifine/shaders/ShadersTex.java
++++ b/src/minecraft/net/optifine/shaders/ShadersTex.java
+@@ -843,7 +843,7 @@ public class ShadersTex
+         return ((color1 >>> 24 & 255) * factor1 + (color2 >>> 24 & 255) * i) / 255 << 24 | ((color1 >>> 16 & 255) * factor1 + (color2 >>> 16 & 255) * i) / 255 << 16 | ((color1 >>> 8 & 255) * factor1 + (color2 >>> 8 & 255) * i) / 255 << 8 | ((color1 >>> 0 & 255) * factor1 + (color2 >>> 0 & 255) * i) / 255 << 0;
+     }
+ 
+-    public static void loadLayeredTexture(LayeredTexture tex, IResourceManager manager, List list)
++    public static void loadLayeredTexture(LayeredTexture tex, IResourceManager manager, List<String> list) // Compile error
+     {
+         int i = 0;
+         int j = 0;
+diff --git a/src/minecraft/net/optifine/shaders/config/ShaderPackParser.java b/src/minecraft/net/optifine/shaders/config/ShaderPackParser.java
+index 765f326..370c5b0 100644
+--- a/src/minecraft/net/optifine/shaders/config/ShaderPackParser.java
++++ b/src/minecraft/net/optifine/shaders/config/ShaderPackParser.java
+@@ -262,8 +262,9 @@ public class ShaderPackParser
+         String s = "profile.";
+         List<ShaderProfile> list = new ArrayList<ShaderProfile>();
+ 
+-        for (String s1 : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s1 = (String) o; //
+             if (s1.startsWith(s))
+             {
+                 String s2 = s1.substring(s.length());
+@@ -295,8 +296,9 @@ public class ShaderPackParser
+         Pattern pattern = Pattern.compile("program\\.([^.]+)\\.enabled");
+         Map<String, IExpressionBool> map = new HashMap<String, IExpressionBool>();
+ 
+-        for (String s1 : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s1 = (String) o; //
+             Matcher matcher = pattern.matcher(s1);
+ 
+             if (matcher.matches())
+@@ -506,7 +508,7 @@ public class ShaderPackParser
+ 
+                 if (s1.equals("<empty>"))
+                 {
+-                    list.add((Object)null);
++                    list.add(null); //
+                 }
+                 else if (set.contains(s1))
+                 {
+@@ -558,7 +560,7 @@ public class ShaderPackParser
+                         if (shaderoption == null)
+                         {
+                             Config.warn("[Shaders] Invalid option: " + s1 + ", key: " + key);
+-                            list.add((Object)null);
++                            list.add(null); //
+                         }
+                         else
+                         {
+@@ -757,8 +759,9 @@ public class ShaderPackParser
+         Map<String, IExpression> map = new HashMap<String, IExpression>();
+         List<CustomUniform> list = new ArrayList<CustomUniform>();
+ 
+-        for (String s4 : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s4 = (String) o; //
+             String[] astring = Config.tokenize(s4, ".");
+ 
+             if (astring.length == 3)
+@@ -854,8 +857,9 @@ public class ShaderPackParser
+ 
+     public static void parseAlphaStates(Properties props)
+     {
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String[] astring = Config.tokenize(s, ".");
+ 
+             if (astring.length == 2)
+@@ -918,8 +922,9 @@ public class ShaderPackParser
+ 
+     public static void parseBlendStates(Properties props)
+     {
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String[] astring = Config.tokenize(s, ".");
+ 
+             if (astring.length == 2)
+@@ -993,8 +998,9 @@ public class ShaderPackParser
+ 
+     public static void parseRenderScales(Properties props)
+     {
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o;
+             String[] astring = Config.tokenize(s, ".");
+ 
+             if (astring.length == 2)
+@@ -1057,8 +1063,9 @@ public class ShaderPackParser
+ 
+     public static void parseBuffersFlip(Properties props)
+     {
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String[] astring = Config.tokenize(s, ".");
+ 
+             if (astring.length == 3)
+diff --git a/src/minecraft/net/optifine/util/ArrayUtils.java b/src/minecraft/net/optifine/util/ArrayUtils.java
+index e976fa0..6e16ea6 100644
+--- a/src/minecraft/net/optifine/util/ArrayUtils.java
++++ b/src/minecraft/net/optifine/util/ArrayUtils.java
+@@ -71,7 +71,7 @@ public class ArrayUtils
+         {
+             int i = arr.length;
+             int j = i + objs.length;
+-            Object[] aobject = Array.newInstance(arr.getClass().getComponentType(), j);
++            Object[] aobject = (Object[]) Array.newInstance(arr.getClass().getComponentType(), j); //
+             System.arraycopy(arr, 0, aobject, 0, i);
+             System.arraycopy(objs, 0, aobject, i, objs.length);
+             return aobject;
+@@ -88,7 +88,7 @@ public class ArrayUtils
+         {
+             int i = arr.length;
+             int j = i + 1;
+-            Object[] aobject = Array.newInstance(arr.getClass().getComponentType(), j);
++            Object[] aobject = (Object[]) Array.newInstance(arr.getClass().getComponentType(), j); //
+             System.arraycopy(arr, 0, aobject, 0, i);
+             aobject[i] = obj;
+             return aobject;
+@@ -99,7 +99,7 @@ public class ArrayUtils
+     {
+         List list = new ArrayList(Arrays.asList(arr));
+         list.add(index, obj);
+-        Object[] aobject = Array.newInstance(arr.getClass().getComponentType(), list.size());
++        Object[] aobject = (Object[]) Array.newInstance(arr.getClass().getComponentType(), list.size()); //
+         return list.toArray(aobject);
+     }
+ 
+@@ -291,7 +291,7 @@ public class ArrayUtils
+         }
+         else
+         {
+-            Object[] aobject = Array.newInstance(elementClass, coll.size());
++            Object[] aobject = (Object[]) Array.newInstance(elementClass, coll.size()); //
+             return coll.toArray(aobject);
+         }
+     }
+diff --git a/src/minecraft/net/optifine/util/CacheObjectArray.java b/src/minecraft/net/optifine/util/CacheObjectArray.java
+index 6f37650..82c7666 100644
+--- a/src/minecraft/net/optifine/util/CacheObjectArray.java
++++ b/src/minecraft/net/optifine/util/CacheObjectArray.java
+@@ -111,7 +111,7 @@ public class CacheObjectArray
+ 
+         for (int j = 0; j < count; ++j)
+         {
+-            Object[] aobject = Array.newInstance(cls, size);
++            Object[] aobject = (Object[]) Array.newInstance(cls, size); //
+         }
+ 
+         long k = System.currentTimeMillis();
+diff --git a/src/minecraft/net/optifine/util/ChunkUtils.java b/src/minecraft/net/optifine/util/ChunkUtils.java
+index 1277c70..882f97a 100644
+--- a/src/minecraft/net/optifine/util/ChunkUtils.java
++++ b/src/minecraft/net/optifine/util/ChunkUtils.java
+@@ -54,7 +54,7 @@ public class ChunkUtils
+         try
+         {
+             Chunk chunk = new Chunk((World)null, 0, 0);
+-            List list = new ArrayList();
++            List<Field> list = new ArrayList<Field>(); // Compile error
+             List list1 = new ArrayList();
+             Field[] afield = Chunk.class.getDeclaredFields();
+ 
+diff --git a/src/minecraft/net/optifine/util/FontUtils.java b/src/minecraft/net/optifine/util/FontUtils.java
+index f5dca9d..ed24609 100644
+--- a/src/minecraft/net/optifine/util/FontUtils.java
++++ b/src/minecraft/net/optifine/util/FontUtils.java
+@@ -52,8 +52,9 @@ public class FontUtils
+ 
+     public static void readCustomCharWidths(Properties props, float[] charWidth)
+     {
+-        for (String s : props.keySet())
++        for (Object o : props.keySet()) //
+         {
++            String s = (String) o; //
+             String s1 = "width.";
+ 
+             if (s.startsWith(s1))
+diff --git a/src/minecraft/net/optifine/util/IteratorCache.java b/src/minecraft/net/optifine/util/IteratorCache.java
+index aa616c0..0cc2b8b 100644
+--- a/src/minecraft/net/optifine/util/IteratorCache.java
++++ b/src/minecraft/net/optifine/util/IteratorCache.java
+@@ -9,7 +9,7 @@ public class IteratorCache
+ {
+     private static Deque<IteratorCache.IteratorReusable<Object>> dequeIterators = new ArrayDeque<IteratorCache.IteratorReusable<Object>>();
+ 
+-    public static Iterator<Object> getReadOnly(List list)
++    public static <T> Iterator<T> getReadOnly(List list) // Compile error?
+     {
+         synchronized (dequeIterators)
+         {
+@@ -21,7 +21,7 @@ public class IteratorCache
+             }
+ 
+             iteratorreusable.setList(list);
+-            return iteratorreusable;
++            return (Iterator<T>) iteratorreusable; // Compile error?
+         }
+     }
+ 
+diff --git a/src/minecraft/net/optifine/util/LinkedList.java b/src/minecraft/net/optifine/util/LinkedList.java
+index 2b9b2a9..ada4d01 100644
+--- a/src/minecraft/net/optifine/util/LinkedList.java
++++ b/src/minecraft/net/optifine/util/LinkedList.java
+@@ -19,9 +19,9 @@ public class LinkedList<T>
+         }
+         else
+         {
+-            LinkedList.Node<T> node = this.first;
+-            node.setNext(node);
+-            node.setPrev(node);
++            LinkedList.Node<T> nodeNext = this.first; //
++            node.setNext(nodeNext); //
++            nodeNext.setPrev(node); //
+             this.first = node;
+         }
+ 
+@@ -40,9 +40,9 @@ public class LinkedList<T>
+         }
+         else
+         {
+-            LinkedList.Node<T> node = this.last;
+-            node.setPrev(node);
+-            node.setNext(node);
++            LinkedList.Node<T> nodePrev = this.last; //
++            node.setPrev(nodePrev); //
++            nodePrev.setNext(node); //
+             this.last = node;
+         }
+ 
+@@ -64,11 +64,11 @@ public class LinkedList<T>
+         {
+             this.checkParent(nodePrev);
+             this.checkNoParent(node);
+-            LinkedList.Node<T> node = nodePrev.getNext();
++            LinkedList.Node<T> nodeNext = nodePrev.getNext(); //
+             nodePrev.setNext(node);
+             node.setPrev(nodePrev);
+-            node.setPrev(node);
+-            node.setNext(node);
++            nodeNext.setPrev(node); //
++            node.setNext(nodeNext); //
+             node.setParent(this);
+             ++this.size;
+         }
+@@ -77,25 +77,25 @@ public class LinkedList<T>
+     public LinkedList.Node<T> remove(LinkedList.Node<T> node)
+     {
+         this.checkParent(node);
+-        LinkedList.Node<T> node = node.getPrev();
+-        LinkedList.Node<T> node1 = node.getNext();
++        LinkedList.Node<T> prev = node.getPrev(); //
++        LinkedList.Node<T> next = node.getNext(); //
+ 
+-        if (node != null)
++        if (prev != null) //
+         {
+-            node.setNext(node1);
++            prev.setNext(next); //
+         }
+         else
+         {
+-            this.first = node1;
++            this.first = next;
+         }
+ 
+-        if (node1 != null)
++        if (next != null) //
+         {
+-            node1.setPrev(node);
++            next.setPrev(prev); //
+         }
+         else
+         {
+-            this.last = node;
++            this.last = prev; //
+         }
+ 
+         node.setPrev((LinkedList.Node)null);
+@@ -207,19 +207,19 @@ public class LinkedList<T>
+ 
+     public String toString()
+     {
+-        StringBuffer stringbuffer = new StringBuffer();
+-
+-        for (LinkedList.Node<T> node : this)
+-        {
+-            if (stringbuffer.length() > 0)
+-            {
+-                stringbuffer.append(", ");
++        // Paste in proper method
++        StringBuffer sb = new StringBuffer();
++
++        Node node;
++        for(Iterator it = this.iterator(); it.hasNext(); sb.append(node.getItem())) {
++            node = (Node)it.next();
++            if (sb.length() > 0) {
++                sb.append(", ");
+             }
+-
+-            stringbuffer.append(node.getItem());
+         }
+ 
+-        return "" + this.size + " [" + stringbuffer.toString() + "]";
++        return "" + this.size + " [" + sb.toString() + "]";
++        // End
+     }
+ 
+     public static class Node<T>
+diff --git a/src/minecraft/net/optifine/util/LinkedListTest.java b/src/minecraft/net/optifine/util/LinkedListTest.java
+index a4c6abc..ab0a1bd 100644
+--- a/src/minecraft/net/optifine/util/LinkedListTest.java
++++ b/src/minecraft/net/optifine/util/LinkedListTest.java
+@@ -82,8 +82,9 @@ public class LinkedListTest
+     {
+         StringBuffer stringbuffer = new StringBuffer();
+ 
+-        for (LinkedList.Node<VboRange> node : linkedList)
++        for (java.util.Iterator<LinkedList.Node<VboRange>> it = linkedList.iterator(); it.hasNext(); ) //
+         {
++            LinkedList.Node<VboRange> node = it.next(); //
+             VboRange vborange = node.getItem();
+ 
+             if (stringbuffer.length() > 0)
+diff --git a/src/minecraft/net/optifine/util/NativeMemory.java b/src/minecraft/net/optifine/util/NativeMemory.java
+index c21d6d3..e7c2576 100644
+--- a/src/minecraft/net/optifine/util/NativeMemory.java
++++ b/src/minecraft/net/optifine/util/NativeMemory.java
+@@ -57,9 +57,9 @@ public class NativeMemory
+         else
+         {
+             Class oclass = Class.forName(path[0]);
+-            final Method method = oclass.getMethod(path[1]);
++            Method method = oclass.getMethod(path[1]); //
+             method.setAccessible(true);
+-            final Object object = null;
++            Object object = null; //
+ 
+             for (int i = 2; i < path.length; ++i)
+             {
+@@ -69,6 +69,7 @@ public class NativeMemory
+                 method.setAccessible(true);
+             }
+ 
++            final Object finalObject = object; final Method finalMethod = method; //
+             LongSupplier longsupplier = new LongSupplier()
+             {
+                 private boolean disabled = false;
+@@ -82,7 +83,7 @@ public class NativeMemory
+                     {
+                         try
+                         {
+-                            return ((Long)method.invoke(object)).longValue();
++                            return ((Long)finalMethod.invoke(finalObject)).longValue(); //
+                         }
+                         catch (Throwable throwable)
+                         {
+-- 
+2.35.3
+

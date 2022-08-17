@@ -1,0 +1,1275 @@
+From b6bf6f96d723fb468d73b50791c887ad035b0fb5 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 11:21:34 -0400
+Subject: [PATCH 08/14] Replace instances is String#isEmpty with length check
+
+---
+ src/minecraft/net/minecraft/client/Minecraft.java    | 10 +++++-----
+ .../net/minecraft/client/audio/SoundManager.java     | 10 +++++-----
+ .../client/entity/AbstractClientPlayer.java          |  2 +-
+ src/minecraft/net/minecraft/client/gui/GuiChat.java  |  2 +-
+ .../net/minecraft/client/gui/GuiCommandBlock.java    |  2 +-
+ .../net/minecraft/client/gui/GuiCreateWorld.java     |  2 +-
+ .../client/gui/GuiCustomizeWorldScreen.java          |  4 ++--
+ .../net/minecraft/client/gui/GuiMainMenu.java        |  6 +++---
+ .../net/minecraft/client/gui/GuiScreenAddServer.java |  4 ++--
+ .../net/minecraft/client/gui/GuiScreenBook.java      | 10 +++++-----
+ .../minecraft/client/gui/GuiScreenServerList.java    |  4 ++--
+ .../net/minecraft/client/gui/GuiSleepMP.java         |  2 +-
+ .../net/minecraft/client/gui/GuiTextField.java       | 12 ++++++------
+ .../client/gui/GuiUtilRenderComponents.java          |  2 +-
+ .../net/minecraft/client/gui/GuiWorldEdit.java       |  2 +-
+ .../minecraft/client/gui/achievement/GuiStats.java   |  4 ++--
+ .../client/gui/advancements/GuiAdvancement.java      |  2 +-
+ .../client/gui/inventory/GuiContainerCreative.java   |  2 +-
+ .../gui/inventory/GuiEditCommandBlockMinecart.java   |  6 +++---
+ .../minecraft/client/gui/inventory/GuiEditSign.java  |  2 +-
+ .../client/gui/recipebook/GuiRecipeBook.java         |  2 +-
+ src/minecraft/net/minecraft/client/main/Main.java    |  2 +-
+ .../minecraft/client/multiplayer/ServerAddress.java  |  2 +-
+ .../client/network/NetHandlerPlayClient.java         |  6 +++---
+ .../minecraft/client/renderer/BannerTextures.java    |  2 +-
+ .../client/renderer/block/model/ModelBlock.java      |  2 +-
+ .../model/multipart/ConditionPropertyValue.java      |  2 +-
+ .../net/minecraft/client/resources/Locale.java       |  2 +-
+ .../client/resources/ResourcePackRepository.java     |  2 +-
+ .../data/LanguageMetadataSectionSerializer.java      |  4 ++--
+ .../net/minecraft/client/util/RecipeBookClient.java  |  2 +-
+ .../net/minecraft/command/CommandResultStats.java    |  2 +-
+ .../net/minecraft/command/CommandStats.java          |  2 +-
+ .../net/minecraft/command/CommandStopSound.java      |  4 ++--
+ .../net/minecraft/command/FunctionObject.java        |  2 +-
+ .../minecraft/command/server/CommandScoreboard.java  |  8 ++++----
+ src/minecraft/net/minecraft/entity/Entity.java       |  2 +-
+ .../minecraft/entity/monster/EntityPigZombie.java    |  2 +-
+ .../net/minecraft/entity/passive/AbstractHorse.java  |  2 +-
+ .../net/minecraft/entity/passive/EntityTameable.java |  2 +-
+ .../net/minecraft/entity/passive/EntityVillager.java |  2 +-
+ .../minecraft/entity/projectile/EntityThrowable.java |  6 +++---
+ src/minecraft/net/minecraft/item/ItemStack.java      |  2 +-
+ src/minecraft/net/minecraft/nbt/JsonToNBT.java       |  4 ++--
+ src/minecraft/net/minecraft/nbt/NBTTagString.java    |  2 +-
+ src/minecraft/net/minecraft/profiler/Profiler.java   |  4 ++--
+ .../net/minecraft/server/management/PlayerList.java  |  2 +-
+ src/minecraft/net/minecraft/src/Config.java          |  4 ++--
+ .../net/minecraft/tileentity/TileEntityBanner.java   |  2 +-
+ .../net/minecraft/tileentity/TileEntityBeacon.java   |  2 +-
+ .../minecraft/tileentity/TileEntityBrewingStand.java |  2 +-
+ .../tileentity/TileEntityEnchantmentTable.java       |  2 +-
+ .../net/minecraft/tileentity/TileEntityFurnace.java  |  2 +-
+ .../minecraft/tileentity/TileEntityLockableLoot.java |  2 +-
+ src/minecraft/net/minecraft/util/TabCompleter.java   |  4 ++--
+ .../util/datafix/fixes/SpawnerEntityTypes.java       |  2 +-
+ .../net/minecraft/util/text/TextComponentBase.java   |  2 +-
+ .../minecraft/util/text/translation/LanguageMap.java |  2 +-
+ src/minecraft/net/minecraft/world/LockCode.java      |  2 +-
+ .../net/minecraft/world/biome/BiomeProvider.java     |  2 +-
+ .../minecraft/world/gen/ChunkGeneratorSettings.java  |  2 +-
+ .../net/minecraft/world/gen/FlatGeneratorInfo.java   |  2 +-
+ src/minecraft/net/optifine/Lang.java                 |  2 +-
+ src/minecraft/net/optifine/player/CapeUtils.java     |  2 +-
+ src/minecraft/net/optifine/shaders/Shaders.java      |  6 +++---
+ .../net/optifine/shaders/config/MacroProcessor.java  |  2 +-
+ 66 files changed, 106 insertions(+), 106 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/Minecraft.java b/src/minecraft/net/minecraft/client/Minecraft.java
+index d689293..14d0acd 100644
+--- a/src/minecraft/net/minecraft/client/Minecraft.java
++++ b/src/minecraft/net/minecraft/client/Minecraft.java
+@@ -653,7 +653,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+         SearchTree<ItemStack> searchtree = new SearchTree<ItemStack>((p_193988_0_) ->
+         {
+             return (List)p_193988_0_.getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream().map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193984_0_) -> {
+-                return !p_193984_0_.isEmpty();
++                return p_193984_0_.length() != 0;
+             }).collect(Collectors.toList());
+         }, (p_193985_0_) ->
+         {
+@@ -672,7 +672,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+             return (List)p_193990_0_.getRecipes().stream().flatMap((p_193993_0_) -> {
+                 return p_193993_0_.getRecipeOutput().getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream();
+             }).map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193994_0_) -> {
+-                return !p_193994_0_.isEmpty();
++                return p_193994_0_.length() != 0;
+             }).collect(Collectors.toList());
+         }, (p_193991_0_) ->
+         {
+@@ -1392,7 +1392,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+ 
+             if (keyCount == 0)
+             {
+-                if (!profiler$result.profilerName.isEmpty())
++                if (profiler$result.profilerName.length() != 0)
+                 {
+                     int i = this.debugProfilerName.lastIndexOf(46);
+ 
+@@ -1408,7 +1408,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+ 
+                 if (keyCount < list.size() && !"unspecified".equals((list.get(keyCount)).profilerName))
+                 {
+-                    if (!this.debugProfilerName.isEmpty())
++                    if (this.debugProfilerName.length() != 0)
+                     {
+                         this.debugProfilerName = this.debugProfilerName + ".";
+                     }
+@@ -1497,7 +1497,7 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+                 s = s + "[0] ";
+             }
+ 
+-            if (profiler$result.profilerName.isEmpty())
++            if (profiler$result.profilerName.length() == 0)
+             {
+                 s = s + "ROOT ";
+             }
+diff --git a/src/minecraft/net/minecraft/client/audio/SoundManager.java b/src/minecraft/net/minecraft/client/audio/SoundManager.java
+index 5a8d09b..1a5713c 100644
+--- a/src/minecraft/net/minecraft/client/audio/SoundManager.java
++++ b/src/minecraft/net/minecraft/client/audio/SoundManager.java
+@@ -127,21 +127,21 @@ public class SoundManager
+                         {
+                             public void message(String p_message_1_, int p_message_2_)
+                             {
+-                                if (!p_message_1_.isEmpty())
++                                if (p_message_1_.length() != 0)
+                                 {
+                                     SoundManager.LOGGER.info(p_message_1_);
+                                 }
+                             }
+                             public void importantMessage(String p_importantMessage_1_, int p_importantMessage_2_)
+                             {
+-                                if (!p_importantMessage_1_.isEmpty())
++                                if (p_importantMessage_1_.length() != 0)
+                                 {
+                                     SoundManager.LOGGER.warn(p_importantMessage_1_);
+                                 }
+                             }
+                             public void errorMessage(String p_errorMessage_1_, String p_errorMessage_2_, int p_errorMessage_3_)
+                             {
+-                                if (!p_errorMessage_2_.isEmpty())
++                                if (p_errorMessage_2_.length() != 0)
+                                 {
+                                     SoundManager.LOGGER.error("Error in class '{}'", (Object)p_errorMessage_1_);
+                                     SoundManager.LOGGER.error(p_errorMessage_2_);
+@@ -569,7 +569,7 @@ public class SoundManager
+             {
+                 ISound isound = this.playingSounds.get(s);
+ 
+-                if (p_189567_1_.isEmpty())
++                if (p_189567_1_.length() == 0)
+                 {
+                     this.stopSound(isound);
+                 }
+@@ -579,7 +579,7 @@ public class SoundManager
+                 }
+             }
+         }
+-        else if (p_189567_1_.isEmpty())
++        else if (p_189567_1_.length() == 0)
+         {
+             this.stopAllSounds();
+         }
+diff --git a/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java b/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
+index 3fa1919..84f7709 100644
+--- a/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
++++ b/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
+@@ -43,7 +43,7 @@ public abstract class AbstractClientPlayer extends EntityPlayer
+         super(worldIn, playerProfile);
+         this.nameClear = playerProfile.getName();
+ 
+-        if (this.nameClear != null && !this.nameClear.isEmpty())
++        if (this.nameClear != null && this.nameClear.length() != 0)
+         {
+             this.nameClear = StringUtils.stripControlCodes(this.nameClear);
+         }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiChat.java b/src/minecraft/net/minecraft/client/gui/GuiChat.java
+index d934065..c643f43 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiChat.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiChat.java
+@@ -126,7 +126,7 @@ public class GuiChat extends GuiScreen implements ITabCompleter
+         {
+             String s = this.inputField.getText().trim();
+ 
+-            if (!s.isEmpty())
++            if (s.length() != 0)
+             {
+                 this.sendChatMessage(s);
+             }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiCommandBlock.java b/src/minecraft/net/minecraft/client/gui/GuiCommandBlock.java
+index 6bc4c2f..ae69c93 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiCommandBlock.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiCommandBlock.java
+@@ -226,7 +226,7 @@ public class GuiCommandBlock extends GuiScreen implements ITabCompleter
+         this.drawString(this.fontRenderer, I18n.format("advMode.allEntities"), this.width / 2 - 140, i + j++ * this.fontRenderer.FONT_HEIGHT, 10526880);
+         this.drawString(this.fontRenderer, I18n.format("advMode.self"), this.width / 2 - 140, i + j++ * this.fontRenderer.FONT_HEIGHT, 10526880);
+ 
+-        if (!this.previousOutputTextField.getText().isEmpty())
++        if (this.previousOutputTextField.getText().length() != 0)
+         {
+             i = i + j * this.fontRenderer.FONT_HEIGHT + 1;
+             this.drawString(this.fontRenderer, I18n.format("advMode.previousOutput"), this.width / 2 - 150, i + 4, 10526880);
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiCreateWorld.java b/src/minecraft/net/minecraft/client/gui/GuiCreateWorld.java
+index 9e50406..4ef7486 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiCreateWorld.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiCreateWorld.java
+@@ -463,7 +463,7 @@ public class GuiCreateWorld extends GuiScreen
+             this.actionPerformed(this.buttonList.get(0));
+         }
+ 
+-        (this.buttonList.get(0)).enabled = !this.worldNameField.getText().isEmpty();
++        (this.buttonList.get(0)).enabled = this.worldNameField.getText().length() != 0;
+         this.calcSaveDirName();
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java b/src/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java
+index b9a4111..98cda74 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java
+@@ -39,7 +39,7 @@ public class GuiCustomizeWorldScreen extends GuiScreen implements GuiSlider.Form
+         public boolean apply(@Nullable String p_apply_1_)
+         {
+             Float f = Floats.tryParse(p_apply_1_);
+-            return p_apply_1_.isEmpty() || f != null && Floats.isFinite(f.floatValue()) && f.floatValue() >= 0.0F;
++            return p_apply_1_.length() == 0 || f != null && Floats.isFinite(f.floatValue()) && f.floatValue() >= 0.0F;
+         }
+     };
+     private final ChunkGeneratorSettings.Factory defaultSettings = new ChunkGeneratorSettings.Factory();
+@@ -133,7 +133,7 @@ public class GuiCustomizeWorldScreen extends GuiScreen implements GuiSlider.Form
+ 
+     public void loadValues(String p_175324_1_)
+     {
+-        if (p_175324_1_ != null && !p_175324_1_.isEmpty())
++        if (p_175324_1_ != null && p_175324_1_.length() != 0)
+         {
+             this.settings = ChunkGeneratorSettings.Factory.jsonToFactory(p_175324_1_);
+         }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+index 9477c95..b06d40f 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+@@ -138,7 +138,7 @@ public class GuiMainMenu extends GuiScreen
+             {
+                 s = s.trim();
+ 
+-                if (!s.isEmpty())
++                if (s.length() != 0)
+                 {
+                     list.add(s);
+                 }
+@@ -710,7 +710,7 @@ public class GuiMainMenu extends GuiScreen
+             drawRect(this.widthCopyrightRest, this.height - 1, this.widthCopyrightRest + this.widthCopyright, this.height, -1);
+         }
+ 
+-        if (this.openGLWarning1 != null && !this.openGLWarning1.isEmpty())
++        if (this.openGLWarning1 != null && this.openGLWarning1.length() != 0)
+         {
+             drawRect(this.openGLWarningX1 - 2, this.openGLWarningY1 - 2, this.openGLWarningX2 + 2, this.openGLWarningY2 - 1, 1428160512);
+             this.drawString(this.fontRenderer, this.openGLWarning1, this.openGLWarningX1, this.openGLWarningY1, -1);
+@@ -739,7 +739,7 @@ public class GuiMainMenu extends GuiScreen
+ 
+         synchronized (this.threadLock)
+         {
+-            if (!this.openGLWarning1.isEmpty() && !StringUtils.isNullOrEmpty(this.openGLWarningLink) && mouseX >= this.openGLWarningX1 && mouseX <= this.openGLWarningX2 && mouseY >= this.openGLWarningY1 && mouseY <= this.openGLWarningY2)
++            if (this.openGLWarning1.length() != 0 && !StringUtils.isNullOrEmpty(this.openGLWarningLink) && mouseX >= this.openGLWarningX1 && mouseX <= this.openGLWarningX2 && mouseY >= this.openGLWarningY1 && mouseY <= this.openGLWarningY2)
+             {
+                 GuiConfirmOpenLink guiconfirmopenlink = new GuiConfirmOpenLink(this, this.openGLWarningLink, 13, true);
+                 guiconfirmopenlink.disableSecurityWarning();
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java b/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
+index ca852a7..31a3919 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
+@@ -81,7 +81,7 @@ public class GuiScreenAddServer extends GuiScreen
+         this.serverIPField.setMaxStringLength(128);
+         this.serverIPField.setText(this.serverData.serverIP);
+         this.serverIPField.setValidator(this.addressFilter);
+-        (this.buttonList.get(0)).enabled = !this.serverIPField.getText().isEmpty() && this.serverIPField.getText().split(":").length > 0 && !this.serverNameField.getText().isEmpty();
++        (this.buttonList.get(0)).enabled = this.serverIPField.getText().length() != 0 && this.serverIPField.getText().split(":").length > 0 && this.serverNameField.getText().length() != 0;
+     }
+ 
+     /**
+@@ -137,7 +137,7 @@ public class GuiScreenAddServer extends GuiScreen
+             this.actionPerformed(this.buttonList.get(0));
+         }
+ 
+-        (this.buttonList.get(0)).enabled = !this.serverIPField.getText().isEmpty() && this.serverIPField.getText().split(":").length > 0 && !this.serverNameField.getText().isEmpty();
++        (this.buttonList.get(0)).enabled = this.serverIPField.getText().length() != 0 && this.serverIPField.getText().split(":").length > 0 && this.serverNameField.getText().length() != 0;
+     }
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiScreenBook.java b/src/minecraft/net/minecraft/client/gui/GuiScreenBook.java
+index ab0cf83..7986038 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiScreenBook.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiScreenBook.java
+@@ -148,7 +148,7 @@ public class GuiScreenBook extends GuiScreen
+             this.buttonSign.visible = !this.bookGettingSigned;
+             this.buttonCancel.visible = this.bookGettingSigned;
+             this.buttonFinalize.visible = this.bookGettingSigned;
+-            this.buttonFinalize.enabled = !this.bookTitle.trim().isEmpty();
++            this.buttonFinalize.enabled = this.bookTitle.trim().length() != 0;
+         }
+     }
+ 
+@@ -162,7 +162,7 @@ public class GuiScreenBook extends GuiScreen
+                 {
+                     String s = this.bookPages.getStringTagAt(this.bookPages.tagCount() - 1);
+ 
+-                    if (!s.isEmpty())
++                    if (s.length() != 0)
+                     {
+                         break;
+                     }
+@@ -296,7 +296,7 @@ public class GuiScreenBook extends GuiScreen
+                 case 14:
+                     String s = this.pageGetCurrent();
+ 
+-                    if (!s.isEmpty())
++                    if (s.length() != 0)
+                     {
+                         this.pageSetCurrent(s.substring(0, s.length() - 1));
+                     }
+@@ -325,7 +325,7 @@ public class GuiScreenBook extends GuiScreen
+         switch (keyCode)
+         {
+             case 14:
+-                if (!this.bookTitle.isEmpty())
++                if (this.bookTitle.length() != 0)
+                 {
+                     this.bookTitle = this.bookTitle.substring(0, this.bookTitle.length() - 1);
+                     this.updateButtons();
+@@ -335,7 +335,7 @@ public class GuiScreenBook extends GuiScreen
+ 
+             case 28:
+             case 156:
+-                if (!this.bookTitle.isEmpty())
++                if (this.bookTitle.length() != 0)
+                 {
+                     this.sendBookToServer(true);
+                     this.mc.displayGuiScreen((GuiScreen)null);
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiScreenServerList.java b/src/minecraft/net/minecraft/client/gui/GuiScreenServerList.java
+index 8141d45..9a7b2e7 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiScreenServerList.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiScreenServerList.java
+@@ -39,7 +39,7 @@ public class GuiScreenServerList extends GuiScreen
+         this.ipEdit.setMaxStringLength(128);
+         this.ipEdit.setFocused(true);
+         this.ipEdit.setText(this.mc.gameSettings.lastServer);
+-        (this.buttonList.get(0)).enabled = !this.ipEdit.getText().isEmpty() && this.ipEdit.getText().split(":").length > 0;
++        (this.buttonList.get(0)).enabled = this.ipEdit.getText().length() != 0 && this.ipEdit.getText().split(":").length > 0;
+     }
+ 
+     /**
+@@ -79,7 +79,7 @@ public class GuiScreenServerList extends GuiScreen
+     {
+         if (this.ipEdit.textboxKeyTyped(typedChar, keyCode))
+         {
+-            (this.buttonList.get(0)).enabled = !this.ipEdit.getText().isEmpty() && this.ipEdit.getText().split(":").length > 0;
++            (this.buttonList.get(0)).enabled = this.ipEdit.getText().length() != 0 && this.ipEdit.getText().split(":").length > 0;
+         }
+         else if (keyCode == 28 || keyCode == 156)
+         {
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiSleepMP.java b/src/minecraft/net/minecraft/client/gui/GuiSleepMP.java
+index 064f703..0645344 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiSleepMP.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiSleepMP.java
+@@ -35,7 +35,7 @@ public class GuiSleepMP extends GuiChat
+         {
+             String s = this.inputField.getText().trim();
+ 
+-            if (!s.isEmpty())
++            if (s.length() != 0)
+             {
+                 this.mc.player.sendChatMessage(s);
+             }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiTextField.java b/src/minecraft/net/minecraft/client/gui/GuiTextField.java
+index b7b1a35..73f6ef4 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiTextField.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiTextField.java
+@@ -138,7 +138,7 @@ public class GuiTextField extends Gui
+         int j = this.cursorPosition < this.selectionEnd ? this.selectionEnd : this.cursorPosition;
+         int k = this.maxStringLength - this.text.length() - (i - j);
+ 
+-        if (!this.text.isEmpty())
++        if (this.text.length() != 0)
+         {
+             s = s + this.text.substring(0, i);
+         }
+@@ -156,7 +156,7 @@ public class GuiTextField extends Gui
+             l = s1.length();
+         }
+ 
+-        if (!this.text.isEmpty() && j < this.text.length())
++        if (this.text.length() != 0 && j < this.text.length())
+         {
+             s = s + this.text.substring(j);
+         }
+@@ -186,7 +186,7 @@ public class GuiTextField extends Gui
+      */
+     public void deleteWords(int num)
+     {
+-        if (!this.text.isEmpty())
++        if (this.text.length() != 0)
+         {
+             if (this.selectionEnd != this.cursorPosition)
+             {
+@@ -205,7 +205,7 @@ public class GuiTextField extends Gui
+      */
+     public void deleteFromCursor(int num)
+     {
+-        if (!this.text.isEmpty())
++        if (this.text.length() != 0)
+         {
+             if (this.selectionEnd != this.cursorPosition)
+             {
+@@ -565,7 +565,7 @@ public class GuiTextField extends Gui
+                 k = s.length();
+             }
+ 
+-            if (!s.isEmpty())
++            if (s.length() != 0)
+             {
+                 String s1 = flag ? s.substring(0, j) : s;
+                 j1 = this.fontRenderer.drawStringWithShadow(s1, (float)l, (float)i1, i);
+@@ -584,7 +584,7 @@ public class GuiTextField extends Gui
+                 --j1;
+             }
+ 
+-            if (!s.isEmpty() && flag && j < s.length())
++            if (s.length() != 0 && flag && j < s.length())
+             {
+                 j1 = this.fontRenderer.drawStringWithShadow(s.substring(j), (float)j1, (float)i1, i);
+             }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiUtilRenderComponents.java b/src/minecraft/net/minecraft/client/gui/GuiUtilRenderComponents.java
+index 9ec03cc..20959fa 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiUtilRenderComponents.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiUtilRenderComponents.java
+@@ -49,7 +49,7 @@ public class GuiUtilRenderComponents
+                 String s2 = fontRendererIn.trimStringToWidth(s4, maxTextLenght - i, false);
+                 String s3 = s2.length() < s4.length() ? s4.substring(s2.length()) : null;
+ 
+-                if (s3 != null && !s3.isEmpty())
++                if (s3 != null && s3.length() != 0)
+                 {
+                     int l = s2.lastIndexOf(32);
+ 
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiWorldEdit.java b/src/minecraft/net/minecraft/client/gui/GuiWorldEdit.java
+index d76a697..9490c75 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiWorldEdit.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiWorldEdit.java
+@@ -95,7 +95,7 @@ public class GuiWorldEdit extends GuiScreen
+     protected void keyTyped(char typedChar, int keyCode) throws IOException
+     {
+         this.nameEdit.textboxKeyTyped(typedChar, keyCode);
+-        (this.buttonList.get(2)).enabled = !this.nameEdit.getText().trim().isEmpty();
++        (this.buttonList.get(2)).enabled = this.nameEdit.getText().trim().length() != 0;
+ 
+         if (keyCode == 28 || keyCode == 156)
+         {
+diff --git a/src/minecraft/net/minecraft/client/gui/achievement/GuiStats.java b/src/minecraft/net/minecraft/client/gui/achievement/GuiStats.java
+index b0e103b..e0e4c3b 100644
+--- a/src/minecraft/net/minecraft/client/gui/achievement/GuiStats.java
++++ b/src/minecraft/net/minecraft/client/gui/achievement/GuiStats.java
+@@ -449,7 +449,7 @@ public class GuiStats extends GuiScreen implements IProgressMeter
+ 
+                     s = ("" + I18n.format(s)).trim();
+ 
+-                    if (!s.isEmpty())
++                    if (s.length() != 0)
+                     {
+                         int k = mouseXIn + 12;
+                         int l = mouseYIn - 12;
+@@ -470,7 +470,7 @@ public class GuiStats extends GuiScreen implements IProgressMeter
+                 String s = itemstack.getTranslationKey();
+                 String s1 = ("" + I18n.format(s + ".name")).trim();
+ 
+-                if (!s1.isEmpty())
++                if (s1.length() != 0)
+                 {
+                     int i = p_148213_2_ + 12;
+                     int j = p_148213_3_ - 12;
+diff --git a/src/minecraft/net/minecraft/client/gui/advancements/GuiAdvancement.java b/src/minecraft/net/minecraft/client/gui/advancements/GuiAdvancement.java
+index 0dd9326..f2945f3 100644
+--- a/src/minecraft/net/minecraft/client/gui/advancements/GuiAdvancement.java
++++ b/src/minecraft/net/minecraft/client/gui/advancements/GuiAdvancement.java
+@@ -60,7 +60,7 @@ public class GuiAdvancement extends Gui
+ 
+     private List<String> findOptimalLines(String p_192995_1_, int p_192995_2_)
+     {
+-        if (p_192995_1_.isEmpty())
++        if (p_192995_1_.length() == 0)
+         {
+             return Collections.<String>emptyList();
+         }
+diff --git a/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java b/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
+index 077dcbc..4df1f07 100644
+--- a/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
++++ b/src/minecraft/net/minecraft/client/gui/inventory/GuiContainerCreative.java
+@@ -371,7 +371,7 @@ public class GuiContainerCreative extends InventoryEffectRenderer
+         GuiContainerCreative.ContainerCreative guicontainercreative$containercreative = (GuiContainerCreative.ContainerCreative)this.inventorySlots;
+         guicontainercreative$containercreative.itemList.clear();
+ 
+-        if (this.searchField.getText().isEmpty())
++        if (this.searchField.getText().length() == 0)
+         {
+             for (Item item : Item.REGISTRY)
+             {
+diff --git a/src/minecraft/net/minecraft/client/gui/inventory/GuiEditCommandBlockMinecart.java b/src/minecraft/net/minecraft/client/gui/inventory/GuiEditCommandBlockMinecart.java
+index 20bf848..a8f2707 100644
+--- a/src/minecraft/net/minecraft/client/gui/inventory/GuiEditCommandBlockMinecart.java
++++ b/src/minecraft/net/minecraft/client/gui/inventory/GuiEditCommandBlockMinecart.java
+@@ -61,7 +61,7 @@ public class GuiEditCommandBlockMinecart extends GuiScreen implements ITabComple
+         this.previousEdit.setText("-");
+         this.trackOutput = this.commandBlockLogic.shouldTrackOutput();
+         this.updateCommandOutput();
+-        this.doneButton.enabled = !this.commandField.getText().trim().isEmpty();
++        this.doneButton.enabled = this.commandField.getText().trim().length() != 0;
+         this.tabCompleter = new TabCompleter(this.commandField, true)
+         {
+             @Nullable
+@@ -135,7 +135,7 @@ public class GuiEditCommandBlockMinecart extends GuiScreen implements ITabComple
+ 
+         this.commandField.textboxKeyTyped(typedChar, keyCode);
+         this.previousEdit.textboxKeyTyped(typedChar, keyCode);
+-        this.doneButton.enabled = !this.commandField.getText().trim().isEmpty();
++        this.doneButton.enabled = this.commandField.getText().trim().length() != 0;
+ 
+         if (keyCode != 28 && keyCode != 156)
+         {
+@@ -177,7 +177,7 @@ public class GuiEditCommandBlockMinecart extends GuiScreen implements ITabComple
+         this.drawString(this.fontRenderer, I18n.format("advMode.allEntities"), this.width / 2 - 140, i + j++ * this.fontRenderer.FONT_HEIGHT, 10526880);
+         this.drawString(this.fontRenderer, I18n.format("advMode.self"), this.width / 2 - 140, i + j++ * this.fontRenderer.FONT_HEIGHT, 10526880);
+ 
+-        if (!this.previousEdit.getText().isEmpty())
++        if (this.previousEdit.getText().length() != 0)
+         {
+             i = i + j * this.fontRenderer.FONT_HEIGHT + 20;
+             this.drawString(this.fontRenderer, I18n.format("advMode.previousOutput"), this.width / 2 - 150, i, 10526880);
+diff --git a/src/minecraft/net/minecraft/client/gui/inventory/GuiEditSign.java b/src/minecraft/net/minecraft/client/gui/inventory/GuiEditSign.java
+index 0b30a9b..49a9e2e 100644
+--- a/src/minecraft/net/minecraft/client/gui/inventory/GuiEditSign.java
++++ b/src/minecraft/net/minecraft/client/gui/inventory/GuiEditSign.java
+@@ -103,7 +103,7 @@ public class GuiEditSign extends GuiScreen
+ 
+         String s = this.tileSign.signText[this.editLine].getUnformattedText();
+ 
+-        if (keyCode == 14 && !s.isEmpty())
++        if (keyCode == 14 && s.length() != 0)
+         {
+             s = s.substring(0, s.length() - 1);
+         }
+diff --git a/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java b/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
+index b88c940..ac46fe1 100644
+--- a/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
++++ b/src/minecraft/net/minecraft/client/gui/recipebook/GuiRecipeBook.java
+@@ -172,7 +172,7 @@ public class GuiRecipeBook extends Gui implements IRecipeUpdateListener
+         });
+         String s = this.searchBar.getText();
+ 
+-        if (!s.isEmpty())
++        if (s.length() != 0)
+         {
+             ObjectSet<RecipeList> objectset = new ObjectLinkedOpenHashSet<RecipeList>(this.mc.getSearchTree(SearchTreeManager.RECIPES).search(s.toLowerCase(Locale.US)));
+             list1.removeIf((p_193947_1_) ->
+diff --git a/src/minecraft/net/minecraft/client/main/Main.java b/src/minecraft/net/minecraft/client/main/Main.java
+index 2dacf22..51e3fa6 100644
+--- a/src/minecraft/net/minecraft/client/main/Main.java
++++ b/src/minecraft/net/minecraft/client/main/Main.java
+@@ -120,6 +120,6 @@ public class Main
+      */
+     private static boolean isNotEmpty(String str)
+     {
+-        return str != null && !str.isEmpty();
++        return str != null && str.length() != 0;
+     }
+ }
+diff --git a/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java b/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
+index b858039..015320f 100644
+--- a/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
++++ b/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
+@@ -53,7 +53,7 @@ public class ServerAddress
+                     String s = addrString.substring(1, i);
+                     String s1 = addrString.substring(i + 1).trim();
+ 
+-                    if (s1.startsWith(":") && !s1.isEmpty())
++                    if (s1.startsWith(":") && s1.length() != 0)
+                     {
+                         s1 = s1.substring(1);
+                         astring = new String[] {s, s1};
+diff --git a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+index 08ffaf0..c6f1ceb 100644
+--- a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
++++ b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+@@ -1731,8 +1731,8 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient
+ 
+     public void handlePlayerListHeaderFooter(SPacketPlayerListHeaderFooter packetIn)
+     {
+-        this.client.ingameGUI.getTabList().setHeader(packetIn.getHeader().getFormattedText().isEmpty() ? null : packetIn.getHeader());
+-        this.client.ingameGUI.getTabList().setFooter(packetIn.getFooter().getFormattedText().isEmpty() ? null : packetIn.getFooter());
++        this.client.ingameGUI.getTabList().setHeader(packetIn.getHeader().getFormattedText().length() == 0 ? null : packetIn.getHeader());
++        this.client.ingameGUI.getTabList().setFooter(packetIn.getFooter().getFormattedText().length() == 0 ? null : packetIn.getFooter());
+     }
+ 
+     public void handleRemoveEntityEffect(SPacketRemoveEntityEffect packetIn)
+@@ -2136,7 +2136,7 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient
+         PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, this.client);
+         Scoreboard scoreboard = this.world.getScoreboard();
+ 
+-        if (packetIn.getName().isEmpty())
++        if (packetIn.getName().length() == 0)
+         {
+             scoreboard.setObjectiveInDisplaySlot(packetIn.getPosition(), (ScoreObjective)null);
+         }
+diff --git a/src/minecraft/net/minecraft/client/renderer/BannerTextures.java b/src/minecraft/net/minecraft/client/renderer/BannerTextures.java
+index 4b823c4..c0b67f4 100644
+--- a/src/minecraft/net/minecraft/client/renderer/BannerTextures.java
++++ b/src/minecraft/net/minecraft/client/renderer/BannerTextures.java
+@@ -39,7 +39,7 @@ public class BannerTextures
+         @Nullable
+         public ResourceLocation getResourceLocation(String id, List<BannerPattern> patternList, List<EnumDyeColor> colorList)
+         {
+-            if (id.isEmpty())
++            if (id.length() == 0)
+             {
+                 return null;
+             }
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBlock.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBlock.java
+index 0178e07..495cd32 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBlock.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBlock.java
+@@ -253,7 +253,7 @@ public class ModelBlock
+             }
+ 
+             List<ItemOverride> list1 = this.getItemOverrides(p_deserialize_3_, jsonobject);
+-            ResourceLocation resourcelocation = s.isEmpty() ? null : new ResourceLocation(s);
++            ResourceLocation resourcelocation = s.length() == 0 ? null : new ResourceLocation(s);
+             return new ModelBlock(resourcelocation, list, map, flag, true, itemcameratransforms, list1);
+         }
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/multipart/ConditionPropertyValue.java b/src/minecraft/net/minecraft/client/renderer/block/model/multipart/ConditionPropertyValue.java
+index 5395383..48f5fcf 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/multipart/ConditionPropertyValue.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/multipart/ConditionPropertyValue.java
+@@ -36,7 +36,7 @@ public class ConditionPropertyValue implements ICondition
+         else
+         {
+             String s = this.value;
+-            boolean flag = !s.isEmpty() && s.charAt(0) == '!';
++            boolean flag = s.length() != 0 && s.charAt(0) == '!';
+ 
+             if (flag)
+             {
+diff --git a/src/minecraft/net/minecraft/client/resources/Locale.java b/src/minecraft/net/minecraft/client/resources/Locale.java
+index e79594c..5995d77 100644
+--- a/src/minecraft/net/minecraft/client/resources/Locale.java
++++ b/src/minecraft/net/minecraft/client/resources/Locale.java
+@@ -102,7 +102,7 @@ public class Locale
+     {
+         for (String s : IOUtils.readLines(inputStreamIn, Charsets.UTF_8.name())) //
+         {
+-            if (!s.isEmpty() && s.charAt(0) != '#')
++            if (s.length() != 0 && s.charAt(0) != '#')
+             {
+                 String[] astring = (String[])Iterables.toArray(SPLITTER.split(s), String.class);
+ 
+diff --git a/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java b/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
+index 5386bab..0d657f1 100644
+--- a/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
++++ b/src/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
+@@ -316,7 +316,7 @@ public class ResourcePackRepository
+         {
+             String s = DigestUtils.sha1Hex(inputstream = new FileInputStream(p_190113_2_));
+ 
+-            if (!p_190113_1_.isEmpty())
++            if (p_190113_1_.length() != 0)
+             {
+                 if (s.toLowerCase(java.util.Locale.US).equals(p_190113_1_.toLowerCase(java.util.Locale.US)))
+                 {
+diff --git a/src/minecraft/net/minecraft/client/resources/data/LanguageMetadataSectionSerializer.java b/src/minecraft/net/minecraft/client/resources/data/LanguageMetadataSectionSerializer.java
+index 0934066..70cd008 100644
+--- a/src/minecraft/net/minecraft/client/resources/data/LanguageMetadataSectionSerializer.java
++++ b/src/minecraft/net/minecraft/client/resources/data/LanguageMetadataSectionSerializer.java
+@@ -32,12 +32,12 @@ public class LanguageMetadataSectionSerializer extends BaseMetadataSectionSerial
+             String s2 = JsonUtils.getString(jsonobject1, "name");
+             boolean flag = JsonUtils.getBoolean(jsonobject1, "bidirectional", false);
+ 
+-            if (s1.isEmpty())
++            if (s1.length() == 0)
+             {
+                 throw new JsonParseException("Invalid language->'" + s + "'->region: empty value");
+             }
+ 
+-            if (s2.isEmpty())
++            if (s2.length() == 0)
+             {
+                 throw new JsonParseException("Invalid language->'" + s + "'->name: empty value");
+             }
+diff --git a/src/minecraft/net/minecraft/client/util/RecipeBookClient.java b/src/minecraft/net/minecraft/client/util/RecipeBookClient.java
+index 181b046..c54ab25 100644
+--- a/src/minecraft/net/minecraft/client/util/RecipeBookClient.java
++++ b/src/minecraft/net/minecraft/client/util/RecipeBookClient.java
+@@ -61,7 +61,7 @@ public class RecipeBookClient extends RecipeBook
+                 String s = irecipe.getGroup();
+                 RecipeList recipelist1;
+ 
+-                if (s.isEmpty())
++                if (s.length() == 0)
+                 {
+                     recipelist1 = newRecipeList(creativetabs);
+                 }
+diff --git a/src/minecraft/net/minecraft/command/CommandResultStats.java b/src/minecraft/net/minecraft/command/CommandResultStats.java
+index d9b2be5..99e7a17 100644
+--- a/src/minecraft/net/minecraft/command/CommandResultStats.java
++++ b/src/minecraft/net/minecraft/command/CommandResultStats.java
+@@ -163,7 +163,7 @@ public class CommandResultStats
+      */
+     public static void setScoreBoardStat(CommandResultStats stats, CommandResultStats.Type resultType, @Nullable String entityID, @Nullable String objectiveName)
+     {
+-        if (entityID != null && !entityID.isEmpty() && objectiveName != null && !objectiveName.isEmpty())
++        if (entityID != null && entityID.length() != 0 && objectiveName != null && objectiveName.length() != 0)
+         {
+             if (stats.entitiesID == STRING_RESULT_TYPES || stats.objectives == STRING_RESULT_TYPES)
+             {
+diff --git a/src/minecraft/net/minecraft/command/CommandStats.java b/src/minecraft/net/minecraft/command/CommandStats.java
+index 59a92d6..cb9173a 100644
+--- a/src/minecraft/net/minecraft/command/CommandStats.java
++++ b/src/minecraft/net/minecraft/command/CommandStats.java
+@@ -166,7 +166,7 @@ public class CommandStats extends CommandBase
+                     String s1 = args[i++];
+                     String s2 = args[i];
+ 
+-                    if (s1.isEmpty() || s2.isEmpty())
++                    if (s1.length() == 0 || s2.length() == 0)
+                     {
+                         throw new CommandException("commands.stats.failed", new Object[0]);
+                     }
+diff --git a/src/minecraft/net/minecraft/command/CommandStopSound.java b/src/minecraft/net/minecraft/command/CommandStopSound.java
+index 990fd6f..b43b4c2 100644
+--- a/src/minecraft/net/minecraft/command/CommandStopSound.java
++++ b/src/minecraft/net/minecraft/command/CommandStopSound.java
+@@ -73,11 +73,11 @@ public class CommandStopSound extends CommandBase
+             packetbuffer.writeString(s1);
+             entityplayermp.connection.sendPacket(new SPacketCustomPayload("MC|StopSound", packetbuffer));
+ 
+-            if (s.isEmpty() && s1.isEmpty())
++            if (s.length() == 0 && s1.length() == 0)
+             {
+                 notifyCommandListener(sender, this, "commands.stopsound.success.all", new Object[] {entityplayermp.getName()});
+             }
+-            else if (s1.isEmpty())
++            else if (s1.length() == 0)
+             {
+                 notifyCommandListener(sender, this, "commands.stopsound.success.soundSource", new Object[] {s, entityplayermp.getName()});
+             }
+diff --git a/src/minecraft/net/minecraft/command/FunctionObject.java b/src/minecraft/net/minecraft/command/FunctionObject.java
+index d04a0eb..1883a8a 100644
+--- a/src/minecraft/net/minecraft/command/FunctionObject.java
++++ b/src/minecraft/net/minecraft/command/FunctionObject.java
+@@ -32,7 +32,7 @@ public class FunctionObject
+         {
+             s = s.trim();
+ 
+-            if (!s.startsWith("#") && !s.isEmpty())
++            if (!s.startsWith("#") && s.length() != 0)
+             {
+                 String[] astring = s.split(" ", 2);
+                 String s1 = astring[0];
+diff --git a/src/minecraft/net/minecraft/command/server/CommandScoreboard.java b/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
+index 0939387..c0f367d 100644
+--- a/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
++++ b/src/minecraft/net/minecraft/command/server/CommandScoreboard.java
+@@ -413,7 +413,7 @@ public class CommandScoreboard extends CommandBase
+         {
+             throw new SyntaxErrorException("commands.scoreboard.objectives.add.tooLong", new Object[] {s, Integer.valueOf(16)});
+         }
+-        else if (s.isEmpty())
++        else if (s.length() == 0)
+         {
+             throw new WrongUsageException("commands.scoreboard.objectives.add.usage", new Object[0]);
+         }
+@@ -428,7 +428,7 @@ public class CommandScoreboard extends CommandBase
+                     throw new SyntaxErrorException("commands.scoreboard.objectives.add.displayTooLong", new Object[] {s2, Integer.valueOf(32)});
+                 }
+ 
+-                if (s2.isEmpty())
++                if (s2.length() == 0)
+                 {
+                     scoreboard.addScoreObjective(s, iscorecriteria);
+                 }
+@@ -459,7 +459,7 @@ public class CommandScoreboard extends CommandBase
+         {
+             throw new SyntaxErrorException("commands.scoreboard.teams.add.tooLong", new Object[] {s, Integer.valueOf(16)});
+         }
+-        else if (s.isEmpty())
++        else if (s.length() == 0)
+         {
+             throw new WrongUsageException("commands.scoreboard.teams.add.usage", new Object[0]);
+         }
+@@ -474,7 +474,7 @@ public class CommandScoreboard extends CommandBase
+                     throw new SyntaxErrorException("commands.scoreboard.teams.add.displayTooLong", new Object[] {s1, Integer.valueOf(32)});
+                 }
+ 
+-                if (s1.isEmpty())
++                if (s1.length() == 0)
+                 {
+                     scoreboard.createTeam(s);
+                 }
+diff --git a/src/minecraft/net/minecraft/entity/Entity.java b/src/minecraft/net/minecraft/entity/Entity.java
+index 3cdb4ad..c4bda0f 100644
+--- a/src/minecraft/net/minecraft/entity/Entity.java
++++ b/src/minecraft/net/minecraft/entity/Entity.java
+@@ -3246,7 +3246,7 @@ public abstract class Entity implements ICommandSender
+      */
+     public boolean hasCustomName()
+     {
+-        return !((String)this.dataManager.get(CUSTOM_NAME)).isEmpty();
++        return ((String)this.dataManager.get(CUSTOM_NAME)).length() != 0;
+     }
+ 
+     public void setAlwaysRenderNameTag(boolean alwaysRenderNameTag)
+diff --git a/src/minecraft/net/minecraft/entity/monster/EntityPigZombie.java b/src/minecraft/net/minecraft/entity/monster/EntityPigZombie.java
+index f1e564f..17bdd82 100644
+--- a/src/minecraft/net/minecraft/entity/monster/EntityPigZombie.java
++++ b/src/minecraft/net/minecraft/entity/monster/EntityPigZombie.java
+@@ -155,7 +155,7 @@ public class EntityPigZombie extends EntityZombie
+         this.angerLevel = compound.getShort("Anger");
+         String s = compound.getString("HurtBy");
+ 
+-        if (!s.isEmpty())
++        if (s.length() != 0)
+         {
+             this.angerTargetUUID = UUID.fromString(s);
+             EntityPlayer entityplayer = this.world.getPlayerEntityByUUID(this.angerTargetUUID);
+diff --git a/src/minecraft/net/minecraft/entity/passive/AbstractHorse.java b/src/minecraft/net/minecraft/entity/passive/AbstractHorse.java
+index 19e54c8..f103eea 100644
+--- a/src/minecraft/net/minecraft/entity/passive/AbstractHorse.java
++++ b/src/minecraft/net/minecraft/entity/passive/AbstractHorse.java
+@@ -1017,7 +1017,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
+             s = PreYggdrasilConverter.convertMobOwnerIfNeeded(this.getServer(), s1);
+         }
+ 
+-        if (!s.isEmpty())
++        if (s.length() != 0)
+         {
+             this.setOwnerUniqueId(UUID.fromString(s));
+         }
+diff --git a/src/minecraft/net/minecraft/entity/passive/EntityTameable.java b/src/minecraft/net/minecraft/entity/passive/EntityTameable.java
+index ab63d4c..6e7bf52 100644
+--- a/src/minecraft/net/minecraft/entity/passive/EntityTameable.java
++++ b/src/minecraft/net/minecraft/entity/passive/EntityTameable.java
+@@ -76,7 +76,7 @@ public abstract class EntityTameable extends EntityAnimal implements IEntityOwna
+             s = PreYggdrasilConverter.convertMobOwnerIfNeeded(this.getServer(), s1);
+         }
+ 
+-        if (!s.isEmpty())
++        if (s.length() != 0)
+         {
+             try
+             {
+diff --git a/src/minecraft/net/minecraft/entity/passive/EntityVillager.java b/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
+index 293b19a..02968ad 100644
+--- a/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
++++ b/src/minecraft/net/minecraft/entity/passive/EntityVillager.java
+@@ -736,7 +736,7 @@ public class EntityVillager extends EntityAgeable implements INpc, IMerchant
+         Team team = this.getTeam();
+         String s = this.getCustomNameTag();
+ 
+-        if (s != null && !s.isEmpty())
++        if (s != null && s.length() != 0)
+         {
+             TextComponentString textcomponentstring = new TextComponentString(ScorePlayerTeam.formatPlayerName(team, s));
+             textcomponentstring.getStyle().setHoverEvent(this.getHoverEvent());
+diff --git a/src/minecraft/net/minecraft/entity/projectile/EntityThrowable.java b/src/minecraft/net/minecraft/entity/projectile/EntityThrowable.java
+index 650c74e..828b377 100644
+--- a/src/minecraft/net/minecraft/entity/projectile/EntityThrowable.java
++++ b/src/minecraft/net/minecraft/entity/projectile/EntityThrowable.java
+@@ -347,7 +347,7 @@ public abstract class EntityThrowable extends Entity implements IProjectile
+         compound.setByte("shake", (byte)this.throwableShake);
+         compound.setByte("inGround", (byte)(this.inGround ? 1 : 0));
+ 
+-        if ((this.throwerName == null || this.throwerName.isEmpty()) && this.thrower instanceof EntityPlayer)
++        if ((this.throwerName == null || this.throwerName.length() == 0) && this.thrower instanceof EntityPlayer)
+         {
+             this.throwerName = this.thrower.getName();
+         }
+@@ -378,7 +378,7 @@ public abstract class EntityThrowable extends Entity implements IProjectile
+         this.thrower = null;
+         this.throwerName = compound.getString("ownerName");
+ 
+-        if (this.throwerName != null && this.throwerName.isEmpty())
++        if (this.throwerName != null && this.throwerName.length() == 0)
+         {
+             this.throwerName = null;
+         }
+@@ -389,7 +389,7 @@ public abstract class EntityThrowable extends Entity implements IProjectile
+     @Nullable
+     public EntityLivingBase getThrower()
+     {
+-        if (this.thrower == null && this.throwerName != null && !this.throwerName.isEmpty())
++        if (this.thrower == null && this.throwerName != null && this.throwerName.length() != 0)
+         {
+             this.thrower = this.world.getPlayerEntityByName(this.throwerName);
+ 
+diff --git a/src/minecraft/net/minecraft/item/ItemStack.java b/src/minecraft/net/minecraft/item/ItemStack.java
+index 8a34428..8e50274 100644
+--- a/src/minecraft/net/minecraft/item/ItemStack.java
++++ b/src/minecraft/net/minecraft/item/ItemStack.java
+@@ -751,7 +751,7 @@ public final class ItemStack
+         {
+             String s1 = "";
+ 
+-            if (!s.isEmpty())
++            if (s.length() != 0)
+             {
+                 s = s + " (";
+                 s1 = ")";
+diff --git a/src/minecraft/net/minecraft/nbt/JsonToNBT.java b/src/minecraft/net/minecraft/nbt/JsonToNBT.java
+index 65676a4..0f34676 100644
+--- a/src/minecraft/net/minecraft/nbt/JsonToNBT.java
++++ b/src/minecraft/net/minecraft/nbt/JsonToNBT.java
+@@ -76,7 +76,7 @@ public class JsonToNBT
+         {
+             String s = this.readString();
+ 
+-            if (s.isEmpty())
++            if (s.length() == 0)
+             {
+                 throw this.exception("Expected value");
+             }
+@@ -242,7 +242,7 @@ public class JsonToNBT
+         {
+             String s = this.readKey();
+ 
+-            if (s.isEmpty())
++            if (s.length() == 0)
+             {
+                 throw this.exception("Expected non-empty key");
+             }
+diff --git a/src/minecraft/net/minecraft/nbt/NBTTagString.java b/src/minecraft/net/minecraft/nbt/NBTTagString.java
+index 3881579..92d2b2a 100644
+--- a/src/minecraft/net/minecraft/nbt/NBTTagString.java
++++ b/src/minecraft/net/minecraft/nbt/NBTTagString.java
+@@ -62,7 +62,7 @@ public class NBTTagString extends NBTBase
+      */
+     public boolean isEmpty()
+     {
+-        return this.data.isEmpty();
++        return this.data.length() == 0;
+     }
+ 
+     public boolean equals(Object p_equals_1_)
+diff --git a/src/minecraft/net/minecraft/profiler/Profiler.java b/src/minecraft/net/minecraft/profiler/Profiler.java
+index 7bb4b1f..66bbdc6 100644
+--- a/src/minecraft/net/minecraft/profiler/Profiler.java
++++ b/src/minecraft/net/minecraft/profiler/Profiler.java
+@@ -95,7 +95,7 @@ public class Profiler
+         {
+             if (this.profilingEnabled)
+             {
+-                if (!this.profilingSection.isEmpty())
++                if (this.profilingSection.length() != 0)
+                 {
+                     this.profilingSection = this.profilingSection + ".";
+                 }
+@@ -163,7 +163,7 @@ public class Profiler
+             long j = this.profilingMap.containsKey(profilerName) ? ((Long)this.profilingMap.get(profilerName)).longValue() : -1L;
+             List<Profiler.Result> list = Lists.<Profiler.Result>newArrayList();
+ 
+-            if (!profilerName.isEmpty())
++            if (profilerName.length() != 0)
+             {
+                 profilerName = profilerName + ".";
+             }
+diff --git a/src/minecraft/net/minecraft/server/management/PlayerList.java b/src/minecraft/net/minecraft/server/management/PlayerList.java
+index 345950d..078e82e 100644
+--- a/src/minecraft/net/minecraft/server/management/PlayerList.java
++++ b/src/minecraft/net/minecraft/server/management/PlayerList.java
+@@ -175,7 +175,7 @@ public abstract class PlayerList
+         nethandlerplayserver.setPlayerLocation(playerIn.posX, playerIn.posY, playerIn.posZ, playerIn.rotationYaw, playerIn.rotationPitch);
+         this.updateTimeAndWeatherForPlayer(playerIn, worldserver);
+ 
+-        if (!this.server.getResourcePackUrl().isEmpty())
++        if (this.server.getResourcePackUrl().length() != 0)
+         {
+             playerIn.loadResourcePack(this.server.getResourcePackUrl(), this.server.getResourcePackHash());
+         }
+diff --git a/src/minecraft/net/minecraft/src/Config.java b/src/minecraft/net/minecraft/src/Config.java
+index 142e5a3..6eddd8e 100644
+--- a/src/minecraft/net/minecraft/src/Config.java
++++ b/src/minecraft/net/minecraft/src/Config.java
+@@ -1914,12 +1914,12 @@ public class Config
+ 
+                 if (!s2.equals(s3))
+                 {
+-                    if (s2.isEmpty())
++                    if (s2.length() == 0)
+                     {
+                         return 1;
+                     }
+ 
+-                    if (s3.isEmpty())
++                    if (s3.length() == 0)
+                     {
+                         return -1;
+                     }
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityBanner.java b/src/minecraft/net/minecraft/tileentity/TileEntityBanner.java
+index 4289a66..73f3950 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityBanner.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityBanner.java
+@@ -104,7 +104,7 @@ public class TileEntityBanner extends TileEntity implements IWorldNameable
+      */
+     public boolean hasCustomName()
+     {
+-        return this.name != null && !this.name.isEmpty();
++        return this.name != null && this.name.length() != 0;
+     }
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityBeacon.java b/src/minecraft/net/minecraft/tileentity/TileEntityBeacon.java
+index 6254f46..fcb7548 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityBeacon.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityBeacon.java
+@@ -440,7 +440,7 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
+      */
+     public boolean hasCustomName()
+     {
+-        return this.customName != null && !this.customName.isEmpty();
++        return this.customName != null && this.customName.length() != 0;
+     }
+ 
+     public void setName(String name)
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityBrewingStand.java b/src/minecraft/net/minecraft/tileentity/TileEntityBrewingStand.java
+index cfbfe2c..0a53390 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityBrewingStand.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityBrewingStand.java
+@@ -102,7 +102,7 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
+      */
+     public boolean hasCustomName()
+     {
+-        return this.customName != null && !this.customName.isEmpty();
++        return this.customName != null && this.customName.length() != 0;
+     }
+ 
+     public void setName(String name)
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityEnchantmentTable.java b/src/minecraft/net/minecraft/tileentity/TileEntityEnchantmentTable.java
+index 13981f0..85cb3bc 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityEnchantmentTable.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityEnchantmentTable.java
+@@ -186,7 +186,7 @@ public class TileEntityEnchantmentTable extends TileEntity implements ITickable,
+      */
+     public boolean hasCustomName()
+     {
+-        return this.customName != null && !this.customName.isEmpty();
++        return this.customName != null && this.customName.length() != 0;
+     }
+ 
+     public void setCustomName(String customNameIn)
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityFurnace.java b/src/minecraft/net/minecraft/tileentity/TileEntityFurnace.java
+index bf304e2..90d8c6d 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityFurnace.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityFurnace.java
+@@ -171,7 +171,7 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable,
+      */
+     public boolean hasCustomName()
+     {
+-        return this.furnaceCustomName != null && !this.furnaceCustomName.isEmpty();
++        return this.furnaceCustomName != null && this.furnaceCustomName.length() != 0;
+     }
+ 
+     public void setCustomInventoryName(String p_145951_1_)
+diff --git a/src/minecraft/net/minecraft/tileentity/TileEntityLockableLoot.java b/src/minecraft/net/minecraft/tileentity/TileEntityLockableLoot.java
+index f19cb24..cf75d6b 100644
+--- a/src/minecraft/net/minecraft/tileentity/TileEntityLockableLoot.java
++++ b/src/minecraft/net/minecraft/tileentity/TileEntityLockableLoot.java
+@@ -107,7 +107,7 @@ public abstract class TileEntityLockableLoot extends TileEntityLockable implemen
+      */
+     public boolean hasCustomName()
+     {
+-        return this.customName != null && !this.customName.isEmpty();
++        return this.customName != null && this.customName.length() != 0;
+     }
+ 
+     public void setCustomName(String p_190575_1_)
+diff --git a/src/minecraft/net/minecraft/util/TabCompleter.java b/src/minecraft/net/minecraft/util/TabCompleter.java
+index bd101bd..021e6e5 100644
+--- a/src/minecraft/net/minecraft/util/TabCompleter.java
++++ b/src/minecraft/net/minecraft/util/TabCompleter.java
+@@ -84,7 +84,7 @@ public abstract class TabCompleter
+ 
+             for (String s : newCompl)
+             {
+-                if (!s.isEmpty())
++                if (s.length() != 0)
+                 {
+                     this.completions.add(s);
+                 }
+@@ -93,7 +93,7 @@ public abstract class TabCompleter
+             String s1 = this.textField.getText().substring(this.textField.getNthWordFromPosWS(-1, this.textField.getCursorPosition(), false));
+             String s2 = org.apache.commons.lang3.StringUtils.getCommonPrefix(newCompl);
+ 
+-            if (!s2.isEmpty() && !s1.equalsIgnoreCase(s2))
++            if (s2.length() != 0 && !s1.equalsIgnoreCase(s2))
+             {
+                 this.textField.deleteFromCursor(0);
+                 this.textField.deleteFromCursor(this.textField.getNthWordFromPosWS(-1, this.textField.getCursorPosition(), false) - this.textField.getCursorPosition());
+diff --git a/src/minecraft/net/minecraft/util/datafix/fixes/SpawnerEntityTypes.java b/src/minecraft/net/minecraft/util/datafix/fixes/SpawnerEntityTypes.java
+index 1f093ce..40dc2b3 100644
+--- a/src/minecraft/net/minecraft/util/datafix/fixes/SpawnerEntityTypes.java
++++ b/src/minecraft/net/minecraft/util/datafix/fixes/SpawnerEntityTypes.java
+@@ -23,7 +23,7 @@ public class SpawnerEntityTypes implements IFixableData
+             {
+                 String s = compound.getString("EntityId");
+                 NBTTagCompound nbttagcompound = compound.getCompoundTag("SpawnData");
+-                nbttagcompound.setString("id", s.isEmpty() ? "Pig" : s);
++                nbttagcompound.setString("id", s.length() == 0 ? "Pig" : s);
+                 compound.setTag("SpawnData", nbttagcompound);
+                 compound.removeTag("EntityId");
+             }
+diff --git a/src/minecraft/net/minecraft/util/text/TextComponentBase.java b/src/minecraft/net/minecraft/util/text/TextComponentBase.java
+index fff39ad..0812348 100644
+--- a/src/minecraft/net/minecraft/util/text/TextComponentBase.java
++++ b/src/minecraft/net/minecraft/util/text/TextComponentBase.java
+@@ -112,7 +112,7 @@ public abstract class TextComponentBase implements ITextComponent
+         {
+             String s = itextcomponent.getUnformattedComponentText();
+ 
+-            if (!s.isEmpty())
++            if (s.length() != 0)
+             {
+                 stringbuilder.append(itextcomponent.getStyle().getFormattingCode());
+                 stringbuilder.append(s);
+diff --git a/src/minecraft/net/minecraft/util/text/translation/LanguageMap.java b/src/minecraft/net/minecraft/util/text/translation/LanguageMap.java
+index 86903f0..5ce6941 100644
+--- a/src/minecraft/net/minecraft/util/text/translation/LanguageMap.java
++++ b/src/minecraft/net/minecraft/util/text/translation/LanguageMap.java
+@@ -41,7 +41,7 @@ public class LanguageMap
+ 
+             for (String s : IOUtils.readLines(inputstream, Charsets.UTF_8.name())) //
+             {
+-                if (!s.isEmpty() && s.charAt(0) != '#')
++                if (s.length() != 0 && s.charAt(0) != '#')
+                 {
+                     String[] astring = (String[])Iterables.toArray(EQUAL_SIGN_SPLITTER.split(s), String.class);
+ 
+diff --git a/src/minecraft/net/minecraft/world/LockCode.java b/src/minecraft/net/minecraft/world/LockCode.java
+index de3aa1f..03363dd 100644
+--- a/src/minecraft/net/minecraft/world/LockCode.java
++++ b/src/minecraft/net/minecraft/world/LockCode.java
+@@ -16,7 +16,7 @@ public class LockCode
+ 
+     public boolean isEmpty()
+     {
+-        return this.lock == null || this.lock.isEmpty();
++        return this.lock == null || this.lock.length() == 0;
+     }
+ 
+     public String getLock()
+diff --git a/src/minecraft/net/minecraft/world/biome/BiomeProvider.java b/src/minecraft/net/minecraft/world/biome/BiomeProvider.java
+index c2341e7..b6ed705 100644
+--- a/src/minecraft/net/minecraft/world/biome/BiomeProvider.java
++++ b/src/minecraft/net/minecraft/world/biome/BiomeProvider.java
+@@ -37,7 +37,7 @@ public class BiomeProvider
+     {
+         this();
+ 
+-        if (worldTypeIn == WorldType.CUSTOMIZED && !options.isEmpty())
++        if (worldTypeIn == WorldType.CUSTOMIZED && options.length() != 0)
+         {
+             this.settings = ChunkGeneratorSettings.Factory.jsonToFactory(options).build();
+         }
+diff --git a/src/minecraft/net/minecraft/world/gen/ChunkGeneratorSettings.java b/src/minecraft/net/minecraft/world/gen/ChunkGeneratorSettings.java
+index b98e495..1e583be 100644
+--- a/src/minecraft/net/minecraft/world/gen/ChunkGeneratorSettings.java
++++ b/src/minecraft/net/minecraft/world/gen/ChunkGeneratorSettings.java
+@@ -266,7 +266,7 @@ public class ChunkGeneratorSettings
+ 
+         public static ChunkGeneratorSettings.Factory jsonToFactory(String p_177865_0_)
+         {
+-            if (p_177865_0_.isEmpty())
++            if (p_177865_0_.length() == 0)
+             {
+                 return new ChunkGeneratorSettings.Factory();
+             }
+diff --git a/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java b/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
+index c960b3d..f65233c 100644
+--- a/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
++++ b/src/minecraft/net/minecraft/world/gen/FlatGeneratorInfo.java
+@@ -276,7 +276,7 @@ public class FlatGeneratorInfo
+                             String[] astring2 = s.split("\\(", 2);
+                             Map<String, String> map = Maps.<String, String>newHashMap();
+ 
+-                            if (!astring2[0].isEmpty())
++                            if (astring2[0].length() != 0)
+                             {
+                                 flatgeneratorinfo.getWorldFeatures().put(astring2[0], map);
+ 
+diff --git a/src/minecraft/net/optifine/Lang.java b/src/minecraft/net/optifine/Lang.java
+index 74f7967..2d42dd4 100644
+--- a/src/minecraft/net/optifine/Lang.java
++++ b/src/minecraft/net/optifine/Lang.java
+@@ -82,7 +82,7 @@ public class Lang
+         {
+             String s = (String)iterator.next();
+ 
+-            if (!s.isEmpty() && s.charAt(0) != '#')
++            if (s.length() != 0 && s.charAt(0) != '#')
+             {
+                 String[] astring = (String[])Iterables.toArray(splitter.split(s), String.class);
+ 
+diff --git a/src/minecraft/net/optifine/player/CapeUtils.java b/src/minecraft/net/optifine/player/CapeUtils.java
+index e8f3731..5e6d6bb 100644
+--- a/src/minecraft/net/optifine/player/CapeUtils.java
++++ b/src/minecraft/net/optifine/player/CapeUtils.java
+@@ -22,7 +22,7 @@ public class CapeUtils
+     {
+         String s = player.getNameClear();
+ 
+-        if (s != null && !s.isEmpty() && !s.contains("\u0000") && PATTERN_USERNAME.matcher(s).matches())
++        if (s != null && s.length() != 0 && !s.contains("\u0000") && PATTERN_USERNAME.matcher(s).matches())
+         {
+             String s1 = "http://s.optifine.net/capes/" + s + ".png";
+             ResourceLocation resourcelocation = new ResourceLocation("capeof/" + s);
+diff --git a/src/minecraft/net/optifine/shaders/Shaders.java b/src/minecraft/net/optifine/shaders/Shaders.java
+index 2a07fac..a0b61f3 100644
+--- a/src/minecraft/net/optifine/shaders/Shaders.java
++++ b/src/minecraft/net/optifine/shaders/Shaders.java
+@@ -918,7 +918,7 @@ public class Shaders
+         {
+             name = name.trim();
+ 
+-            if (!name.isEmpty() && !name.equals("OFF"))
++            if (name.length() != 0 && !name.equals("OFF"))
+             {
+                 if (name.equals("(internal)"))
+                 {
+@@ -1930,7 +1930,7 @@ public class Shaders
+ 
+         String s2 = activeProgram.getName();
+ 
+-        if (s2.isEmpty())
++        if (s2.length() == 0)
+         {
+             s2 = "none";
+         }
+@@ -1942,7 +1942,7 @@ public class Shaders
+         {
+             String s3 = program.getName();
+ 
+-            if (s3.isEmpty())
++            if (s3.length() == 0)
+             {
+                 s3 = "none";
+             }
+diff --git a/src/minecraft/net/optifine/shaders/config/MacroProcessor.java b/src/minecraft/net/optifine/shaders/config/MacroProcessor.java
+index 7b13b18..a7496e9 100644
+--- a/src/minecraft/net/optifine/shaders/config/MacroProcessor.java
++++ b/src/minecraft/net/optifine/shaders/config/MacroProcessor.java
+@@ -19,7 +19,7 @@ public class MacroProcessor
+         String s = Config.readInputStream(in, "ASCII");
+         String s1 = getMacroHeader(s);
+ 
+-        if (!s1.isEmpty())
++        if (s1.length() != 0)
+         {
+             s = s1 + s;
+ 
+-- 
+2.35.3
+

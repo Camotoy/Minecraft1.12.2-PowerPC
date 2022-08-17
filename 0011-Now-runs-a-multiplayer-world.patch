@@ -1,0 +1,1074 @@
+From d986f3d1ae745e78a5a925928b11c016afa52363 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 16:29:28 -0400
+Subject: [PATCH 11/14] Now runs a multiplayer world
+
+---
+ .../minecraft/util/JavaBackportUtil.java      | 12 +++++
+ .../block/state/BlockStateContainer.java      |  2 +-
+ .../block/state/BlockStateContainer.java.orig |  2 +-
+ .../net/minecraft/client/Minecraft.java       | 53 ++++++++++++++-----
+ .../client/gui/GuiScreenAddServer.java        |  5 +-
+ .../client/gui/chat/NarratorChatListener.java | 18 +++----
+ .../client/multiplayer/ServerAddress.java     | 10 ++++
+ .../multiplayer/ThreadLanServerPing.java      |  2 +-
+ .../client/network/LanServerDetector.java     |  2 +-
+ .../client/network/NetHandlerPlayClient.java  | 12 ++---
+ .../client/network/ServerPinger.java          |  2 +-
+ .../client/renderer/RenderGlobal.java         |  4 +-
+ .../block/model/BakedQuadRetextured.java      |  2 +-
+ .../renderer/block/model/FaceBakery.java      |  2 +-
+ .../renderer/block/model/ModelBakery.java     |  2 +-
+ .../renderer/block/model/ModelRotation.java   |  2 +-
+ .../client/renderer/chunk/VisGraph.java       |  2 +-
+ .../minecraft/client/settings/KeyBinding.java |  2 +-
+ .../client/tutorial/TutorialSteps.java        |  4 +-
+ .../net/minecraft/client/util/SearchTree.java | 14 ++---
+ .../minecraft/client/util/SuffixArray.java    |  2 +-
+ .../net/minecraft/command/CommandClone.java   |  2 +-
+ .../net/minecraft/entity/EntityLiving.java    |  8 +--
+ .../entity/boss/dragon/phase/PhaseList.java   |  2 +-
+ .../minecraft/entity/player/EntityPlayer.java |  2 +-
+ .../minecraft/network/LegacyPingHandler.java  |  2 +-
+ .../net/minecraft/network/PacketBuffer.java   |  2 +-
+ .../net/minecraft/profiler/Profiler.java      |  7 ++-
+ .../scoreboard/ServerScoreboard.java          |  2 +-
+ .../server/management/PlayerProfileCache.java |  2 +-
+ .../server/network/NetHandlerLoginServer.java |  2 +-
+ .../util/ClassInheritanceMultiMap.java        |  6 +--
+ .../util/text/TextComponentKeybind.java       |  6 +--
+ src/minecraft/net/minecraft/world/World.java  |  2 +-
+ .../world/chunk/storage/AnvilChunkLoader.java |  2 +-
+ .../common/model/IModelState.java             |  2 +-
+ .../net/optifine/config/ConnectedParser.java  |  2 +-
+ .../net/optifine/config/NbtTagValue.java      |  2 +-
+ .../entity/model/CustomEntityModels.java      |  2 +-
+ .../net/optifine/expr/ExpressionParser.java   | 24 ++++-----
+ .../net/optifine/gui/TooltipManager.java      |  2 +-
+ .../optifine/http/HttpPipelineReceiver.java   |  2 +-
+ .../net/optifine/http/HttpPipelineSender.java |  2 +-
+ .../net/optifine/reflect/Reflector.java       |  2 +-
+ .../net/optifine/shaders/ProgramStack.java    |  2 +-
+ .../net/optifine/shaders/ShaderPackZip.java   |  2 +-
+ .../net/optifine/shaders/Shaders.java         |  6 +--
+ .../net/optifine/util/ArrayCache.java         |  2 +-
+ .../net/optifine/util/IteratorCache.java      |  2 +-
+ 49 files changed, 156 insertions(+), 101 deletions(-)
+
+diff --git a/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
+index 7533a9a..948c3d9 100644
+--- a/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
++++ b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
+@@ -54,6 +54,14 @@ public final class JavaBackportUtil {
+         }
+     }
+ 
++    public static String newStringFromBytes(byte[] bytes, int offset, int length, Charset charset) {
++        try {
++            return new String(bytes, offset, length, charset.name());
++        } catch (UnsupportedEncodingException e) {
++            throw new RuntimeException(charset.name() + " is not on this platform!");
++        }
++    }
++
+     public static boolean isAllASCII(String input) {
+         boolean isASCII = true;
+         for (int i = 0; i < input.length(); i++) {
+@@ -128,6 +136,10 @@ public final class JavaBackportUtil {
+         }
+     }
+ 
++    public static int compare(int x, int y) {
++        return (x < y) ? -1 : ((x == y) ? 0 : 1);
++    }
++
+     /* Misc */
+ 
+     public static void validateInclusiveBetween(long start, long end, long value, String message) {
+diff --git a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
+index 2f3c9ac..6c7b194 100644
+--- a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
++++ b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
+@@ -17,7 +17,7 @@ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+-import java.util.Optional;
++import com.google.common.base.Optional;
+ import java.util.Map.Entry;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
+diff --git a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java.orig b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java.orig
+index d29b921..8d7243f 100644
+--- a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java.orig
++++ b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java.orig
+@@ -17,7 +17,7 @@ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+-import java.util.Optional;
++import com.google.common.base.Optional;
+ import java.util.Map.Entry;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
+diff --git a/src/minecraft/net/minecraft/client/Minecraft.java b/src/minecraft/net/minecraft/client/Minecraft.java
+index 14d0acd..245a61c 100644
+--- a/src/minecraft/net/minecraft/client/Minecraft.java
++++ b/src/minecraft/net/minecraft/client/Minecraft.java
+@@ -650,11 +650,23 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+      */
+     private void populateSearchTreeManager()
+     {
++        final com.google.common.base.Function<String, String> getTextWithoutFormattingCodes = TextFormatting::getTextWithoutFormattingCodes; // Consolidate this down
++        final com.google.common.base.Function<String, String> trim = String::trim; // Consolidate this down
++        final com.google.common.base.Predicate<String> lengthCheck = new com.google.common.base.Predicate<String>() {
++            public boolean apply(String p_193984_0_) {
++                return p_193984_0_.length() != 0;
++            }
++        };
+         SearchTree<ItemStack> searchtree = new SearchTree<ItemStack>((p_193988_0_) ->
+         {
+-            return (List)p_193988_0_.getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream().map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193984_0_) -> {
+-                return p_193984_0_.length() != 0;
+-            }).collect(Collectors.toList());
++            // Port Streams to Guava iterables API
++            return com.google.common.collect.FluentIterable.from(p_193988_0_.getTooltip(null, ITooltipFlag.TooltipFlags.NORMAL))
++                    .transform(getTextWithoutFormattingCodes)
++                    .transform(trim)
++                    .filter(lengthCheck).toList();
++            //return (List)p_193988_0_.getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream().map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193984_0_) -> {
++            //    return p_193984_0_.length() != 0;
++            //}).collect(Collectors.toList()); End
+         }, (p_193985_0_) ->
+         {
+             return Collections.singleton(Item.REGISTRY.getNameForObject(p_193985_0_.getItem()));
+@@ -666,21 +678,36 @@ public class Minecraft implements IThreadListener, ISnooperInfo
+             item.getSubItems(CreativeTabs.SEARCH, nonnulllist);
+         }
+ 
+-        nonnulllist.forEach(searchtree::add);
++        for (ItemStack item : nonnulllist) { searchtree.add(item); } // Replace lack of Consumer
+         SearchTree<RecipeList> searchtree1 = new SearchTree<RecipeList>((p_193990_0_) ->
+         {
+-            return (List)p_193990_0_.getRecipes().stream().flatMap((p_193993_0_) -> {
+-                return p_193993_0_.getRecipeOutput().getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream();
+-            }).map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193994_0_) -> {
+-                return p_193994_0_.length() != 0;
+-            }).collect(Collectors.toList());
++            // Port Streams to Guava iterables API
++            return com.google.common.collect.FluentIterable.from(p_193990_0_.getRecipes())
++                    .transformAndConcat((p_193993_0_) -> {
++                        return p_193993_0_.getRecipeOutput().getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL);
++                    })
++                    .transform(getTextWithoutFormattingCodes)
++                    .transform(trim)
++                    .filter(lengthCheck)
++                    .toList();
++            //return (List)p_193990_0_.getRecipes().stream().flatMap((p_193993_0_) -> {
++            //    return p_193993_0_.getRecipeOutput().getTooltip((EntityPlayer)null, ITooltipFlag.TooltipFlags.NORMAL).stream();
++            //}).map(TextFormatting::getTextWithoutFormattingCodes).map(String::trim).filter((p_193994_0_) -> {
++            //    return p_193994_0_.length() != 0;
++            //}).collect(Collectors.toList()); End
+         }, (p_193991_0_) ->
+         {
+-            return (List)p_193991_0_.getRecipes().stream().map((p_193992_0_) -> {
+-                return Item.REGISTRY.getNameForObject(p_193992_0_.getRecipeOutput().getItem());
+-            }).collect(Collectors.toList());
++            // Port Streams to Guava iterables API
++            return com.google.common.collect.FluentIterable.from(p_193991_0_.getRecipes())
++                    .transform((p_193992_0_) -> {
++                        return Item.REGISTRY.getNameForObject(p_193992_0_.getRecipeOutput().getItem());
++                    })
++                    .toList();
++            //return (List)p_193991_0_.getRecipes().stream().map((p_193992_0_) -> {
++            //    return Item.REGISTRY.getNameForObject(p_193992_0_.getRecipeOutput().getItem());
++            //}).collect(Collectors.toList()); End
+         });
+-        RecipeBookClient.ALL_RECIPES.forEach(searchtree1::add);
++        for (RecipeList recipeList : RecipeBookClient.ALL_RECIPES) { searchtree1.add(recipeList); } // Replace lack of Consumer
+         this.searchTreeManager.register(SearchTreeManager.ITEMS, searchtree);
+         this.searchTreeManager.register(SearchTreeManager.RECIPES, searchtree1);
+     }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java b/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
+index 31a3919..f0ff205 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiScreenAddServer.java
+@@ -36,8 +36,9 @@ public class GuiScreenAddServer extends GuiScreen
+                 {
+                     try
+                     {
+-                        String s = IDN.toASCII(astring[0]);
+-                        return true;
++                        //String s = IDN.toASCII(astring[0]);
++                        //return true;
++                        return net.camotoy.minecraft.util.JavaBackportUtil.isAllASCII(astring[0]); // IDN doesn't exist in Java 5
+                     }
+                     catch (IllegalArgumentException var4)
+                     {
+diff --git a/src/minecraft/net/minecraft/client/gui/chat/NarratorChatListener.java b/src/minecraft/net/minecraft/client/gui/chat/NarratorChatListener.java
+index 0165abf..296f703 100644
+--- a/src/minecraft/net/minecraft/client/gui/chat/NarratorChatListener.java
++++ b/src/minecraft/net/minecraft/client/gui/chat/NarratorChatListener.java
+@@ -12,7 +12,7 @@ import net.minecraft.util.text.TextComponentTranslation;
+ public class NarratorChatListener implements IChatListener
+ {
+     public static final NarratorChatListener INSTANCE = new NarratorChatListener();
+-    private final Narrator narrator = Narrator.getNarrator();
++    //private final Narrator narrator = Narrator.getNarrator(); Disable as we don't have the natives to do this
+ 
+     /**
+      * Called whenever this listener receives a chat message, if this listener is registered to the given type in {@link
+@@ -25,17 +25,17 @@ public class NarratorChatListener implements IChatListener
+     {
+         int i = Minecraft.getMinecraft().gameSettings.narrator;
+ 
+-        if (i != 0 && this.narrator.active())
++        if (i != 0 && /*this.narrator.active()*/ false)
+         {
+             if (i == 1 || i == 2 && chatTypeIn == ChatType.CHAT || i == 3 && chatTypeIn == ChatType.SYSTEM)
+             {
+                 if (message instanceof TextComponentTranslation && "chat.type.text".equals(((TextComponentTranslation)message).getKey()))
+                 {
+-                    this.narrator.say((new TextComponentTranslation("chat.type.text.narrate", ((TextComponentTranslation)message).getFormatArgs())).getUnformattedText());
++                    //this.narrator.say((new TextComponentTranslation("chat.type.text.narrate", ((TextComponentTranslation)message).getFormatArgs())).getUnformattedText());
+                 }
+                 else
+                 {
+-                    this.narrator.say(message.getUnformattedText());
++                    //this.narrator.say(message.getUnformattedText());
+                 }
+             }
+         }
+@@ -43,11 +43,11 @@ public class NarratorChatListener implements IChatListener
+ 
+     public void announceMode(int p_193641_1_)
+     {
+-        this.narrator.clear();
+-        this.narrator.say((new TextComponentTranslation("options.narrator", new Object[0])).getUnformattedText() + " : " + (new TextComponentTranslation(GameSettings.NARRATOR_MODES[p_193641_1_], new Object[0])).getUnformattedText());
++        //this.narrator.clear();
++        //this.narrator.say((new TextComponentTranslation("options.narrator", new Object[0])).getUnformattedText() + " : " + (new TextComponentTranslation(GameSettings.NARRATOR_MODES[p_193641_1_], new Object[0])).getUnformattedText());
+         GuiToast guitoast = Minecraft.getMinecraft().getToastGui();
+ 
+-        if (this.narrator.active())
++        if (/*this.narrator.active()*/ false)
+         {
+             if (p_193641_1_ == 0)
+             {
+@@ -66,11 +66,11 @@ public class NarratorChatListener implements IChatListener
+ 
+     public boolean isActive()
+     {
+-        return this.narrator.active();
++        return false; //return this.narrator.active();
+     }
+ 
+     public void clear()
+     {
+-        this.narrator.clear();
++        //this.narrator.clear();
+     }
+ }
+diff --git a/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java b/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
+index 015320f..104eb1f 100644
+--- a/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
++++ b/src/minecraft/net/minecraft/client/multiplayer/ServerAddress.java
+@@ -1,5 +1,7 @@
+ package net.minecraft.client.multiplayer;
+ 
++import net.camotoy.minecraft.util.JavaBackportUtil;
++
+ import java.net.IDN;
+ import java.util.Hashtable;
+ import javax.naming.directory.Attributes;
+@@ -19,6 +21,7 @@ public class ServerAddress
+ 
+     public String getIP()
+     {
++        /*
+         try
+         {
+             return IDN.toASCII(this.ipAddress);
+@@ -27,6 +30,13 @@ public class ServerAddress
+         {
+             return "";
+         }
++        */
++        if (JavaBackportUtil.isAllASCII(this.ipAddress)) {
++            return this.ipAddress;
++        } else {
++            return "";
++        }
++        // IDN doesn't exist in Java 5
+     }
+ 
+     public int getPort()
+diff --git a/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java b/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
+index 23b3319..59c7fe8 100644
+--- a/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
++++ b/src/minecraft/net/minecraft/client/multiplayer/ThreadLanServerPing.java
+@@ -32,7 +32,7 @@ public class ThreadLanServerPing extends Thread
+     public void run()
+     {
+         String s = getPingResponse(this.motd, this.address);
+-        byte[] abyte = s.getBytes(com.google.common.base.Charsets.UTF_8);
++        byte[] abyte = net.camotoy.minecraft.util.JavaBackportUtil.getStringBytes(s, com.google.common.base.Charsets.UTF_8); // getBytes
+ 
+         while (!this.isInterrupted() && this.isStopping)
+         {
+diff --git a/src/minecraft/net/minecraft/client/network/LanServerDetector.java b/src/minecraft/net/minecraft/client/network/LanServerDetector.java
+index b796d5c..aa66cb7 100644
+--- a/src/minecraft/net/minecraft/client/network/LanServerDetector.java
++++ b/src/minecraft/net/minecraft/client/network/LanServerDetector.java
+@@ -107,7 +107,7 @@ public class LanServerDetector
+                     break;
+                 }
+ 
+-                String s = new String(datagrampacket.getData(), datagrampacket.getOffset(), datagrampacket.getLength(), com.google.common.base.Charsets.UTF_8);
++                String s = net.camotoy.minecraft.util.JavaBackportUtil.newStringFromBytes(datagrampacket.getData(), datagrampacket.getOffset(), datagrampacket.getLength(), com.google.common.base.Charsets.UTF_8); // Constructor Java 5
+                 LanServerDetector.LOGGER.debug("{}: {}", datagrampacket.getAddress(), s);
+                 this.localServerList.addServer(s, datagrampacket.getAddress());
+             }
+diff --git a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+index c6f1ceb..2b7293a 100644
+--- a/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
++++ b/src/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
+@@ -1616,23 +1616,23 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient
+                 }
+ 
+             case INIT:
+-                packetIn.getRecipes().forEach(recipebook::unlock);
+-                packetIn.getDisplayedRecipes().forEach(recipebook::markNew);
++                for (IRecipe recipe : packetIn.getRecipes()) { recipebook.unlock(recipe); } //packetIn.getRecipes().forEach(recipebook::unlock);
++                for (IRecipe recipe : packetIn.getDisplayedRecipes()) { recipebook.markNew(recipe); } //packetIn.getDisplayedRecipes().forEach(recipebook::markNew);
+                 break;
+ 
+             case ADD:
+-                packetIn.getRecipes().forEach((p_194025_2_) ->
++                for (IRecipe p_194025_2_ : packetIn.getRecipes()) //packetIn.getRecipes().forEach((p_194025_2_) ->
+                 {
+                     recipebook.unlock(p_194025_2_);
+                     recipebook.markNew(p_194025_2_);
+                     RecipeToast.addOrUpdate(this.client.getToastGui(), p_194025_2_);
+-                });
++                }; //
+         }
+ 
+-        RecipeBookClient.ALL_RECIPES.forEach((p_194023_1_) ->
++        for (net.minecraft.client.gui.recipebook.RecipeList p_194023_1_ : RecipeBookClient.ALL_RECIPES) //RecipeBookClient.ALL_RECIPES.forEach((p_194023_1_) ->
+         {
+             p_194023_1_.updateKnownRecipes(recipebook);
+-        });
++        }; //
+ 
+         if (this.client.currentScreen instanceof IRecipeShownListener)
+         {
+diff --git a/src/minecraft/net/minecraft/client/network/ServerPinger.java b/src/minecraft/net/minecraft/client/network/ServerPinger.java
+index 5597a52..d3474f9 100644
+--- a/src/minecraft/net/minecraft/client/network/ServerPinger.java
++++ b/src/minecraft/net/minecraft/client/network/ServerPinger.java
+@@ -242,7 +242,7 @@ public class ServerPinger
+ 
+                         if (short1 == 255)
+                         {
+-                            String s = new String(p_channelRead0_2_.readBytes(p_channelRead0_2_.readShort() * 2).array(), StandardCharsets.UTF_16BE);
++                            String s = net.camotoy.minecraft.util.JavaBackportUtil.newStringFromBytes(p_channelRead0_2_.readBytes(p_channelRead0_2_.readShort() * 2).array(), com.google.common.base.Charsets.UTF_16BE); // Constructor doesn't exist in Java 5
+                             String[] astring = (String[])Iterables.toArray(ServerPinger.PING_RESPONSE_SPLITTER.split(s), String.class);
+ 
+                             if ("\u00a71".equals(astring[0]))
+diff --git a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+index 36c9ae8..08902af 100644
+--- a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
++++ b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+@@ -208,7 +208,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+     public Set chunksToResortTransparency = new LinkedHashSet();
+     public Set chunksToUpdateForced = new LinkedHashSet();
+     private Set<RenderChunk> chunksToUpdatePrev = new ObjectLinkedOpenHashSet<RenderChunk>();
+-    private Deque visibilityDeque = new ArrayDeque();
++    private final io.netty.util.internal.deque.Deque<RenderGlobal.ContainerLocalRenderInformation> visibilityDeque = new io.netty.util.internal.deque.ArrayDequeV6<RenderGlobal.ContainerLocalRenderInformation>(); // Deque Java 5
+     private List<RenderGlobal.ContainerLocalRenderInformation> renderInfosEntities = new ArrayList<RenderGlobal.ContainerLocalRenderInformation>(1024); // Compile
+     private List<RenderGlobal.ContainerLocalRenderInformation> renderInfosTileEntities = new ArrayList<RenderGlobal.ContainerLocalRenderInformation>(1024); // Compile
+     private List renderInfosNormal = new ArrayList(1024);
+@@ -1247,7 +1247,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             this.displayListEntitiesDirty = false;
+             this.clearRenderInfos();
+             this.visibilityDeque.clear();
+-            Deque deque = this.visibilityDeque;
++            io.netty.util.internal.deque.Deque<RenderGlobal.ContainerLocalRenderInformation> deque = this.visibilityDeque; // Deque Java 5
+             Entity.setRenderDistanceWeight(MathHelper.clamp((double)this.mc.gameSettings.renderDistanceChunks / 8.0D, 1.0D, 2.5D));
+             boolean flag1 = this.mc.renderChunksMany;
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuadRetextured.java b/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuadRetextured.java
+index 2a224ed..6dffeb6 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuadRetextured.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuadRetextured.java
+@@ -10,7 +10,7 @@ public class BakedQuadRetextured extends BakedQuad
+ 
+     public BakedQuadRetextured(BakedQuad quad, TextureAtlasSprite textureIn)
+     {
+-        super(Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length), quad.tintIndex, FaceBakery.getFacingFromVertexData(quad.getVertexData()), textureIn, quad.applyDiffuseLighting, quad.format);
++        super(net.camotoy.minecraft.util.JavaBackportUtil.arrayCopyOf(quad.getVertexData(), quad.getVertexData().length), quad.tintIndex, FaceBakery.getFacingFromVertexData(quad.getVertexData()), textureIn, quad.applyDiffuseLighting, quad.format);
+         this.texture = textureIn;
+         this.format = quad.format;
+         this.applyDiffuseLighting = quad.applyDiffuseLighting;
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+index c1647aa..e69d73f 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+@@ -52,7 +52,7 @@ public class FaceBakery
+ 
+     public BakedQuad makeBakedQuad(Vector3f posFrom, Vector3f posTo, BlockPartFace face, TextureAtlasSprite sprite, EnumFacing facing, ModelRotation modelRotationIn, @Nullable BlockPartRotation partRotation, boolean uvLocked, boolean shade)
+     {
+-        return this.makeBakedQuad(posFrom, posTo, face, sprite, facing, modelRotationIn, partRotation, uvLocked, shade);
++        return this.makeBakedQuad(posFrom, posTo, face, sprite, facing, (ITransformation) modelRotationIn, partRotation, uvLocked, shade); // Decompile error
+     }
+ 
+     public BakedQuad makeBakedQuad(Vector3f p_makeBakedQuad_1_, Vector3f p_makeBakedQuad_2_, BlockPartFace p_makeBakedQuad_3_, TextureAtlasSprite p_makeBakedQuad_4_, EnumFacing p_makeBakedQuad_5_, ITransformation p_makeBakedQuad_6_, BlockPartRotation p_makeBakedQuad_7_, boolean p_makeBakedQuad_8_, boolean p_makeBakedQuad_9_)
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+index ea3806a..6982005 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+@@ -717,7 +717,7 @@ public class ModelBakery
+     @Nullable
+     public IBakedModel bakeModel(ModelBlock modelBlockIn, ModelRotation modelRotationIn, boolean uvLocked)
+     {
+-        return this.bakeModel(modelBlockIn, modelRotationIn, uvLocked);
++        return this.bakeModel(modelBlockIn, (ITransformation) modelRotationIn, uvLocked); // Decompile error
+     }
+ 
+     protected IBakedModel bakeModel(ModelBlock p_bakeModel_1_, ITransformation p_bakeModel_2_, boolean p_bakeModel_3_)
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
+index 4824257..483ac6e 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
+@@ -2,7 +2,7 @@ package net.minecraft.client.renderer.block.model;
+ 
+ import com.google.common.collect.Maps;
+ import java.util.Map;
+-import java.util.Optional;
++import com.google.common.base.Optional;
+ import net.minecraft.util.EnumFacing;
+ import net.minecraft.util.math.MathHelper;
+ import net.minecraftforge.common.model.IModelPart;
+diff --git a/src/minecraft/net/minecraft/client/renderer/chunk/VisGraph.java b/src/minecraft/net/minecraft/client/renderer/chunk/VisGraph.java
+index 25d593d..ff3ab91 100644
+--- a/src/minecraft/net/minecraft/client/renderer/chunk/VisGraph.java
++++ b/src/minecraft/net/minecraft/client/renderer/chunk/VisGraph.java
+@@ -67,7 +67,7 @@ public class VisGraph
+     private Set<EnumFacing> floodFill(int pos)
+     {
+         Set<EnumFacing> set = EnumSet.<EnumFacing>noneOf(EnumFacing.class);
+-        ArrayDeque arraydeque = new ArrayDeque(384);
++        io.netty.util.internal.deque.ArrayDequeV6<Integer> arraydeque = new io.netty.util.internal.deque.ArrayDequeV6<Integer>(384); //
+         arraydeque.add(IntegerCache.getInteger(pos));
+         this.bitSet.set(pos, true);
+ 
+diff --git a/src/minecraft/net/minecraft/client/settings/KeyBinding.java b/src/minecraft/net/minecraft/client/settings/KeyBinding.java
+index 79fcbaf..bc9a284 100644
+--- a/src/minecraft/net/minecraft/client/settings/KeyBinding.java
++++ b/src/minecraft/net/minecraft/client/settings/KeyBinding.java
+@@ -163,7 +163,7 @@ public class KeyBinding implements Comparable<KeyBinding>
+         return this.keyCategory.equals(p_compareTo_1_.keyCategory) ? I18n.format(this.keyDescription).compareTo(I18n.format(p_compareTo_1_.keyDescription)) : ((Integer)CATEGORY_ORDER.get(this.keyCategory)).compareTo(CATEGORY_ORDER.get(p_compareTo_1_.keyCategory));
+     }
+ 
+-    public static Supplier<String> getDisplayString(String key)
++    public static com.google.common.base.Supplier<String> getDisplayString(String key) // Replace with Guava
+     {
+         KeyBinding keybinding = KEYBIND_ARRAY.get(key);
+         return keybinding == null ? () ->
+diff --git a/src/minecraft/net/minecraft/client/tutorial/TutorialSteps.java b/src/minecraft/net/minecraft/client/tutorial/TutorialSteps.java
+index 2694539..a4d987e 100644
+--- a/src/minecraft/net/minecraft/client/tutorial/TutorialSteps.java
++++ b/src/minecraft/net/minecraft/client/tutorial/TutorialSteps.java
+@@ -12,9 +12,9 @@ public enum TutorialSteps
+     NONE("none", CompletedTutorialStep::new);
+ 
+     private final String name;
+-    private final Function < Tutorial, ? extends ITutorialStep > tutorial;
++    private final com.google.common.base.Function < Tutorial, ? extends ITutorialStep > tutorial; // Replace with Guava function
+ 
+-    private <T extends ITutorialStep> TutorialSteps(String nameIn, Function<Tutorial, T> constructor)
++    private <T extends ITutorialStep> TutorialSteps(String nameIn, com.google.common.base.Function<Tutorial, T> constructor) // Replace with Guava function
+     {
+         this.name = nameIn;
+         this.tutorial = constructor;
+diff --git a/src/minecraft/net/minecraft/client/util/SearchTree.java b/src/minecraft/net/minecraft/client/util/SearchTree.java
+index c914bb8..1e36cf1 100644
+--- a/src/minecraft/net/minecraft/client/util/SearchTree.java
++++ b/src/minecraft/net/minecraft/client/util/SearchTree.java
+@@ -15,12 +15,12 @@ public class SearchTree<T> implements ISearchTree<T>
+ {
+     protected SuffixArray<T> byName = new SuffixArray<T>();
+     protected SuffixArray<T> byId = new SuffixArray<T>();
+-    private final Function<T, Iterable<String>> nameFunc;
+-    private final Function<T, Iterable<ResourceLocation>> idFunc;
++    private final com.google.common.base.Function<T, Iterable<String>> nameFunc;
++    private final com.google.common.base.Function<T, Iterable<ResourceLocation>> idFunc;
+     private final List<T> contents = Lists.<T>newArrayList();
+     private Object2IntMap<T> numericContents = new Object2IntOpenHashMap<T>();
+ 
+-    public SearchTree(Function<T, Iterable<String>> nameFuncIn, Function<T, Iterable<ResourceLocation>> idFuncIn)
++    public SearchTree(com.google.common.base.Function<T, Iterable<String>> nameFuncIn, com.google.common.base.Function<T, Iterable<ResourceLocation>> idFuncIn)
+     {
+         this.nameFunc = nameFuncIn;
+         this.idFunc = idFuncIn;
+@@ -64,14 +64,14 @@ public class SearchTree<T> implements ISearchTree<T>
+      */
+     private void index(T element)
+     {
+-        (this.idFunc.apply(element)).forEach((p_194039_2_) ->
++        for (ResourceLocation p_194039_2_ : this.idFunc.apply(element)) //(this.idFunc.apply(element)).forEach((p_194039_2_) ->
+         {
+             this.byId.add(element, p_194039_2_.toString().toLowerCase(Locale.US));
+-        });
+-        (this.nameFunc.apply(element)).forEach((p_194041_2_) ->
++        }; //
++        for (String p_194041_2_ : this.nameFunc.apply(element)) //(this.nameFunc.apply(element)).forEach((p_194041_2_) ->
+         {
+             this.byName.add(element, p_194041_2_.toLowerCase(Locale.US));
+-        });
++        }; //
+     }
+ 
+     public List<T> search(String searchText)
+diff --git a/src/minecraft/net/minecraft/client/util/SuffixArray.java b/src/minecraft/net/minecraft/client/util/SuffixArray.java
+index 2cb8fb6..65274c0 100644
+--- a/src/minecraft/net/minecraft/client/util/SuffixArray.java
++++ b/src/minecraft/net/minecraft/client/util/SuffixArray.java
+@@ -66,7 +66,7 @@ public class SuffixArray<T>
+         {
+             public int compare(int p_compare_1_, int p_compare_2_)
+             {
+-                return aint1[p_compare_1_] == aint1[p_compare_2_] ? Integer.compare(aint2[p_compare_1_], aint2[p_compare_2_]) : Integer.compare(aint1[p_compare_1_], aint1[p_compare_2_]);
++                return aint1[p_compare_1_] == aint1[p_compare_2_] ? net.camotoy.minecraft.util.JavaBackportUtil.compare(aint2[p_compare_1_], aint2[p_compare_2_]) : net.camotoy.minecraft.util.JavaBackportUtil.compare(aint1[p_compare_1_], aint1[p_compare_2_]);
+             }
+             public int compare(Integer p_compare_1_, Integer p_compare_2_)
+             {
+diff --git a/src/minecraft/net/minecraft/command/CommandClone.java b/src/minecraft/net/minecraft/command/CommandClone.java
+index 4463ce2..a5fb99d 100644
+--- a/src/minecraft/net/minecraft/command/CommandClone.java
++++ b/src/minecraft/net/minecraft/command/CommandClone.java
+@@ -117,7 +117,7 @@ public class CommandClone extends CommandBase
+                             List<CommandClone.StaticCloneData> list = Lists.<CommandClone.StaticCloneData>newArrayList();
+                             List<CommandClone.StaticCloneData> list1 = Lists.<CommandClone.StaticCloneData>newArrayList();
+                             List<CommandClone.StaticCloneData> list2 = Lists.<CommandClone.StaticCloneData>newArrayList();
+-                            Deque<BlockPos> deque = Lists.<BlockPos>newLinkedList();
++                            java.util.LinkedList<BlockPos> deque = Lists.<BlockPos>newLinkedList(); // No Deque in Java 5
+                             BlockPos blockpos3 = new BlockPos(structureboundingbox1.minX - structureboundingbox.minX, structureboundingbox1.minY - structureboundingbox.minY, structureboundingbox1.minZ - structureboundingbox.minZ);
+ 
+                             for (int j = structureboundingbox.minZ; j <= structureboundingbox.maxZ; ++j)
+diff --git a/src/minecraft/net/minecraft/entity/EntityLiving.java b/src/minecraft/net/minecraft/entity/EntityLiving.java
+index 2656971..787cbe2 100644
+--- a/src/minecraft/net/minecraft/entity/EntityLiving.java
++++ b/src/minecraft/net/minecraft/entity/EntityLiving.java
+@@ -1727,21 +1727,23 @@ public abstract class EntityLiving extends EntityLivingBase
+         IN_AIR,
+         IN_WATER;
+ 
+-        private final BiPredicate<IBlockAccess, BlockPos> spawnPredicate;
++        //private final BiPredicate<IBlockAccess, BlockPos> spawnPredicate; Never used I guess
+ 
+         private SpawnPlacementType()
+         {
+-            this.spawnPredicate = null;
++            //this.spawnPredicate = null;
+         }
+ 
++        /*
+         private SpawnPlacementType(BiPredicate<IBlockAccess, BlockPos> p_i8_3_)
+         {
+             this.spawnPredicate = p_i8_3_;
+         }
++        */
+ 
+         public boolean canSpawnAt(World p_canSpawnAt_1_, BlockPos p_canSpawnAt_2_)
+         {
+-            return this.spawnPredicate != null ? this.spawnPredicate.test(p_canSpawnAt_1_, p_canSpawnAt_2_) : WorldEntitySpawner.canCreatureTypeSpawnBody(this, p_canSpawnAt_1_, p_canSpawnAt_2_);
++            return /*this.spawnPredicate != null ? this.spawnPredicate.test(p_canSpawnAt_1_, p_canSpawnAt_2_) :*/ WorldEntitySpawner.canCreatureTypeSpawnBody(this, p_canSpawnAt_1_, p_canSpawnAt_2_);
+         }
+     }
+ }
+diff --git a/src/minecraft/net/minecraft/entity/boss/dragon/phase/PhaseList.java b/src/minecraft/net/minecraft/entity/boss/dragon/phase/PhaseList.java
+index 666bc7f..d848863 100644
+--- a/src/minecraft/net/minecraft/entity/boss/dragon/phase/PhaseList.java
++++ b/src/minecraft/net/minecraft/entity/boss/dragon/phase/PhaseList.java
+@@ -70,7 +70,7 @@ public class PhaseList<T extends IPhase>
+     private static <T extends IPhase> PhaseList<T> create(Class<T> phaseIn, String nameIn)
+     {
+         PhaseList<T> phaselist = new PhaseList<T>(phases.length, phaseIn, nameIn);
+-        phases = (PhaseList[])Arrays.copyOf(phases, phases.length + 1);
++        phases = (PhaseList[])io.netty.util.internal.PlatformDependent.arrayCopyOf(phases, phases.length + 1); //
+         phases[phaselist.getId()] = phaselist;
+         return phaselist;
+     }
+diff --git a/src/minecraft/net/minecraft/entity/player/EntityPlayer.java b/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
+index ca806c8..0c69d9c 100644
+--- a/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
++++ b/src/minecraft/net/minecraft/entity/player/EntityPlayer.java
+@@ -2576,7 +2576,7 @@ public abstract class EntityPlayer extends EntityLivingBase
+ 
+     public static UUID getOfflineUUID(String username)
+     {
+-        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(com.google.common.base.Charsets.UTF_8));
++        return UUID.nameUUIDFromBytes(net.camotoy.minecraft.util.JavaBackportUtil.getStringBytes("OfflinePlayer:" + username, com.google.common.base.Charsets.UTF_8)); // getBytes
+     }
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/network/LegacyPingHandler.java b/src/minecraft/net/minecraft/network/LegacyPingHandler.java
+index 8615305..682a0b6 100644
+--- a/src/minecraft/net/minecraft/network/LegacyPingHandler.java
++++ b/src/minecraft/net/minecraft/network/LegacyPingHandler.java
+@@ -57,7 +57,7 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter
+                     default:
+                         boolean flag1 = bytebuf.readUnsignedByte() == 1;
+                         flag1 = flag1 & bytebuf.readUnsignedByte() == 250;
+-                        flag1 = flag1 & "MC|PingHost".equals(new String(bytebuf.readBytes(bytebuf.readShort() * 2).array(), StandardCharsets.UTF_16BE));
++                        flag1 = flag1 & "MC|PingHost".equals(net.camotoy.minecraft.util.JavaBackportUtil.newStringFromBytes(bytebuf.readBytes(bytebuf.readShort() * 2).array(), com.google.common.base.Charsets.UTF_16BE)); // Constructor doesn't exist in Java 5
+                         int j = bytebuf.readUnsignedShort();
+                         flag1 = flag1 & bytebuf.readUnsignedByte() >= 73;
+                         flag1 = flag1 & 3 + bytebuf.readBytes(bytebuf.readShort() * 2).array().length + 4 == j;
+diff --git a/src/minecraft/net/minecraft/network/PacketBuffer.java b/src/minecraft/net/minecraft/network/PacketBuffer.java
+index 727d58d..74b8c70 100644
+--- a/src/minecraft/net/minecraft/network/PacketBuffer.java
++++ b/src/minecraft/net/minecraft/network/PacketBuffer.java
+@@ -430,7 +430,7 @@ public class PacketBuffer extends ByteBuf
+ 
+     public PacketBuffer writeString(String string)
+     {
+-        byte[] abyte = string.getBytes(com.google.common.base.Charsets.UTF_8);
++        byte[] abyte = net.camotoy.minecraft.util.JavaBackportUtil.getStringBytes(string, com.google.common.base.Charsets.UTF_8);
+ 
+         if (abyte.length > 32767)
+         {
+diff --git a/src/minecraft/net/minecraft/profiler/Profiler.java b/src/minecraft/net/minecraft/profiler/Profiler.java
+index 66bbdc6..ae35d73 100644
+--- a/src/minecraft/net/minecraft/profiler/Profiler.java
++++ b/src/minecraft/net/minecraft/profiler/Profiler.java
+@@ -107,7 +107,10 @@ public class Profiler
+         }
+     }
+ 
+-    public void func_194340_a(Supplier<String> p_194340_1_)
++    public boolean shouldActivateFunc_194340_a() { //
++        return this.profilerLocalEnabled && this.profilingEnabled; //
++    } //
++    public void func_194340_a(com.google.common.base.Supplier<String> p_194340_1_) // Java 5
+     {
+         if (this.profilerLocalEnabled)
+         {
+@@ -230,7 +233,7 @@ public class Profiler
+         }
+     }
+ 
+-    public void func_194339_b(Supplier<String> p_194339_1_)
++    public void func_194339_b(com.google.common.base.Supplier<String> p_194339_1_) // Java 5
+     {
+         if (this.profilerLocalEnabled)
+         {
+diff --git a/src/minecraft/net/minecraft/scoreboard/ServerScoreboard.java b/src/minecraft/net/minecraft/scoreboard/ServerScoreboard.java
+index 0d42932..3732e5e 100644
+--- a/src/minecraft/net/minecraft/scoreboard/ServerScoreboard.java
++++ b/src/minecraft/net/minecraft/scoreboard/ServerScoreboard.java
+@@ -176,7 +176,7 @@ public class ServerScoreboard extends Scoreboard
+ 
+     public void addDirtyRunnable(Runnable runnable)
+     {
+-        this.dirtyRunnables = (Runnable[])Arrays.copyOf(this.dirtyRunnables, this.dirtyRunnables.length + 1);
++        this.dirtyRunnables = (Runnable[])io.netty.util.internal.PlatformDependent.arrayCopyOf(this.dirtyRunnables, this.dirtyRunnables.length + 1); //
+         this.dirtyRunnables[this.dirtyRunnables.length - 1] = runnable;
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+index d593ac8..b88a5bc 100644
+--- a/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
++++ b/src/minecraft/net/minecraft/server/management/PlayerProfileCache.java
+@@ -47,7 +47,7 @@ public class PlayerProfileCache
+     private static boolean onlineMode;
+     private final Map<String, PlayerProfileCache.ProfileEntry> usernameToProfileEntryMap = Maps.<String, PlayerProfileCache.ProfileEntry>newHashMap();
+     private final Map<UUID, PlayerProfileCache.ProfileEntry> uuidToProfileEntryMap = Maps.<UUID, PlayerProfileCache.ProfileEntry>newHashMap();
+-    private final Deque<GameProfile> gameProfiles = Lists.<GameProfile>newLinkedList();
++    private final java.util.LinkedList<GameProfile> gameProfiles = Lists.<GameProfile>newLinkedList(); // No Deque in Java 5
+     private final GameProfileRepository profileRepo;
+     protected final Gson gson;
+     private final File usercacheFile;
+diff --git a/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java b/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
+index 907ea86..8916352 100644
+--- a/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
++++ b/src/minecraft/net/minecraft/server/network/NetHandlerLoginServer.java
+@@ -240,7 +240,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable
+ 
+     protected GameProfile getOfflineProfile(GameProfile original)
+     {
+-        UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + original.getName()).getBytes(com.google.common.base.Charsets.UTF_8));
++        UUID uuid = UUID.nameUUIDFromBytes(net.camotoy.minecraft.util.JavaBackportUtil.getStringBytes("OfflinePlayer:" + original.getName(), com.google.common.base.Charsets.UTF_8)); // getBytes
+         return new GameProfile(uuid, original.getName());
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java b/src/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java
+index 06a1104..2668fba 100644
+--- a/src/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java
++++ b/src/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java
+@@ -15,7 +15,7 @@ import net.optifine.util.IteratorCache;
+ 
+ public class ClassInheritanceMultiMap<T> extends AbstractSet<T>
+ {
+-    private static final Set < Class<? >> ALL_KNOWN = Collections. < Class<? >> newSetFromMap(new ConcurrentHashMap());
++    private static final Set < Class<? >> ALL_KNOWN = io.netty.util.internal.PlatformDependent.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+     private final Map < Class<?>, List<T >> map = Maps. < Class<?>, List<T >> newHashMap();
+     private final Set < Class<? >> knownKeys = Sets. < Class<? >> newIdentityHashSet();
+     private final Class<T> baseClass;
+@@ -138,7 +138,7 @@ public class ClassInheritanceMultiMap<T> extends AbstractSet<T>
+ 
+                 if (list == null)
+                 {
+-                    return Collections.<S>emptyIterator();
++                    return Iterators.emptyIterator(); // Java 5
+                 }
+                 else
+                 {
+@@ -151,7 +151,7 @@ public class ClassInheritanceMultiMap<T> extends AbstractSet<T>
+ 
+     public Iterator<T> iterator()
+     {
+-        return this.values.isEmpty() ? Collections.emptyIterator() : IteratorCache.getReadOnly(this.values);
++        return this.values.isEmpty() ? Iterators.<T>emptyIterator() : IteratorCache.getReadOnly(this.values); // Java 5
+     }
+ 
+     public int size()
+diff --git a/src/minecraft/net/minecraft/util/text/TextComponentKeybind.java b/src/minecraft/net/minecraft/util/text/TextComponentKeybind.java
+index d20064c..3afe931 100644
+--- a/src/minecraft/net/minecraft/util/text/TextComponentKeybind.java
++++ b/src/minecraft/net/minecraft/util/text/TextComponentKeybind.java
+@@ -5,14 +5,14 @@ import java.util.function.Supplier;
+ 
+ public class TextComponentKeybind extends TextComponentBase
+ {
+-    public static Function<String, Supplier<String>> displaySupplierFunction = (p_193635_0_) ->
++    public static com.google.common.base.Function<String, com.google.common.base.Supplier<String>> displaySupplierFunction = (p_193635_0_) -> // Replace with Guava
+     {
+         return () -> {
+             return p_193635_0_;
+         };
+     };
+     private final String keybind;
+-    private Supplier<String> displaySupplier;
++    private com.google.common.base.Supplier<String> displaySupplier; //
+ 
+     public TextComponentKeybind(String keybind)
+     {
+@@ -28,7 +28,7 @@ public class TextComponentKeybind extends TextComponentBase
+     {
+         if (this.displaySupplier == null)
+         {
+-            this.displaySupplier = (Supplier)displaySupplierFunction.apply(this.keybind);
++            this.displaySupplier = displaySupplierFunction.apply(this.keybind); //
+         }
+ 
+         return this.displaySupplier.get();
+diff --git a/src/minecraft/net/minecraft/world/World.java b/src/minecraft/net/minecraft/world/World.java
+index 9bd2e87..f795cc0 100644
+--- a/src/minecraft/net/minecraft/world/World.java
++++ b/src/minecraft/net/minecraft/world/World.java
+@@ -1876,7 +1876,7 @@ public abstract class World implements IBlockAccess
+                 {
+                     try
+                     {
+-                        this.profiler.func_194340_a(() ->
++                        if (this.profiler.shouldActivateFunc_194340_a()) this.profiler.func_194340_a(() ->
+                         {
+                             return String.valueOf((Object)TileEntity.getKey(tileentity.getClass()));
+                         });
+diff --git a/src/minecraft/net/minecraft/world/chunk/storage/AnvilChunkLoader.java b/src/minecraft/net/minecraft/world/chunk/storage/AnvilChunkLoader.java
+index 6db7dcc..041e0a0 100644
+--- a/src/minecraft/net/minecraft/world/chunk/storage/AnvilChunkLoader.java
++++ b/src/minecraft/net/minecraft/world/chunk/storage/AnvilChunkLoader.java
+@@ -38,7 +38,7 @@ public class AnvilChunkLoader implements IChunkLoader, IThreadedFileIO
+ {
+     private static final Logger LOGGER = LogManager.getLogger();
+     private final Map<ChunkPos, NBTTagCompound> chunksToSave = Maps.<ChunkPos, NBTTagCompound>newConcurrentMap();
+-    private final Set<ChunkPos> chunksBeingSaved = Collections.<ChunkPos>newSetFromMap(Maps.newConcurrentMap());
++    private final Set<ChunkPos> chunksBeingSaved = io.netty.util.internal.PlatformDependent.newSetFromMap(io.netty.util.internal.PlatformDependent.<ChunkPos, Boolean>newConcurrentHashMap()); //
+ 
+     /** Save directory for chunks using the Anvil format */
+     private final File chunkSaveLocation;
+diff --git a/src/minecraft/net/minecraftforge/common/model/IModelState.java b/src/minecraft/net/minecraftforge/common/model/IModelState.java
+index 0af6d79..df59d02 100644
+--- a/src/minecraft/net/minecraftforge/common/model/IModelState.java
++++ b/src/minecraft/net/minecraftforge/common/model/IModelState.java
+@@ -1,6 +1,6 @@
+ package net.minecraftforge.common.model;
+ 
+-import java.util.Optional;
++import com.google.common.base.Optional;
+ 
+ public interface IModelState
+ {
+diff --git a/src/minecraft/net/optifine/config/ConnectedParser.java b/src/minecraft/net/optifine/config/ConnectedParser.java
+index f8eee3c..b81142a 100644
+--- a/src/minecraft/net/optifine/config/ConnectedParser.java
++++ b/src/minecraft/net/optifine/config/ConnectedParser.java
+@@ -163,7 +163,7 @@ public class ConnectedParser
+                 }
+ 
+                 String s1 = astring[i];
+-                String[] astring1 = (String[])Arrays.copyOfRange(astring, i + 1, astring.length);
++                String[] astring1 = (String[])net.camotoy.minecraft.util.JavaBackportUtil.arrayCopyOfRange(astring, i + 1, astring.length);
+                 Block[] ablock = this.parseBlockPart(s, s1);
+ 
+                 if (ablock == null)
+diff --git a/src/minecraft/net/optifine/config/NbtTagValue.java b/src/minecraft/net/optifine/config/NbtTagValue.java
+index e662ae4..d78ce58 100644
+--- a/src/minecraft/net/optifine/config/NbtTagValue.java
++++ b/src/minecraft/net/optifine/config/NbtTagValue.java
+@@ -41,7 +41,7 @@ public class NbtTagValue
+     public NbtTagValue(String tag, String value)
+     {
+         String[] astring = Config.tokenize(tag, ".");
+-        this.parents = (String[])Arrays.copyOfRange(astring, 0, astring.length - 1);
++        this.parents = (String[])net.camotoy.minecraft.util.JavaBackportUtil.arrayCopyOfRange(astring, 0, astring.length - 1);
+         this.name = astring[astring.length - 1];
+ 
+         if (value.startsWith("!"))
+diff --git a/src/minecraft/net/optifine/entity/model/CustomEntityModels.java b/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
+index a4201b7..3ae8ec4 100644
+--- a/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
++++ b/src/minecraft/net/optifine/entity/model/CustomEntityModels.java
+@@ -279,7 +279,7 @@ public class CustomEntityModels
+                 if (modelrenderer.childModels != null)
+                 {
+                     ModelRenderer[] amodelrenderer = modelAdapter.getModelRenderers(model);
+-                    Set<ModelRenderer> set = Collections.<ModelRenderer>newSetFromMap(new IdentityHashMap());
++                    Set<ModelRenderer> set = io.netty.util.internal.PlatformDependent.newSetFromMap(new IdentityHashMap<ModelRenderer, Boolean>()); //
+                     set.addAll(Arrays.asList(amodelrenderer));
+                     List<ModelRenderer> list = modelrenderer.childModels;
+                     Iterator iterator = list.iterator();
+diff --git a/src/minecraft/net/optifine/expr/ExpressionParser.java b/src/minecraft/net/optifine/expr/ExpressionParser.java
+index c547677..e8ba527 100644
+--- a/src/minecraft/net/optifine/expr/ExpressionParser.java
++++ b/src/minecraft/net/optifine/expr/ExpressionParser.java
+@@ -59,7 +59,7 @@ public class ExpressionParser
+             }
+             else
+             {
+-                Deque<Token> deque = new ArrayDeque<Token>(Arrays.asList(atoken));
++                io.netty.util.internal.deque.Deque<Token> deque = new io.netty.util.internal.deque.ArrayDequeV6<Token>(Arrays.asList(atoken)); //
+                 return this.parseInfix(deque);
+             }
+         }
+@@ -69,7 +69,7 @@ public class ExpressionParser
+         }
+     }
+ 
+-    private IExpression parseInfix(Deque<Token> deque) throws ParseException
++    private IExpression parseInfix(io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+         if (deque.isEmpty())
+         {
+@@ -181,7 +181,7 @@ public class ExpressionParser
+         }
+     }
+ 
+-    private IExpression parseExpression(Deque<Token> deque) throws ParseException
++    private IExpression parseExpression(io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+         Token token = deque.poll();
+         checkNull(token, "Missing expression");
+@@ -242,7 +242,7 @@ public class ExpressionParser
+         }
+     }
+ 
+-    private FunctionType getFunctionType(Token token, Deque<Token> deque) throws ParseException
++    private FunctionType getFunctionType(Token token, io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+         // Just copy the entire method decompiled properly
+         Token tokenNext = deque.peek();
+@@ -264,7 +264,7 @@ public class ExpressionParser
+         // End
+     }
+ 
+-    private IExpression makeFunction(FunctionType type, Deque<Token> deque) throws ParseException
++    private IExpression makeFunction(FunctionType type, io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+         // Just copy the entire method decompiled properly
+         Token tokenNext;
+@@ -276,19 +276,19 @@ public class ExpressionParser
+         }
+ 
+         tokenNext = (Token)deque.poll();
+-        Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true);
++        io.netty.util.internal.deque.Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true);
+         IExpression[] exprs = this.parseExpressions(dequeBracketed);
+         return makeFunction(type, exprs);
+         // End
+     }
+ 
+-    private IExpression[] parseExpressions(Deque<Token> deque) throws ParseException
++    private IExpression[] parseExpressions(io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+         // Just copy the entire method decompiled properly
+         ArrayList list = new ArrayList();
+ 
+         while(true) {
+-            Deque<Token> dequeArg = getGroup(deque, TokenType.COMMA, false);
++            io.netty.util.internal.deque.Deque<Token> dequeArg = getGroup(deque, TokenType.COMMA, false);
+             IExpression expr = this.parseInfix(dequeArg);
+             if (expr == null) {
+                 IExpression[] exprs = (IExpression[])((IExpression[])list.toArray(new IExpression[list.size()]));
+@@ -362,16 +362,16 @@ public class ExpressionParser
+         }
+     }
+ 
+-    private IExpression makeBracketed(Token token, Deque<Token> deque) throws ParseException
++    private IExpression makeBracketed(Token token, io.netty.util.internal.deque.Deque<Token> deque) throws ParseException
+     {
+-        Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true); // Decompiled properly
++        io.netty.util.internal.deque.Deque<Token> dequeBracketed = getGroup(deque, TokenType.BRACKET_CLOSE, true); // Decompiled properly
+         return this.parseInfix(dequeBracketed); // Decompiled properly
+     }
+ 
+-    private static Deque<Token> getGroup(Deque<Token> deque, TokenType tokenTypeEnd, boolean tokenEndRequired) throws ParseException
++    private static io.netty.util.internal.deque.Deque<Token> getGroup(io.netty.util.internal.deque.Deque<Token> deque, TokenType tokenTypeEnd, boolean tokenEndRequired) throws ParseException
+     {
+         // Decompiled properly
+-        Deque<Token> dequeGroup = new ArrayDeque();
++        io.netty.util.internal.deque.Deque<Token> dequeGroup = new io.netty.util.internal.deque.ArrayDequeV6(); //
+         int level = 0;
+         Iterator it = deque.iterator();
+ 
+diff --git a/src/minecraft/net/optifine/gui/TooltipManager.java b/src/minecraft/net/optifine/gui/TooltipManager.java
+index 23290fe..753c338 100644
+--- a/src/minecraft/net/optifine/gui/TooltipManager.java
++++ b/src/minecraft/net/optifine/gui/TooltipManager.java
+@@ -42,7 +42,7 @@ public class TooltipManager
+                     {
+                         if (astring.length > 8)
+                         {
+-                            astring = (String[])Arrays.copyOf(astring, 8);
++                            astring = (String[])io.netty.util.internal.PlatformDependent.arrayCopyOf(astring, 8); //
+                             astring[astring.length - 1] = astring[astring.length - 1] + " ...";
+                         }
+ 
+diff --git a/src/minecraft/net/optifine/http/HttpPipelineReceiver.java b/src/minecraft/net/optifine/http/HttpPipelineReceiver.java
+index 05200f0..74657d8 100644
+--- a/src/minecraft/net/optifine/http/HttpPipelineReceiver.java
++++ b/src/minecraft/net/optifine/http/HttpPipelineReceiver.java
+@@ -172,7 +172,7 @@ public class HttpPipelineReceiver extends Thread
+         }
+ 
+         byte[] abyte = bytearrayoutputstream.toByteArray();
+-        String s = new String(abyte, ASCII);
++        String s = net.camotoy.minecraft.util.JavaBackportUtil.newStringFromBytes(abyte, ASCII); // Constructor Java 5
+ 
+         if (flag)
+         {
+diff --git a/src/minecraft/net/optifine/http/HttpPipelineSender.java b/src/minecraft/net/optifine/http/HttpPipelineSender.java
+index 7ddbf24..9936be9 100644
+--- a/src/minecraft/net/optifine/http/HttpPipelineSender.java
++++ b/src/minecraft/net/optifine/http/HttpPipelineSender.java
+@@ -73,7 +73,7 @@ public class HttpPipelineSender extends Thread
+ 
+     private void write(OutputStream out, String str) throws IOException
+     {
+-        byte[] abyte = str.getBytes(ASCII);
++        byte[] abyte = net.camotoy.minecraft.util.JavaBackportUtil.getStringBytes(str, ASCII); // getBytes
+         out.write(abyte);
+     }
+ }
+diff --git a/src/minecraft/net/optifine/reflect/Reflector.java b/src/minecraft/net/optifine/reflect/Reflector.java
+index 3e53595..d8ddf48 100644
+--- a/src/minecraft/net/optifine/reflect/Reflector.java
++++ b/src/minecraft/net/optifine/reflect/Reflector.java
+@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ import java.util.Map;
+-import java.util.Optional;
++import com.google.common.base.Optional;
+ import javax.vecmath.Matrix4f;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.properties.IProperty;
+diff --git a/src/minecraft/net/optifine/shaders/ProgramStack.java b/src/minecraft/net/optifine/shaders/ProgramStack.java
+index 89a11ae..a93612b 100644
+--- a/src/minecraft/net/optifine/shaders/ProgramStack.java
++++ b/src/minecraft/net/optifine/shaders/ProgramStack.java
+@@ -5,7 +5,7 @@ import java.util.Deque;
+ 
+ public class ProgramStack
+ {
+-    private Deque<Program> stack = new ArrayDeque<Program>();
++    private final io.netty.util.internal.deque.Deque<Program> stack = new io.netty.util.internal.deque.ArrayDequeV6<Program>(); // Deque doesn't exist in Java 5
+ 
+     public void push(Program p)
+     {
+diff --git a/src/minecraft/net/optifine/shaders/ShaderPackZip.java b/src/minecraft/net/optifine/shaders/ShaderPackZip.java
+index 776b94a..d14f3e6 100644
+--- a/src/minecraft/net/optifine/shaders/ShaderPackZip.java
++++ b/src/minecraft/net/optifine/shaders/ShaderPackZip.java
+@@ -72,7 +72,7 @@ public class ShaderPackZip implements IShaderPack
+ 
+     private String resolveRelative(String name)
+     {
+-        Deque<String> deque = new ArrayDeque<String>();
++        io.netty.util.internal.deque.Deque<String> deque = new io.netty.util.internal.deque.ArrayDequeV6<String>();
+         String[] astring = Config.tokenize(name, "/");
+ 
+         for (int i = 0; i < astring.length; ++i)
+diff --git a/src/minecraft/net/optifine/shaders/Shaders.java b/src/minecraft/net/optifine/shaders/Shaders.java
+index a0b61f3..4773952 100644
+--- a/src/minecraft/net/optifine/shaders/Shaders.java
++++ b/src/minecraft/net/optifine/shaders/Shaders.java
+@@ -1168,7 +1168,7 @@ public class Shaders
+     {
+         ConnectedParser connectedparser = new ConnectedParser("Shaders");
+         String[] astring = Config.tokenize(line, " ");
+-        Deque<String> deque = new ArrayDeque<String>(Arrays.asList(astring));
++        io.netty.util.internal.deque.Deque<String> deque = new io.netty.util.internal.deque.ArrayDequeV6<String>(Arrays.asList(astring)); // Deques don't exist in Java 5
+         String s = deque.poll();
+         TextureType texturetype = (TextureType)connectedparser.parseEnum(deque.poll(), TextureType.values(), "texture type");
+ 
+@@ -2038,7 +2038,7 @@ public class Shaders
+     public static void startup(Minecraft mc)
+     {
+         checkShadersModInstalled();
+-        mc = mc;
++        Shaders.mc = mc; // Fix decompile error
+         mc = Minecraft.getMinecraft();
+         capabilities = GLContext.getCapabilities();
+         glVersionString = GL11.glGetString(GL11.GL_VERSION);
+@@ -3262,7 +3262,7 @@ public class Shaders
+                 abyte[i - 1] = 10;
+             }
+ 
+-            String s = new String(abyte, StandardCharsets.US_ASCII);
++            String s = net.camotoy.minecraft.util.JavaBackportUtil.newStringFromBytes(abyte, com.google.common.base.Charsets.US_ASCII); // Constructor doesn't exist in Java 5
+             s = StrUtils.trim(s, " \n\r\t");
+             SMCLog.info("Info log: " + name + "\n" + s);
+             return false;
+diff --git a/src/minecraft/net/optifine/util/ArrayCache.java b/src/minecraft/net/optifine/util/ArrayCache.java
+index cab1a91..d7f3959 100644
+--- a/src/minecraft/net/optifine/util/ArrayCache.java
++++ b/src/minecraft/net/optifine/util/ArrayCache.java
+@@ -7,7 +7,7 @@ public class ArrayCache
+ {
+     private Class elementClass = null;
+     private int maxCacheSize = 0;
+-    private ArrayDeque cache = new ArrayDeque();
++    private final io.netty.util.internal.deque.ArrayDequeV6<Object> cache = new io.netty.util.internal.deque.ArrayDequeV6<Object>(); //
+ 
+     public ArrayCache(Class elementClass, int maxCacheSize)
+     {
+diff --git a/src/minecraft/net/optifine/util/IteratorCache.java b/src/minecraft/net/optifine/util/IteratorCache.java
+index 0cc2b8b..7d172ad 100644
+--- a/src/minecraft/net/optifine/util/IteratorCache.java
++++ b/src/minecraft/net/optifine/util/IteratorCache.java
+@@ -7,7 +7,7 @@ import java.util.List;
+ 
+ public class IteratorCache
+ {
+-    private static Deque<IteratorCache.IteratorReusable<Object>> dequeIterators = new ArrayDeque<IteratorCache.IteratorReusable<Object>>();
++    private static io.netty.util.internal.deque.Deque<IteratorCache.IteratorReusable<Object>> dequeIterators = new io.netty.util.internal.deque.ArrayDequeV6<IteratorCache.IteratorReusable<Object>>(); // Java 5
+ 
+     public static <T> Iterator<T> getReadOnly(List list) // Compile error?
+     {
+-- 
+2.35.3
+

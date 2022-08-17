@@ -1,0 +1,45 @@
+From a6454a4c1126a22d3236a1c683b2bece5dd7ade0 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 16:43:32 -0400
+Subject: [PATCH 13/14] Replace LongSupplier instance
+
+---
+ .../net/camotoy/minecraft/util/LongSupplier.java     | 12 ++++++++++++
+ src/minecraft/net/optifine/util/NativeMemory.java    |  2 +-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+ create mode 100644 src/minecraft/net/camotoy/minecraft/util/LongSupplier.java
+
+diff --git a/src/minecraft/net/camotoy/minecraft/util/LongSupplier.java b/src/minecraft/net/camotoy/minecraft/util/LongSupplier.java
+new file mode 100644
+index 0000000..771b7c3
+--- /dev/null
++++ b/src/minecraft/net/camotoy/minecraft/util/LongSupplier.java
+@@ -0,0 +1,12 @@
++package net.camotoy.minecraft.util;
++
++@FunctionalInterface
++public interface LongSupplier {
++
++    /**
++     * Gets a result.
++     *
++     * @return a result
++     */
++    long getAsLong();
++}
+diff --git a/src/minecraft/net/optifine/util/NativeMemory.java b/src/minecraft/net/optifine/util/NativeMemory.java
+index e7c2576..e6747ac 100644
+--- a/src/minecraft/net/optifine/util/NativeMemory.java
++++ b/src/minecraft/net/optifine/util/NativeMemory.java
+@@ -3,7 +3,7 @@ package net.optifine.util;
+ import java.lang.reflect.Method;
+ import java.util.ArrayList;
+ import java.util.List;
+-import java.util.function.LongSupplier;
++import net.camotoy.minecraft.util.LongSupplier; //import java.util.function.LongSupplier;
+ import net.minecraft.src.Config;
+ 
+ public class NativeMemory
+-- 
+2.35.3
+
