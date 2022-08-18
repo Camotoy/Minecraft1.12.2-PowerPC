@@ -1,7 +1,7 @@
 From d8375e01911e59e0eb9c2c8e01bd610aed78da6f Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 20:57:49 -0400
-Subject: [PATCH 02/14] Changes for older APIs
+Subject: [PATCH 02/17] Changes for older APIs
 
 ---
  .../minecraft/util/JavaBackportUtil.java      | 147 ++++++++++++++++++

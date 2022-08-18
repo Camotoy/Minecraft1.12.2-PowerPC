@@ -1,7 +1,7 @@
 From 3e0331c9e1a26f0c7e348a6ea5e48c371f33d2f0 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 22:48:31 -0400
-Subject: [PATCH 05/14] Replace usages of StandardCharsets
+Subject: [PATCH 05/17] Replace usages of StandardCharsets
 
 ---
  .../net/minecraft/advancements/FunctionManager.java         | 2 +-

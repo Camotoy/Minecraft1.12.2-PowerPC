@@ -1,7 +1,7 @@
 From c974d20f85d614c06244bfb3d3725b92e460c773 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 16:40:59 -0400
-Subject: [PATCH 12/14] Fix endian coloring issues
+Subject: [PATCH 12/17] Fix endian coloring issues
 
 ---
  .../net/minecraft/client/renderer/BufferBuilder.java     | 9 +++++----

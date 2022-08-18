@@ -1,7 +1,7 @@
 From a6454a4c1126a22d3236a1c683b2bece5dd7ade0 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 16:43:32 -0400
-Subject: [PATCH 13/14] Replace LongSupplier instance
+Subject: [PATCH 13/17] Replace LongSupplier instance
 
 ---
  .../net/camotoy/minecraft/util/LongSupplier.java     | 12 ++++++++++++

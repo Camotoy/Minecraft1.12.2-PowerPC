@@ -1,0 +1,31 @@
+From 4d2f1c8851affac05d0e420c2f6591c9624f7d73 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 19:29:52 -0400
+Subject: [PATCH 15/17] Remove OpenGL outdated nag
+
+---
+ src/minecraft/net/minecraft/client/gui/GuiMainMenu.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+index b06d40f..3f429e9 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+@@ -169,12 +169,14 @@ public class GuiMainMenu extends GuiScreen
+         this.minceraftRoll = RANDOM.nextFloat();
+         this.openGLWarning1 = "";
+ 
++        /*
+         if (!GLContext.getCapabilities().OpenGL20 && !OpenGlHelper.areShadersSupported())
+         {
+             this.openGLWarning1 = I18n.format("title.oldgl1");
+             this.openGLWarning2 = I18n.format("title.oldgl2");
+             this.openGLWarningLink = "https://help.mojang.com/customer/portal/articles/325948?ref=game";
+         }
++        */
+     }
+ 
+     /**
+-- 
+2.35.3
+

@@ -1,0 +1,45 @@
+From 66a35664fa5dd95eeb6fa237020aa519c28533fb Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Wed, 17 Aug 2022 21:42:22 -0400
+Subject: [PATCH 16/17] Remove Optifine-specific threads
+
+---
+ src/minecraft/net/minecraft/src/Config.java   | 1 -
+ src/minecraft/net/optifine/CrashReporter.java | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/minecraft/net/minecraft/src/Config.java b/src/minecraft/net/minecraft/src/Config.java
+index 6eddd8e..5ecbfd3 100644
+--- a/src/minecraft/net/minecraft/src/Config.java
++++ b/src/minecraft/net/minecraft/src/Config.java
+@@ -173,7 +173,6 @@ public class Config
+             {
+                 initialized = true;
+                 checkOpenGlCaps();
+-                startVersionCheckThread();
+             }
+         }
+     }
+diff --git a/src/minecraft/net/optifine/CrashReporter.java b/src/minecraft/net/optifine/CrashReporter.java
+index c715ac8..820197c 100644
+--- a/src/minecraft/net/optifine/CrashReporter.java
++++ b/src/minecraft/net/optifine/CrashReporter.java
+@@ -34,6 +34,7 @@ public class CrashReporter
+             }
+ 
+             extendCrashReport(category);
++            /* Disable FileUploadThread to Optifine
+             GameSettings gamesettings = Config.getGameSettings();
+ 
+             if (gamesettings == null)
+@@ -62,6 +63,7 @@ public class CrashReporter
+             fileuploadthread.setPriority(10);
+             fileuploadthread.start();
+             Thread.sleep(1000L);
++            */
+         }
+         catch (Exception exception)
+         {
+-- 
+2.35.3
+

@@ -1,7 +1,7 @@
 From a294cadbe69848221060daba90544a4ad15d7564 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 19:02:43 -0400
-Subject: [PATCH 01/14] Compiles on Java 8
+Subject: [PATCH 01/17] Compiles on Java 8
 
 ---
  .../minecraft/block/state/BlockStateBase.java |   4 +-
