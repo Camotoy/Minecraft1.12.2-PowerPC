@@ -1,7 +1,7 @@
 From 39ac1e5354b9c01707e3fed96995c00d586f1f8f Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 11:38:42 -0400
-Subject: [PATCH 10/17] Replace instances of Objects#requireNonNull
+Subject: [PATCH] Replace instances of Objects#requireNonNull
 
 Retrolambda doesn't backport requireNonNull with a string error message
 ---

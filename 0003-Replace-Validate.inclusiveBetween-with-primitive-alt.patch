@@ -1,8 +1,7 @@
 From 63fff42b8297235216be38705efdcc6fedf11920 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 22:44:57 -0400
-Subject: [PATCH 03/17] Replace Validate.inclusiveBetween with primitive
- alternative
+Subject: [PATCH] Replace Validate.inclusiveBetween with primitive alternative
 
 ---
  .../minecraft/entity/ai/attributes/AttributeModifier.java | 2 +-

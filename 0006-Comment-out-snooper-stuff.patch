@@ -1,7 +1,7 @@
 From 0b7b477e48e94a50c0c9cf0dbd7ca8ee6d410b7f Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 10:48:15 -0400
-Subject: [PATCH 06/17] Comment out snooper stuff
+Subject: [PATCH] Comment out snooper stuff
 
 ---
  src/minecraft/net/minecraft/client/Minecraft.java | 4 +++-

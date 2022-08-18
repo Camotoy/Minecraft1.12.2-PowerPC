@@ -1,7 +1,7 @@
 From 78824e2b8a3939f089244df4898c30c1d681d3e5 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 22:45:40 -0400
-Subject: [PATCH 04/17] Replace usages of Locale.ROOT
+Subject: [PATCH] Replace usages of Locale.ROOT
 
 ---
  src/minecraft/net/minecraft/client/Minecraft.java      |  2 +-
