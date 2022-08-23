@@ -1,4 +1,4 @@
-From d986f3d1ae745e78a5a925928b11c016afa52363 Mon Sep 17 00:00:00 2001
+From be8e54e7aad4e75ccd80b61540771099a4ca20a7 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 16:29:28 -0400
 Subject: [PATCH] Now runs a multiplayer world
@@ -15,6 +15,7 @@ Subject: [PATCH] Now runs a multiplayer world
  .../client/network/LanServerDetector.java     |  2 +-
  .../client/network/NetHandlerPlayClient.java  | 12 ++---
  .../client/network/ServerPinger.java          |  2 +-
+ .../client/renderer/EntityRenderer.java       |  2 +-
  .../client/renderer/RenderGlobal.java         |  4 +-
  .../block/model/BakedQuadRetextured.java      |  2 +-
  .../renderer/block/model/FaceBakery.java      |  2 +-
@@ -53,13 +54,13 @@ Subject: [PATCH] Now runs a multiplayer world
  .../net/optifine/shaders/Shaders.java         |  6 +--
  .../net/optifine/util/ArrayCache.java         |  2 +-
  .../net/optifine/util/IteratorCache.java      |  2 +-
- 49 files changed, 156 insertions(+), 101 deletions(-)
+ 50 files changed, 157 insertions(+), 102 deletions(-)
 
 diff --git a/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
-index 7533a9a..948c3d9 100644
+index ad44ed2..65c3e07 100644
 --- a/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
 +++ b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
-@@ -54,6 +54,14 @@ public final class JavaBackportUtil {
+@@ -52,6 +52,14 @@ public final class JavaBackportUtil {
          }
      }
  
@@ -74,7 +75,7 @@ index 7533a9a..948c3d9 100644
      public static boolean isAllASCII(String input) {
          boolean isASCII = true;
          for (int i = 0; i < input.length(); i++) {
-@@ -128,6 +136,10 @@ public final class JavaBackportUtil {
+@@ -126,6 +134,10 @@ public final class JavaBackportUtil {
          }
      }
  
@@ -375,6 +376,19 @@ index 5597a52..d3474f9 100644
                              String[] astring = (String[])Iterables.toArray(ServerPinger.PING_RESPONSE_SPLITTER.split(s), String.class);
  
                              if ("\u00a71".equals(astring[0]))
+diff --git a/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java b/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
+index a94ea06..dcf2506 100644
+--- a/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
++++ b/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
+@@ -2443,7 +2443,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+ 
+             if (Float.isInfinite(f6))
+             {
+-                f6 = Math.nextAfter(f6, 0.0D);
++                f6 = net.camotoy.minecraft.util.JavaBackportUtil.nextAfter(f6, 0.0D);
+             }
+ 
+             this.fogColorRed = this.fogColorRed * (1.0F - f15) + this.fogColorRed * f6 * f15;
 diff --git a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
 index 36c9ae8..08902af 100644
 --- a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java

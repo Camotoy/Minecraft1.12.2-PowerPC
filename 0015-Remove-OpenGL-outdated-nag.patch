@@ -1,4 +1,4 @@
-From 4d2f1c8851affac05d0e420c2f6591c9624f7d73 Mon Sep 17 00:00:00 2001
+From ea689523cf3b3a662da999960a736759fd299140 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 19:29:52 -0400
 Subject: [PATCH] Remove OpenGL outdated nag

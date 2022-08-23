@@ -1,10 +1,10 @@
-From d8375e01911e59e0eb9c2c8e01bd610aed78da6f Mon Sep 17 00:00:00 2001
+From 1633701428b55cee171a30d4fac0f256e43fbb3e Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Tue, 16 Aug 2022 20:57:49 -0400
 Subject: [PATCH] Changes for older APIs
 
 ---
- .../minecraft/util/JavaBackportUtil.java      | 147 ++++++++++++++++++
+ .../minecraft/util/JavaBackportUtil.java      | 145 ++++++++++++++++++
  .../minecraft/advancements/Advancement.java   |   2 +-
  .../advancements/AdvancementList.java         |   2 +-
  .../advancements/AdvancementManager.java      |   3 +-
@@ -43,21 +43,19 @@ Subject: [PATCH] Changes for older APIs
  .../net/minecraft/world/gen/MapGenCaves.java  |   4 +-
  .../gen/structure/StructureBoundingBox.java   |   4 +-
  src/minecraft/net/optifine/Lang.java          |   5 +-
- 39 files changed, 313 insertions(+), 79 deletions(-)
+ 39 files changed, 311 insertions(+), 79 deletions(-)
  create mode 100644 src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
 
 diff --git a/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
 new file mode 100644
-index 0000000..7533a9a
+index 0000000..ad44ed2
 --- /dev/null
 +++ b/src/minecraft/net/camotoy/minecraft/util/JavaBackportUtil.java
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,145 @@
 +package net.camotoy.minecraft.util;
 +
-+import com.google.common.base.Preconditions;
 +import sun.misc.FloatConsts;
 +
-+import javax.annotation.Nullable;
 +import java.io.UnsupportedEncodingException;
 +import java.lang.reflect.Array;
 +import java.nio.charset.Charset;

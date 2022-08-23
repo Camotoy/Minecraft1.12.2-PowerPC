@@ -1,0 +1,35 @@
+From 1751490aabc2527623b46470a7b5f0af75baefe4 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Mon, 22 Aug 2022 23:19:13 -0400
+Subject: [PATCH] Default Fast Render to true
+
+This is not required on a Mac mini, but a 2005 iBook G4 will crash without it enabled.
+---
+ src/minecraft/net/minecraft/client/settings/GameSettings.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/client/settings/GameSettings.java b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+index 762b791..414d522 100644
+--- a/src/minecraft/net/minecraft/client/settings/GameSettings.java
++++ b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+@@ -249,7 +249,7 @@ public class GameSettings
+     public boolean ofNaturalTextures = false;
+     public boolean ofEmissiveTextures = true;
+     public boolean ofFastMath = false;
+-    public boolean ofFastRender = false;
++    public boolean ofFastRender = true; // Default Fast Render to true
+     public int ofTranslucentBlocks = 0;
+     public boolean ofDynamicFov = true;
+     public boolean ofAlternateBlocks = true;
+@@ -3411,7 +3411,7 @@ public class GameSettings
+         this.ofLazyChunkLoading = false;
+         this.ofRenderRegions = false;
+         this.ofFastMath = false;
+-        this.ofFastRender = false;
++        this.ofFastRender = true; // Default Fast Render to true
+         this.ofTranslucentBlocks = 0;
+         this.ofDynamicFov = true;
+         this.ofAlternateBlocks = true;
+-- 
+2.35.3
+

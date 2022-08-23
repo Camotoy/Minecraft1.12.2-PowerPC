@@ -1,0 +1,183 @@
+From 446b41a146c2adc0fc10aa2498514a070414b372 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Thu, 18 Aug 2022 15:07:20 -0400
+Subject: [PATCH] Implement primitive getters for getBlockState in IBlockAccess
+
+---
+ .../net/minecraft/world/ChunkCache.java       | 14 ++++++++----
+ .../net/minecraft/world/IBlockAccess.java     |  1 +
+ src/minecraft/net/minecraft/world/World.java  | 22 ++++++++++++++++---
+ .../net/optifine/override/ChunkCacheOF.java   | 22 ++++++++++++-------
+ 4 files changed, 44 insertions(+), 15 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/world/ChunkCache.java b/src/minecraft/net/minecraft/world/ChunkCache.java
+index 846e91c..8e3410d 100644
+--- a/src/minecraft/net/minecraft/world/ChunkCache.java
++++ b/src/minecraft/net/minecraft/world/ChunkCache.java
+@@ -90,11 +90,17 @@ public class ChunkCache implements IBlockAccess
+     }
+ 
+     public IBlockState getBlockState(BlockPos pos)
++    // Start - add primitive getters for BlockState
+     {
+-        if (pos.getY() >= 0 && pos.getY() < 256)
++        return getBlockState(pos.getX(), pos.getY(), pos.getZ());
++    }
++    public IBlockState getBlockState(int x, int y, int z)
++    // End
++    {
++        if (y >= 0 && y < 256) //
+         {
+-            int i = (pos.getX() >> 4) - this.chunkX;
+-            int j = (pos.getZ() >> 4) - this.chunkZ;
++            int i = (x >> 4) - this.chunkX; //
++            int j = (z >> 4) - this.chunkZ; //
+ 
+             if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
+             {
+@@ -102,7 +108,7 @@ public class ChunkCache implements IBlockAccess
+ 
+                 if (chunk != null)
+                 {
+-                    return chunk.getBlockState(pos);
++                    return chunk.getBlockState(x, y, z); //
+                 }
+             }
+         }
+diff --git a/src/minecraft/net/minecraft/world/IBlockAccess.java b/src/minecraft/net/minecraft/world/IBlockAccess.java
+index ceaf168..ad5565a 100644
+--- a/src/minecraft/net/minecraft/world/IBlockAccess.java
++++ b/src/minecraft/net/minecraft/world/IBlockAccess.java
+@@ -14,6 +14,7 @@ public interface IBlockAccess
+ 
+     int getCombinedLight(BlockPos pos, int lightValue);
+ 
++    IBlockState getBlockState(int x, int y, int z); // Implement primitive getter for BlockStates
+     IBlockState getBlockState(BlockPos pos);
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/world/World.java b/src/minecraft/net/minecraft/world/World.java
+index f795cc0..de411bd 100644
+--- a/src/minecraft/net/minecraft/world/World.java
++++ b/src/minecraft/net/minecraft/world/World.java
+@@ -263,6 +263,11 @@ public abstract class World implements IBlockAccess
+         return !this.isOutsideBuildHeight(pos) && pos.getX() >= -30000000 && pos.getZ() >= -30000000 && pos.getX() < 30000000 && pos.getZ() < 30000000;
+     }
+ 
++    // Start - primitive Y check
++    protected final boolean isOutsideBuildHeight(int y) {
++        return y < 0 || y >= 256;
++    }
++    // End
+     private boolean isOutsideBuildHeight(BlockPos pos)
+     {
+         return pos.getY() < 0 || pos.getY() >= 256;
+@@ -352,6 +357,11 @@ public abstract class World implements IBlockAccess
+         return this.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
+     }
+ 
++    // Start - convenience method for getting a chunk from block coords
++    public Chunk getChunkFromBlockCoords(int blockX, int blockZ) {
++        return this.getChunk(blockX >> 4, blockZ >> 4);
++    }
++    // End
+     /**
+      * Gets the chunk at the specified location.
+      */
+@@ -949,15 +959,21 @@ public abstract class World implements IBlockAccess
+     }
+ 
+     public IBlockState getBlockState(BlockPos pos)
++    // Start - implement primitive getters for BlockStates
+     {
+-        if (this.isOutsideBuildHeight(pos))
++        return getBlockState(pos.getX(), pos.getY(), pos.getZ());
++    }
++    public IBlockState getBlockState(int x, int y, int z)
++    // End
++    {
++        if (this.isOutsideBuildHeight(y)) //
+         {
+             return Blocks.AIR.getDefaultState();
+         }
+         else
+         {
+-            Chunk chunk = this.getChunk(pos);
+-            return chunk.getBlockState(pos);
++            Chunk chunk = this.getChunkFromBlockCoords(x, z); //
++            return chunk.getBlockState(x, y, z); //
+         }
+     }
+ 
+diff --git a/src/minecraft/net/optifine/override/ChunkCacheOF.java b/src/minecraft/net/optifine/override/ChunkCacheOF.java
+index c4c254c..953c819 100644
+--- a/src/minecraft/net/optifine/override/ChunkCacheOF.java
++++ b/src/minecraft/net/optifine/override/ChunkCacheOF.java
+@@ -51,17 +51,17 @@ public class ChunkCacheOF implements IBlockAccess
+         this.posZ = k << 4;
+     }
+ 
+-    private int getPositionIndex(BlockPos pos)
++    private int getPositionIndex(int x, int y, int z) //
+     {
+-        int i = pos.getX() - this.posX;
++        int i = x - this.posX; //
+ 
+         if (i >= 0 && i < this.sizeX)
+         {
+-            int j = pos.getY() - this.posY;
++            int j = y - this.posY; //
+ 
+             if (j >= 0 && j < this.sizeY)
+             {
+-                int k = pos.getZ() - this.posZ;
++                int k = z - this.posZ; //
+                 return k >= 0 && k < this.sizeZ ? k * this.sizeXY + j * this.sizeX + i : -1;
+             }
+             else
+@@ -77,7 +77,7 @@ public class ChunkCacheOF implements IBlockAccess
+ 
+     public int getCombinedLight(BlockPos pos, int lightValue)
+     {
+-        int i = this.getPositionIndex(pos);
++        int i = this.getPositionIndex(pos.getX(), pos.getY(), pos.getZ());
+ 
+         if (i >= 0 && i < this.arraySize && this.combinedLights != null)
+         {
+@@ -110,8 +110,14 @@ public class ChunkCacheOF implements IBlockAccess
+     }
+ 
+     public IBlockState getBlockState(BlockPos pos)
++    // Start - implement primitive getters for BlockStates
+     {
+-        int i = this.getPositionIndex(pos);
++        return getBlockState(pos.getX(), pos.getY(), pos.getZ());
++    }
++    public IBlockState getBlockState(int x, int y, int z)
++    // End
++    {
++        int i = this.getPositionIndex(x, y, z); //
+ 
+         if (i >= 0 && i < this.arraySize && this.blockStates != null)
+         {
+@@ -119,7 +125,7 @@ public class ChunkCacheOF implements IBlockAccess
+ 
+             if (iblockstate == null)
+             {
+-                iblockstate = this.chunkCache.getBlockState(pos);
++                iblockstate = this.chunkCache.getBlockState(x, y, z); //
+                 this.blockStates[i] = iblockstate;
+             }
+ 
+@@ -127,7 +133,7 @@ public class ChunkCacheOF implements IBlockAccess
+         }
+         else
+         {
+-            return this.chunkCache.getBlockState(pos);
++            return this.chunkCache.getBlockState(x, y, z); //
+         }
+     }
+ 
+-- 
+2.35.3
+

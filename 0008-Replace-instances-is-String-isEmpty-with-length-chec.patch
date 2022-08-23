@@ -1,4 +1,4 @@
-From b6bf6f96d723fb468d73b50791c887ad035b0fb5 Mon Sep 17 00:00:00 2001
+From 90d146286825a71744f55a8a082be1bfad96e339 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 11:21:34 -0400
 Subject: [PATCH] Replace instances is String#isEmpty with length check

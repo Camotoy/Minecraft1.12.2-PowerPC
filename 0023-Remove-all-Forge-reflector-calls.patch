@@ -1,0 +1,2644 @@
+From 1dc2ee9174072ec03a329e0d401177a136a0eba3 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Mon, 22 Aug 2022 23:17:28 -0400
+Subject: [PATCH] Remove all Forge reflector calls
+
+---
+ .../block/state/BlockStateContainer.java      |  4 ++
+ .../client/LoadingScreenRenderer.java         |  2 +
+ .../client/entity/AbstractClientPlayer.java   |  2 +-
+ .../net/minecraft/client/gui/GuiIngame.java   |  8 +++-
+ .../net/minecraft/client/gui/GuiMainMenu.java | 10 +++++
+ .../minecraft/client/gui/GuiOverlayDebug.java |  2 +
+ .../client/multiplayer/WorldClient.java       |  6 +--
+ .../client/particle/ParticleManager.java      |  4 ++
+ .../client/renderer/BlockModelRenderer.java   |  4 +-
+ .../client/renderer/EntityRenderer.java       | 45 +++++++++++++++----
+ .../client/renderer/ItemRenderer.java         | 16 ++++---
+ .../client/renderer/RenderGlobal.java         | 42 ++++++++++++-----
+ .../minecraft/client/renderer/RenderItem.java | 25 +++++++++--
+ .../renderer/WorldVertexBufferUploader.java   |  8 +++-
+ .../renderer/block/model/BakedQuad.java       |  6 ++-
+ .../renderer/block/model/FaceBakery.java      | 10 ++++-
+ .../block/model/ItemOverrideList.java         |  2 +
+ .../renderer/block/model/ModelBakery.java     | 14 ++++++
+ .../renderer/block/model/ModelRotation.java   |  4 +-
+ .../client/renderer/chunk/RenderChunk.java    | 15 +++++--
+ .../renderer/entity/RenderItemFrame.java      |  4 +-
+ .../renderer/entity/RenderLivingBase.java     | 10 ++++-
+ .../client/renderer/entity/RenderManager.java |  5 ++-
+ .../entity/layers/LayerArmorBase.java         |  8 ++++
+ .../texture/LayeredColorMaskTexture.java      |  2 +-
+ .../client/renderer/texture/TextureMap.java   |  6 +--
+ .../client/renderer/texture/TextureUtil.java  |  2 +
+ .../TileEntityRendererDispatcher.java         |  8 ++++
+ .../client/resources/DefaultResourcePack.java |  2 +
+ .../client/settings/GameSettings.java         | 14 +++++-
+ .../net/minecraft/crash/CrashReport.java      |  3 +-
+ .../net/minecraft/entity/EntityLiving.java    | 14 ++++--
+ .../server/integrated/IntegratedServer.java   | 12 +++--
+ src/minecraft/net/minecraft/src/Config.java   |  2 +-
+ .../net/minecraft/util/ScreenShotHelper.java  |  4 ++
+ .../minecraft/world/WorldEntitySpawner.java   | 18 +++++---
+ .../chunk/storage/ExtendedBlockStorage.java   |  2 +
+ .../common/model/ITransformation.java         |  2 +-
+ .../net/optifine/ConnectedTextures.java       |  2 +
+ src/minecraft/net/optifine/CustomColors.java  |  2 +-
+ .../net/optifine/CustomItemProperties.java    |  6 ++-
+ src/minecraft/net/optifine/DynamicLights.java |  2 +
+ .../net/optifine/SpriteDependencies.java      |  2 +-
+ .../net/optifine/config/ConnectedParser.java  |  4 +-
+ .../net/optifine/override/ChunkCacheOF.java   |  2 +
+ .../net/optifine/reflect/Reflector.java       |  6 +++
+ .../net/optifine/reflect/ReflectorForge.java  |  2 +
+ .../net/optifine/shaders/BlockAliases.java    |  6 ++-
+ .../net/optifine/shaders/EntityAliases.java   |  6 ++-
+ .../net/optifine/shaders/ItemAliases.java     |  6 ++-
+ .../net/optifine/shaders/Shaders.java         |  2 +
+ .../net/optifine/shaders/ShadersRender.java   |  4 ++
+ 52 files changed, 319 insertions(+), 80 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
+index 6c7b194..ff45a71 100644
+--- a/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
++++ b/src/minecraft/net/minecraft/block/state/BlockStateContainer.java
+@@ -171,6 +171,7 @@ public class BlockStateContainer
+         return (IProperty)this.properties.get(propertyName);
+     }
+ 
++    /*
+     public static class Builder
+     {
+         private final Block block;
+@@ -219,6 +220,7 @@ public class BlockStateContainer
+             }
+         }
+     }
++    Unused class */
+ 
+     static class StateImplementation extends BlockStateBase
+     {
+@@ -548,6 +550,7 @@ public class BlockStateContainer
+             return this.propertyValueTable;
+         }
+ 
++        /* These methods appear to be Forge-specific
+         public int getLightOpacity(IBlockAccess p_getLightOpacity_1_, BlockPos p_getLightOpacity_2_)
+         {
+             return Reflector.callInt(this.block, Reflector.ForgeBlock_getLightOpacity, this, p_getLightOpacity_1_, p_getLightOpacity_2_);
+@@ -572,6 +575,7 @@ public class BlockStateContainer
+         {
+             return Reflector.callBoolean(this.block, Reflector.ForgeBlock_doesSideBlockRendering, this, p_doesSideBlockRendering_1_, p_doesSideBlockRendering_2_, p_doesSideBlockRendering_3_);
+         }
++        */
+ 
+         public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, BlockPos pos, EnumFacing facing)
+         {
+diff --git a/src/minecraft/net/minecraft/client/LoadingScreenRenderer.java b/src/minecraft/net/minecraft/client/LoadingScreenRenderer.java
+index 41abab1..a64b3da 100644
+--- a/src/minecraft/net/minecraft/client/LoadingScreenRenderer.java
++++ b/src/minecraft/net/minecraft/client/LoadingScreenRenderer.java
+@@ -164,6 +164,7 @@ public class LoadingScreenRenderer implements IProgressUpdate
+ 
+                 boolean flag = true;
+ 
++                /*
+                 if (Reflector.FMLClientHandler_handleLoadingScreen.exists())
+                 {
+                     Object object = Reflector.call(Reflector.FMLClientHandler_instance);
+@@ -173,6 +174,7 @@ public class LoadingScreenRenderer implements IProgressUpdate
+                         flag = !Reflector.callBoolean(object, Reflector.FMLClientHandler_handleLoadingScreen, scaledresolution);
+                     }
+                 }
++                */
+ 
+                 if (flag)
+                 {
+diff --git a/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java b/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
+index 84f7709..44b9c9b 100644
+--- a/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
++++ b/src/minecraft/net/minecraft/client/entity/AbstractClientPlayer.java
+@@ -209,7 +209,7 @@ public abstract class AbstractClientPlayer extends EntityPlayer
+             f *= 1.0F - f1 * 0.15F;
+         }
+ 
+-        return Reflector.ForgeHooksClient_getOffsetFOV.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getOffsetFOV, this, f) : f;
++        return /*Reflector.ForgeHooksClient_getOffsetFOV.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getOffsetFOV, this, f) :*/ f;
+     }
+ 
+     public String getNameClear()
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiIngame.java b/src/minecraft/net/minecraft/client/gui/GuiIngame.java
+index b6ff10f..af3b4ec 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiIngame.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiIngame.java
+@@ -419,7 +419,7 @@ public class GuiIngame extends Gui
+                 BlockPos blockpos = raytraceresult.getBlockPos();
+                 IBlockState iblockstate = this.mc.world.getBlockState(blockpos);
+ 
+-                if (!ReflectorForge.blockHasTileEntity(iblockstate) || !(this.mc.world.getTileEntity(blockpos) instanceof IInventory))
++                if (!iblockstate.getBlock().hasTileEntity() || !(this.mc.world.getTileEntity(blockpos) instanceof IInventory)) //
+                 {
+                     return;
+                 }
+@@ -503,17 +503,19 @@ public class GuiIngame extends Gui
+                     potion = potioneffect.getPotion();
+                     flag = potion.hasStatusIcon();
+ 
+-                    if (!Reflector.ForgePotion_shouldRenderHUD.exists())
++                    //if (!Reflector.ForgePotion_shouldRenderHUD.exists())
+                     {
+                         break;
+                     }
+ 
++                    /*
+                     if (Reflector.callBoolean(potion, Reflector.ForgePotion_shouldRenderHUD, potioneffect))
+                     {
+                         this.mc.getTextureManager().bindTexture(GuiContainer.INVENTORY_BACKGROUND);
+                         flag = true;
+                         break;
+                     }
++                    */
+                 }
+ 
+                 if (flag && potioneffect.doesShowParticles())
+@@ -560,6 +562,7 @@ public class GuiIngame extends Gui
+ 
+                     GlStateManager.color(1.0F, 1.0F, 1.0F, f);
+ 
++                    /*
+                     if (Reflector.ForgePotion_renderHUDEffect.exists())
+                     {
+                         if (potion.hasStatusIcon())
+@@ -570,6 +573,7 @@ public class GuiIngame extends Gui
+                         Reflector.call(potion, Reflector.ForgePotion_renderHUDEffect, potioneffect, this, k, l, this.zLevel, f);
+                     }
+                     else
++                    */
+                     {
+                         this.drawTexturedModalRect(k + 3, l + 3, i1 % 8 * 18, 198 + i1 / 8 * 18, 18, 18);
+                     }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+index 3f429e9..62550e6 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiMainMenu.java
+@@ -282,10 +282,12 @@ public class GuiMainMenu extends GuiScreen
+             this.realmsNotification.initGui();
+         }
+ 
++        /*
+         if (Reflector.NotificationModUpdateScreen_init.exists())
+         {
+             this.modUpdateNotification = (GuiScreen)Reflector.call(Reflector.NotificationModUpdateScreen_init, this, this.modButton);
+         }
++        */
+     }
+ 
+     /**
+@@ -296,12 +298,14 @@ public class GuiMainMenu extends GuiScreen
+         this.buttonList.add(new GuiButton(1, this.width / 2 - 100, p_73969_1_, I18n.format("menu.singleplayer")));
+         this.buttonList.add(new GuiButton(2, this.width / 2 - 100, p_73969_1_ + p_73969_2_ * 1, I18n.format("menu.multiplayer")));
+ 
++        /*
+         if (Reflector.GuiModList_Constructor.exists())
+         {
+             this.realmsButton = this.addButton(new GuiButton(14, this.width / 2 + 2, p_73969_1_ + p_73969_2_ * 2, 98, 20, I18n.format("menu.online").replace("Minecraft", "").trim()));
+             this.buttonList.add(this.modButton = new GuiButton(6, this.width / 2 - 100, p_73969_1_ + p_73969_2_ * 2, 98, 20, I18n.format("fml.menu.mods")));
+         }
+         else
++        */
+         {
+             this.realmsButton = this.addButton(new GuiButton(14, this.width / 2 - 100, p_73969_1_ + p_73969_2_ * 2, I18n.format("menu.online")));
+         }
+@@ -358,10 +362,12 @@ public class GuiMainMenu extends GuiScreen
+             this.mc.shutdown();
+         }
+ 
++        /*
+         if (button.id == 6 && Reflector.GuiModList_Constructor.exists())
+         {
+             this.mc.displayGuiScreen((GuiScreen)Reflector.newInstance(Reflector.GuiModList_Constructor, this));
+         }
++        */
+ 
+         if (button.id == 11)
+         {
+@@ -661,10 +667,12 @@ public class GuiMainMenu extends GuiScreen
+         this.mc.getTextureManager().bindTexture(field_194400_H);
+         drawModalRectWithCustomSizedTexture(j + 88, 67, 0.0F, 0.0F, 98, 14, 128.0F, 16.0F);
+ 
++        /*
+         if (Reflector.ForgeHooksClient_renderMainMenu.exists())
+         {
+             this.splashText = Reflector.callString(Reflector.ForgeHooksClient_renderMainMenu, this, this.fontRenderer, this.width, this.height, this.splashText);
+         }
++        */
+ 
+         GlStateManager.pushMatrix();
+         GlStateManager.translate((float)(this.width / 2 + 90), 70.0F, 0.0F);
+@@ -685,6 +693,7 @@ public class GuiMainMenu extends GuiScreen
+             s = s + ("release".equalsIgnoreCase(this.mc.getVersionType()) ? "" : "/" + this.mc.getVersionType());
+         }
+ 
++        /*
+         if (Reflector.FMLCommonHandler_getBrandings.exists())
+         {
+             Object object = Reflector.call(Reflector.FMLCommonHandler_instance);
+@@ -701,6 +710,7 @@ public class GuiMainMenu extends GuiScreen
+             }
+         }
+         else
++        */
+         {
+             this.drawString(this.fontRenderer, s, 2, this.height - 10, -1);
+         }
+diff --git a/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java b/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
+index dc34800..df0d147 100644
+--- a/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
++++ b/src/minecraft/net/minecraft/client/gui/GuiOverlayDebug.java
+@@ -283,12 +283,14 @@ public class GuiOverlayDebug extends Gui
+         list.add(4, s);
+         list.set(5, "GC: " + MemoryMonitor.getAllocationRateMb() + "MB/s");
+ 
++        /*
+         if (Reflector.FMLCommonHandler_getBrandings.exists())
+         {
+             Object object = Reflector.call(Reflector.FMLCommonHandler_instance);
+             list.add("");
+             list.addAll((Collection)Reflector.call(object, Reflector.FMLCommonHandler_getBrandings, false));
+         }
++        */
+ 
+         if (this.mc.isReducedDebug())
+         {
+diff --git a/src/minecraft/net/minecraft/client/multiplayer/WorldClient.java b/src/minecraft/net/minecraft/client/multiplayer/WorldClient.java
+index 48aeb28..9d67c39 100644
+--- a/src/minecraft/net/minecraft/client/multiplayer/WorldClient.java
++++ b/src/minecraft/net/minecraft/client/multiplayer/WorldClient.java
+@@ -82,8 +82,8 @@ public class WorldClient extends World
+         this.mapStorage = new SaveDataMemoryStorage();
+         this.calculateInitialSkylight();
+         this.calculateInitialWeather();
+-        Reflector.call(this, Reflector.ForgeWorld_initCapabilities);
+-        Reflector.postForgeBusEvent(Reflector.WorldEvent_Load_Constructor, this);
++        //Reflector.call(this, Reflector.ForgeWorld_initCapabilities);
++        //Reflector.postForgeBusEvent(Reflector.WorldEvent_Load_Constructor, this);
+ 
+         if (this.mc.playerController != null && this.mc.playerController.getClass() == PlayerControllerMP.class)
+         {
+@@ -94,7 +94,7 @@ public class WorldClient extends World
+ 
+     private static WorldProvider makeWorldProvider(int p_makeWorldProvider_0_)
+     {
+-        return Reflector.DimensionManager_createProviderFor.exists() ? (WorldProvider)Reflector.call(Reflector.DimensionManager_createProviderFor, p_makeWorldProvider_0_) : DimensionType.getById(p_makeWorldProvider_0_).createDimension();
++        return /*Reflector.DimensionManager_createProviderFor.exists() ? (WorldProvider)Reflector.call(Reflector.DimensionManager_createProviderFor, p_makeWorldProvider_0_) :*/ DimensionType.getById(p_makeWorldProvider_0_).createDimension();
+     }
+ 
+     /**
+diff --git a/src/minecraft/net/minecraft/client/particle/ParticleManager.java b/src/minecraft/net/minecraft/client/particle/ParticleManager.java
+index c75aaa0..bf4c989 100644
+--- a/src/minecraft/net/minecraft/client/particle/ParticleManager.java
++++ b/src/minecraft/net/minecraft/client/particle/ParticleManager.java
+@@ -443,12 +443,14 @@ public class ParticleManager
+     {
+         boolean flag;
+ 
++        /*
+         if (Reflector.ForgeBlock_addDestroyEffects.exists() && Reflector.ForgeBlock_isAir.exists())
+         {
+             Block block = state.getBlock();
+             flag = !Reflector.callBoolean(block, Reflector.ForgeBlock_isAir, state, this.world, pos) && !Reflector.callBoolean(block, Reflector.ForgeBlock_addDestroyEffects, this.world, pos, this);
+         }
+         else
++        */
+         {
+             flag = state.getMaterial() != Material.AIR;
+         }
+@@ -555,6 +557,7 @@ public class ParticleManager
+         return false;
+     }
+ 
++    /* Appears to be unused
+     public void addBlockHitEffects(BlockPos p_addBlockHitEffects_1_, RayTraceResult p_addBlockHitEffects_2_)
+     {
+         IBlockState iblockstate = this.world.getBlockState(p_addBlockHitEffects_1_);
+@@ -569,4 +572,5 @@ public class ParticleManager
+             }
+         }
+     }
++    */
+ }
+diff --git a/src/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java b/src/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java
+index 68a137b..52703e3 100644
+--- a/src/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java
++++ b/src/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java
+@@ -44,10 +44,12 @@ public class BlockModelRenderer
+     {
+         this.blockColors = blockColorsIn;
+ 
++        /*
+         if (Reflector.ForgeModContainer_forgeLightPipelineEnabled.exists())
+         {
+             Reflector.setFieldValue(Reflector.ForgeModContainer_forgeLightPipelineEnabled, Boolean.valueOf(false));
+         }
++        */
+     }
+ 
+     public boolean renderModel(IBlockAccess blockAccessIn, IBakedModel modelIn, IBlockState blockStateIn, BlockPos blockPosIn, BufferBuilder buffer, boolean checkSides)
+@@ -57,7 +59,7 @@ public class BlockModelRenderer
+ 
+     public boolean renderModel(IBlockAccess worldIn, IBakedModel modelIn, IBlockState stateIn, BlockPos posIn, BufferBuilder buffer, boolean checkSides, long rand)
+     {
+-        boolean flag = Minecraft.isAmbientOcclusionEnabled() && ReflectorForge.getLightValue(stateIn, worldIn, posIn) == 0 && ReflectorForge.isAmbientOcclusion(modelIn, stateIn);
++        boolean flag = Minecraft.isAmbientOcclusionEnabled() && stateIn.getLightValue() == 0 && modelIn.isAmbientOcclusion(); //
+ 
+         try
+         {
+diff --git a/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java b/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
+index dcf2506..a728b29 100644
+--- a/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
++++ b/src/minecraft/net/minecraft/client/renderer/EntityRenderer.java
+@@ -308,10 +308,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             {
+                 this.loadShader(new ResourceLocation("shaders/post/invert.json"));
+             }
++            /*
+             else if (Reflector.ForgeHooksClient_loadEntityShader.exists())
+             {
+                 Reflector.call(Reflector.ForgeHooksClient_loadEntityShader, entityIn, this);
+             }
++            */
+         }
+     }
+ 
+@@ -522,6 +524,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+ 
+                     if (d3 < d2 || d2 == 0.0D)
+                     {
++                        /*
+                         boolean flag1 = false;
+ 
+                         if (Reflector.ForgeEntity_canRiderInteract.exists())
+@@ -530,6 +533,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                         }
+ 
+                         if (!flag1 && entity1.getLowestRidingEntity() == entity.getLowestRidingEntity())
++                        */ if (entity1.getLowestRidingEntity() == entity.getLowestRidingEntity())
+                         {
+                             if (d2 == 0.0D)
+                             {
+@@ -663,7 +667,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 f = f * 60.0F / 70.0F;
+             }
+ 
+-            return Reflector.ForgeHooksClient_getFOVModifier.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getFOVModifier, this, entity, iblockstate, partialTicks, f) : f;
++            return /*Reflector.ForgeHooksClient_getFOVModifier.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getFOVModifier, this, entity, iblockstate, partialTicks, f) :*/ f;
+         }
+     }
+ 
+@@ -735,11 +739,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 IBlockState iblockstate = this.mc.world.getBlockState(blockpos);
+                 Block block = iblockstate.getBlock();
+ 
++                /*
+                 if (Reflector.ForgeHooksClient_orientBedCamera.exists())
+                 {
+                     Reflector.callVoid(Reflector.ForgeHooksClient_orientBedCamera, this.mc.world, blockpos, iblockstate, entity);
+                 }
+-                else if (block == Blocks.BED)
++                else*/ if (block == Blocks.BED)
+                 {
+                     int j = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
+                     GlStateManager.rotate((float)(j * 90), 0.0F, 1.0F, 0.0F);
+@@ -809,6 +814,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             GlStateManager.translate(0.0F, 0.0F, 0.05F);
+         }
+ 
++        /*
+         if (Reflector.EntityViewRenderEvent_CameraSetup_Constructor.exists())
+         {
+             if (!this.mc.gameSettings.debugCamEnable)
+@@ -834,7 +840,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 GlStateManager.rotate(f6, 0.0F, 1.0F, 0.0F);
+             }
+         }
+-        else if (!this.mc.gameSettings.debugCamEnable)
++        else*/ if (!this.mc.gameSettings.debugCamEnable)
+         {
+             GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, 1.0F, 0.0F, 0.0F);
+ 
+@@ -1005,9 +1011,9 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 }
+ 
+                 flag = this.mc.getRenderViewEntity() instanceof EntityLivingBase && ((EntityLivingBase)this.mc.getRenderViewEntity()).isPlayerSleeping();
+-                boolean flag1 = !ReflectorForge.renderFirstPersonHand(this.mc.renderGlobal, p_renderHand_1_, p_renderHand_2_);
++                //boolean flag1 = !ReflectorForge.renderFirstPersonHand(this.mc.renderGlobal, p_renderHand_1_, p_renderHand_2_);
+ 
+-                if (flag1 && this.mc.gameSettings.thirdPersonView == 0 && !flag && !this.mc.gameSettings.hideGUI && !this.mc.playerController.isSpectator())
++                if (this.mc.gameSettings.thirdPersonView == 0 && !flag && !this.mc.gameSettings.hideGUI && !this.mc.playerController.isSpectator()) //
+                 {
+                     this.enableLightmap();
+ 
+@@ -1149,6 +1155,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                         f10 = 0.25F + f7 * 0.75F;
+                     }
+ 
++                    /*
+                     if (Reflector.ForgeWorldProvider_getLightmapColors.exists())
+                     {
+                         float[] afloat = new float[] {f8, f9, f10};
+@@ -1157,6 +1164,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                         f9 = afloat[1];
+                         f10 = afloat[2];
+                     }
++                    */
+ 
+                     f8 = MathHelper.clamp(f8, 0.0F, 1.0F);
+                     f9 = MathHelper.clamp(f9, 0.0F, 1.0F);
+@@ -1409,11 +1417,13 @@ public class EntityRenderer implements IResourceManagerReloadListener
+ 
+                 try
+                 {
++                    /*
+                     if (Reflector.ForgeHooksClient_drawScreen.exists())
+                     {
+                         Reflector.callVoid(Reflector.ForgeHooksClient_drawScreen, this.mc.currentScreen, k1, l1, this.mc.getTickLength());
+                     }
+                     else
++                    */
+                     {
+                         this.mc.currentScreen.drawScreen(k1, l1, this.mc.getTickLength());
+                     }
+@@ -1522,7 +1532,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+ 
+                     if (this.mc.playerController.getCurrentGameType() == GameType.SPECTATOR)
+                     {
+-                        flag = ReflectorForge.blockHasTileEntity(iblockstate) && this.mc.world.getTileEntity(blockpos) instanceof IInventory;
++                        flag = block.hasTileEntity() && this.mc.world.getTileEntity(blockpos) instanceof IInventory;
+                     }
+                     else
+                     {
+@@ -1614,11 +1624,13 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             Shaders.setCamera(partialTicks);
+         }
+ 
++        /*
+         if (Reflector.ActiveRenderInfo_updateRenderInfo2.exists())
+         {
+             Reflector.call(Reflector.ActiveRenderInfo_updateRenderInfo2, this.mc.getRenderViewEntity(), this.mc.gameSettings.thirdPersonView == 2);
+         }
+         else
++        */
+         {
+             ActiveRenderInfo.updateRenderInfo(this.mc.player, this.mc.gameSettings.thirdPersonView == 2);
+         }
+@@ -1762,17 +1774,21 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             RenderHelper.enableStandardItemLighting();
+             this.mc.profiler.endStartSection("entities");
+ 
++            /*
+             if (Reflector.ForgeHooksClient_setRenderPass.exists())
+             {
+                 Reflector.callVoid(Reflector.ForgeHooksClient_setRenderPass, Integer.valueOf(0));
+             }
++            */
+ 
+             renderglobal.renderEntities(entity, icamera, partialTicks);
+ 
++            /*
+             if (Reflector.ForgeHooksClient_setRenderPass.exists())
+             {
+                 Reflector.callVoid(Reflector.ForgeHooksClient_setRenderPass, Integer.valueOf(-1));
+             }
++            */
+ 
+             RenderHelper.disableStandardItemLighting();
+             this.disableLightmap();
+@@ -1787,7 +1803,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             GlStateManager.disableAlpha();
+             this.mc.profiler.endStartSection("outline");
+ 
+-            if (!Reflector.ForgeHooksClient_onDrawBlockHighlight.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_onDrawBlockHighlight, renderglobal, entityplayer, this.mc.objectMouseOver, Integer.valueOf(0), partialTicks))
++            //if (!Reflector.ForgeHooksClient_onDrawBlockHighlight.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_onDrawBlockHighlight, renderglobal, entityplayer, this.mc.objectMouseOver, Integer.valueOf(0), partialTicks))
+             {
+                 renderglobal.drawSelectionBox(entityplayer, this.mc.objectMouseOver, 0, partialTicks);
+             }
+@@ -1901,6 +1917,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             Shaders.endWater();
+         }
+ 
++        /*
+         if (Reflector.ForgeHooksClient_setRenderPass.exists() && !this.debugView)
+         {
+             RenderHelper.enableStandardItemLighting();
+@@ -1911,6 +1928,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             Reflector.callVoid(Reflector.ForgeHooksClient_setRenderPass, Integer.valueOf(-1));
+             RenderHelper.disableStandardItemLighting();
+         }
++        */
+ 
+         GlStateManager.shadeModel(7424);
+         GlStateManager.depthMask(true);
+@@ -1924,11 +1942,13 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             this.renderCloudsCheck(renderglobal, partialTicks, pass, d0, d1, d2);
+         }
+ 
++        /*
+         if (Reflector.ForgeHooksClient_dispatchRenderLast.exists())
+         {
+             this.mc.profiler.endStartSection("forge_render_last");
+             Reflector.callVoid(Reflector.ForgeHooksClient_dispatchRenderLast, renderglobal, partialTicks);
+         }
++        */
+ 
+         this.mc.profiler.endStartSection("hand");
+ 
+@@ -2067,6 +2087,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+      */
+     protected void renderRainSnow(float partialTicks)
+     {
++        /*
+         if (Reflector.ForgeWorldProvider_getWeatherRenderer.exists())
+         {
+             WorldProvider worldprovider = this.mc.world.provider;
+@@ -2078,6 +2099,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 return;
+             }
+         }
++        */
+ 
+         float f5 = this.mc.world.getRainStrength(partialTicks);
+ 
+@@ -2326,6 +2348,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             this.fogColorGreen = (float)vec3d4.y;
+             this.fogColorBlue = (float)vec3d4.z;
+         }
++        /*
+         else if (Reflector.ForgeBlock_getFogColor.exists())
+         {
+             Vec3d vec3d5 = ActiveRenderInfo.projectViewFromEntity(entity, (double)partialTicks);
+@@ -2336,6 +2359,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             this.fogColorGreen = (float)vec3d3.y;
+             this.fogColorBlue = (float)vec3d3.z;
+         }
++        */
+         else if (iblockstate1.getMaterial() == Material.WATER)
+         {
+             float f12 = 0.0F;
+@@ -2461,6 +2485,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             this.fogColorBlue = f7;
+         }
+ 
++        /*
+         if (Reflector.EntityViewRenderEvent_FogColors_Constructor.exists())
+         {
+             Object object = Reflector.newInstance(Reflector.EntityViewRenderEvent_FogColors_Constructor, this, entity, iblockstate1, partialTicks, this.fogColorRed, this.fogColorGreen, this.fogColorBlue);
+@@ -2469,6 +2494,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+             this.fogColorGreen = Reflector.callFloat(object, Reflector.EntityViewRenderEvent_FogColors_getGreen);
+             this.fogColorBlue = Reflector.callFloat(object, Reflector.EntityViewRenderEvent_FogColors_getBlue);
+         }
++        */
+ 
+         Shaders.setClearColor(this.fogColorRed, this.fogColorGreen, this.fogColorBlue, 0.0F);
+     }
+@@ -2485,6 +2511,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+         GlStateManager.glNormal3f(0.0F, -1.0F, 0.0F);
+         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+         IBlockState iblockstate = ActiveRenderInfo.getBlockStateAtEntityViewpoint(this.mc.world, entity, partialTicks);
++        /*
+         float f = -1.0F;
+ 
+         if (Reflector.ForgeHooksClient_getFogDensity.exists())
+@@ -2496,7 +2523,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
+         {
+             GlStateManager.setFogDensity(f);
+         }
+-        else if (entity instanceof EntityLivingBase && ((EntityLivingBase)entity).isPotionActive(MobEffects.BLINDNESS))
++        else*/ if (entity instanceof EntityLivingBase && ((EntityLivingBase)entity).isPotionActive(MobEffects.BLINDNESS))
+         {
+             float f4 = 5.0F;
+             int i = ((EntityLivingBase)entity).getActivePotionEffect(MobEffects.BLINDNESS).getDuration();
+@@ -2592,10 +2619,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
+                 GlStateManager.setFogEnd(f3);
+             }
+ 
++            /*
+             if (Reflector.ForgeHooksClient_onFogRender.exists())
+             {
+                 Reflector.callVoid(Reflector.ForgeHooksClient_onFogRender, this, entity, iblockstate, partialTicks, startCoords, f3);
+             }
++            */
+         }
+ 
+         GlStateManager.enableColorMaterial();
+diff --git a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
+index 5c79b22..c804663 100644
+--- a/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
++++ b/src/minecraft/net/minecraft/client/renderer/ItemRenderer.java
+@@ -234,7 +234,7 @@ public class ItemRenderer
+         bufferbuilder.pos(135.0D, -7.0D, 0.0D).tex(1.0D, 0.0D).endVertex();
+         bufferbuilder.pos(-7.0D, -7.0D, 0.0D).tex(0.0D, 0.0D).endVertex();
+         tessellator.draw();
+-        MapData mapdata = ReflectorForge.getMapData(Items.FILLED_MAP, stack, this.mc.world);
++        MapData mapdata = Items.FILLED_MAP.getMapData(stack, this.mc.world);
+ 
+         if (mapdata != null)
+         {
+@@ -351,7 +351,7 @@ public class ItemRenderer
+             float f3 = enumhand == EnumHand.MAIN_HAND ? f : 0.0F;
+             float f5 = 1.0F - (this.prevEquippedProgressMainHand + (this.equippedProgressMainHand - this.prevEquippedProgressMainHand) * partialTicks);
+ 
+-            if (!Reflector.ForgeHooksClient_renderSpecificFirstPersonHand.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_renderSpecificFirstPersonHand, EnumHand.MAIN_HAND, partialTicks, f1, f3, f5, this.itemStackMainHand))
++            //if (!Reflector.ForgeHooksClient_renderSpecificFirstPersonHand.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_renderSpecificFirstPersonHand, EnumHand.MAIN_HAND, partialTicks, f1, f3, f5, this.itemStackMainHand))
+             {
+                 this.renderItemInFirstPerson(abstractclientplayer, partialTicks, f1, EnumHand.MAIN_HAND, f3, this.itemStackMainHand, f5);
+             }
+@@ -362,7 +362,7 @@ public class ItemRenderer
+             float f4 = enumhand == EnumHand.OFF_HAND ? f : 0.0F;
+             float f6 = 1.0F - (this.prevEquippedProgressOffHand + (this.equippedProgressOffHand - this.prevEquippedProgressOffHand) * partialTicks);
+ 
+-            if (!Reflector.ForgeHooksClient_renderSpecificFirstPersonHand.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_renderSpecificFirstPersonHand, EnumHand.OFF_HAND, partialTicks, f1, f4, f6, this.itemStackOffHand))
++            //if (!Reflector.ForgeHooksClient_renderSpecificFirstPersonHand.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_renderSpecificFirstPersonHand, EnumHand.OFF_HAND, partialTicks, f1, f4, f6, this.itemStackOffHand))
+             {
+                 this.renderItemInFirstPerson(abstractclientplayer, partialTicks, f1, EnumHand.OFF_HAND, f4, this.itemStackOffHand, f6);
+             }
+@@ -498,9 +498,11 @@ public class ItemRenderer
+ 
+             if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE)
+             {
++                /*
+                 Object object = Reflector.getFieldValue(Reflector.RenderBlockOverlayEvent_OverlayType_BLOCK);
+ 
+                 if (!Reflector.callBoolean(Reflector.ForgeEventFactory_renderBlockOverlay, this.mc.player, partialTicks, object, iblockstate, blockpos))
++                */
+                 {
+                     this.renderSuffocationOverlay(this.mc.getBlockRendererDispatcher().getBlockModelShapes().getTexture(iblockstate));
+                 }
+@@ -509,12 +511,14 @@ public class ItemRenderer
+ 
+         if (!this.mc.player.isSpectator())
+         {
+-            if (this.mc.player.isInsideOfMaterial(Material.WATER) && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderWaterOverlay, this.mc.player, partialTicks))
++            //if (this.mc.player.isInsideOfMaterial(Material.WATER) && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderWaterOverlay, this.mc.player, partialTicks))
++            if (this.mc.player.isInsideOfMaterial(Material.WATER))
+             {
+                 this.renderWaterOverlayTexture(partialTicks);
+             }
+ 
+-            if (this.mc.player.isBurning() && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderFireOverlay, this.mc.player, partialTicks))
++            //if (this.mc.player.isBurning() && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderFireOverlay, this.mc.player, partialTicks))
++            if (this.mc.player.isBurning())
+             {
+                 this.renderFireInFirstPerson();
+             }
+@@ -652,6 +656,7 @@ public class ItemRenderer
+         {
+             float f = entityplayersp.getCooledAttackStrength(1.0F);
+ 
++            /*
+             if (Reflector.ForgeHooksClient_shouldCauseReequipAnimation.exists())
+             {
+                 boolean flag = Reflector.callBoolean(Reflector.ForgeHooksClient_shouldCauseReequipAnimation, this.itemStackMainHand, itemstack, entityplayersp.inventory.currentItem);
+@@ -671,6 +676,7 @@ public class ItemRenderer
+                 this.equippedProgressOffHand += MathHelper.clamp((float)(!flag1 ? 1 : 0) - this.equippedProgressOffHand, -0.4F, 0.4F);
+             }
+             else
++            */
+             {
+                 this.equippedProgressMainHand += MathHelper.clamp((com.google.common.base.Objects.equal(this.itemStackMainHand, itemstack) ? f * f * f : 0.0F) - this.equippedProgressMainHand, -0.4F, 0.4F);
+                 this.equippedProgressOffHand += MathHelper.clamp((float)(com.google.common.base.Objects.equal(this.itemStackOffHand, itemstack1) ? 1 : 0) - this.equippedProgressOffHand, -0.4F, 0.4F);
+diff --git a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+index 08902af..5135e29 100644
+--- a/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
++++ b/src/minecraft/net/minecraft/client/renderer/RenderGlobal.java
+@@ -670,19 +670,23 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+ 
+     public void renderEntities(Entity renderViewEntity, ICamera camera, float partialTicks)
+     {
++        /*
+         int i = 0;
+ 
+         if (Reflector.MinecraftForgeClient_getRenderPass.exists())
+         {
+             i = Reflector.callInt(Reflector.MinecraftForgeClient_getRenderPass);
+         }
++        */
+ 
+         if (this.renderEntitiesStartupCounter > 0)
+         {
++            /*
+             if (i > 0)
+             {
+                 return;
+             }
++            */
+ 
+             --this.renderEntitiesStartupCounter;
+         }
+@@ -696,7 +700,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             this.renderManager.cacheActiveRenderInfo(this.world, this.mc.fontRenderer, this.mc.getRenderViewEntity(), this.mc.pointedEntity, this.mc.gameSettings, partialTicks);
+             ++renderEntitiesCounter;
+ 
+-            if (i == 0)
++            //if (i == 0)
+             {
+                 this.countEntitiesTotal = 0;
+                 this.countEntitiesRendered = 0;
+@@ -716,7 +720,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             this.world.profiler.endStartSection("global");
+             List<Entity> list = this.world.getLoadedEntityList();
+ 
+-            if (i == 0)
++            //if (i == 0)
+             {
+                 this.countEntitiesTotal = list.size();
+             }
+@@ -726,14 +730,14 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 GlStateManager.disableFog();
+             }
+ 
+-            boolean flag = Reflector.ForgeEntity_shouldRenderInPass.exists();
+-            boolean flag1 = Reflector.ForgeTileEntity_shouldRenderInPass.exists();
++            //boolean flag = Reflector.ForgeEntity_shouldRenderInPass.exists();
++            //boolean flag1 = Reflector.ForgeTileEntity_shouldRenderInPass.exists();
+ 
+             for (int j = 0; j < this.world.weatherEffects.size(); ++j)
+             {
+                 Entity entity1 = this.world.weatherEffects.get(j);
+ 
+-                if (!flag || Reflector.callBoolean(entity1, Reflector.ForgeEntity_shouldRenderInPass, i))
++                //if (!flag || Reflector.callBoolean(entity1, Reflector.ForgeEntity_shouldRenderInPass, i))
+                 {
+                     ++this.countEntitiesRendered;
+ 
+@@ -767,7 +771,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 {
+                     for (Entity entity2 : classinheritancemultimap)
+                     {
+-                        if (!flag || Reflector.callBoolean(entity2, Reflector.ForgeEntity_shouldRenderInPass, i))
++                        //if (!flag || Reflector.callBoolean(entity2, Reflector.ForgeEntity_shouldRenderInPass, i))
+                         {
+                             boolean flag3 = this.renderManager.shouldRender(entity2, camera, d0, d1, d2) || entity2.isRidingOrBeingRiddenBy(this.mc.player);
+ 
+@@ -810,7 +814,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             {
+                 for (Entity entity3 : list1)
+                 {
+-                    if (!flag || Reflector.callBoolean(entity3, Reflector.ForgeEntity_shouldRenderInPass, i))
++                    //if (!flag || Reflector.callBoolean(entity3, Reflector.ForgeEntity_shouldRenderInPass, i))
+                     {
+                         if (flag5)
+                         {
+@@ -822,7 +826,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 }
+             }
+ 
+-            if (i == 0 && this.isRenderEntityOutlines() && (!list2.isEmpty() || this.entityOutlinesRendered))
++            if (/*i == 0 && */this.isRenderEntityOutlines() && (!list2.isEmpty() || this.entityOutlinesRendered))
+             {
+                 this.world.profiler.endStartSection("entityOutlines");
+                 this.entityOutlineFramebuffer.framebufferClear();
+@@ -840,7 +844,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                     {
+                         Entity entity4 = list2.get(k);
+ 
+-                        if (!flag || Reflector.callBoolean(entity4, Reflector.ForgeEntity_shouldRenderInPass, i))
++                        //if (!flag || Reflector.callBoolean(entity4, Reflector.ForgeEntity_shouldRenderInPass, i))
+                         {
+                             if (flag5)
+                             {
+@@ -890,7 +894,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                     {
+                         Entity entity5 = list2.get(l);
+ 
+-                        if (!flag || Reflector.callBoolean(entity5, Reflector.ForgeEntity_shouldRenderInPass, i))
++                        //if (!flag || Reflector.callBoolean(entity5, Reflector.ForgeEntity_shouldRenderInPass, i))
+                         {
+                             if (flag5)
+                             {
+@@ -923,10 +927,12 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             this.world.profiler.endStartSection("blockentities");
+             RenderHelper.enableStandardItemLighting();
+ 
++            /*
+             if (Reflector.ForgeTileEntity_hasFastRenderer.exists())
+             {
+                 TileEntityRendererDispatcher.instance.preDrawBatch();
+             }
++            */
+ 
+             TileEntitySignRenderer.updateTextRenderDistance();
+             label257:
+@@ -952,11 +958,12 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+ 
+                             tileentity1 = (TileEntity)iterator.next();
+ 
+-                            if (!flag1)
++                            //if (!flag1)
+                             {
+                                 break;
+                             }
+ 
++                            /*
+                             if (Reflector.callBoolean(tileentity1, Reflector.ForgeTileEntity_shouldRenderInPass, i))
+                             {
+                                 AxisAlignedBB axisalignedbb = (AxisAlignedBB)Reflector.call(tileentity1, Reflector.ForgeTileEntity_getRenderBoundingBox);
+@@ -966,6 +973,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                                     break;
+                                 }
+                             }
++                            */
+                         }
+ 
+                         if (flag5)
+@@ -983,7 +991,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+             {
+                 for (TileEntity tileentity : this.setTileEntities)
+                 {
+-                    if (!flag1 || Reflector.callBoolean(tileentity, Reflector.ForgeTileEntity_shouldRenderInPass, i))
++                    //if (!flag1 || Reflector.callBoolean(tileentity, Reflector.ForgeTileEntity_shouldRenderInPass, i))
+                     {
+                         if (flag5)
+                         {
+@@ -995,10 +1003,12 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 }
+             }
+ 
++            /*
+             if (Reflector.ForgeTileEntity_hasFastRenderer.exists())
+             {
+                 TileEntityRendererDispatcher.instance.drawBatch(i);
+             }
++            */
+ 
+             this.renderOverlayDamaged = true;
+             this.preRenderDamagedBlocks();
+@@ -1766,6 +1776,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+ 
+     public void renderSky(float partialTicks, int pass)
+     {
++        /*
+         if (Reflector.ForgeWorldProvider_getSkyRenderer.exists())
+         {
+             WorldProvider worldprovider = this.mc.world.provider;
+@@ -1777,6 +1788,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 return;
+             }
+         }
++        */
+ 
+         if (this.mc.world.provider.getDimensionType() == DimensionType.THE_END)
+         {
+@@ -2112,6 +2124,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+     {
+         if (!Config.isCloudsOff())
+         {
++            /*
+             if (Reflector.ForgeWorldProvider_getCloudRenderer.exists())
+             {
+                 WorldProvider worldprovider = this.mc.world.provider;
+@@ -2123,6 +2136,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                     return;
+                 }
+             }
++            */
+ 
+             if (this.mc.world.provider.isSurfaceWorld())
+             {
+@@ -2655,6 +2669,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 Block block = this.world.getBlockState(blockpos).getBlock();
+                 boolean flag1;
+ 
++                /*
+                 if (Reflector.ForgeTileEntity_canRenderBreaking.exists())
+                 {
+                     boolean flag2 = block instanceof BlockChest || block instanceof BlockEnderChest || block instanceof BlockSign || block instanceof BlockSkull;
+@@ -2672,6 +2687,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                     flag1 = !flag2;
+                 }
+                 else
++                */
+                 {
+                     flag1 = !(block instanceof BlockChest) && !(block instanceof BlockEnderChest) && !(block instanceof BlockSign) && !(block instanceof BlockSkull);
+                 }
+@@ -3372,10 +3388,12 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
+                 {
+                     SoundType soundtype = block.getSoundType();
+ 
++                    /*
+                     if (Reflector.ForgeBlock_getSoundType.exists())
+                     {
+                         soundtype = (SoundType)Reflector.call(block, Reflector.ForgeBlock_getSoundType, Block.getStateById(data), this.world, blockPosIn, null);
+                     }
++                    */
+ 
+                     this.world.playSound(blockPosIn, soundtype.getBreakSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F, false);
+                 }
+diff --git a/src/minecraft/net/minecraft/client/renderer/RenderItem.java b/src/minecraft/net/minecraft/client/renderer/RenderItem.java
+index 45c4a79..50cce85 100644
+--- a/src/minecraft/net/minecraft/client/renderer/RenderItem.java
++++ b/src/minecraft/net/minecraft/client/renderer/RenderItem.java
+@@ -81,18 +81,20 @@ public class RenderItem implements IResourceManagerReloadListener
+     public ModelManager modelManager = null;
+     private boolean renderModelHasEmissive = false;
+     private boolean renderModelEmissive = false;
+-    private boolean forgeAllowEmissiveItems = Reflector.getFieldValueBoolean(Reflector.ForgeModContainer_allowEmissiveItems, false);
++    //private boolean forgeAllowEmissiveItems = Reflector.getFieldValueBoolean(Reflector.ForgeModContainer_allowEmissiveItems, false);
+ 
+     public RenderItem(TextureManager p_i46552_1_, ModelManager p_i46552_2_, ItemColors p_i46552_3_)
+     {
+         this.textureManager = p_i46552_1_;
+         this.modelManager = p_i46552_2_;
+ 
++        /*
+         if (Reflector.ItemModelMesherForge_Constructor.exists())
+         {
+             this.itemModelMesher = (ItemModelMesher)Reflector.newInstance(Reflector.ItemModelMesherForge_Constructor, p_i46552_2_);
+         }
+         else
++        */
+         {
+             this.itemModelMesher = new ItemModelMesher(p_i46552_2_);
+         }
+@@ -177,12 +179,14 @@ public class RenderItem implements IResourceManagerReloadListener
+                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                 GlStateManager.enableRescaleNormal();
+ 
++                /*
+                 if (Reflector.ForgeItem_getTileEntityItemStackRenderer.exists())
+                 {
+                     TileEntityItemStackRenderer tileentityitemstackrenderer = (TileEntityItemStackRenderer)Reflector.call(stack.getItem(), Reflector.ForgeItem_getTileEntityItemStackRenderer);
+                     tileentityitemstackrenderer.renderByItem(stack);
+                 }
+                 else
++                */
+                 {
+                     TileEntityItemStackRenderer.instance.renderByItem(stack);
+                 }
+@@ -299,11 +303,13 @@ public class RenderItem implements IResourceManagerReloadListener
+ 
+         renderer.putSprite(quad.getSprite());
+ 
++        /*
+         if (Reflector.ForgeHooksClient_putQuadColor.exists())
+         {
+             Reflector.call(Reflector.ForgeHooksClient_putQuadColor, renderer, quad, color);
+         }
+         else
++        */
+         {
+             renderer.putColor4(color);
+         }
+@@ -377,11 +383,12 @@ public class RenderItem implements IResourceManagerReloadListener
+             }
+         }
+ 
++        /*
+         if (Reflector.ModelLoader_getInventoryVariant.exists())
+         {
+             return ibakedmodel.getOverrides().handleItemState(ibakedmodel, stack, worldIn, entitylivingbaseIn);
+         }
+-        else if (item != null && item.hasCustomProperties())
++        else*/ if (item != null && item.hasCustomProperties())
+         {
+             ResourceLocation resourcelocation = ibakedmodel.getOverrides().applyOverride(stack, worldIn, entitylivingbaseIn);
+             return resourcelocation == null ? ibakedmodel : this.itemModelMesher.getModelManager().getModel(new ModelResourceLocation(resourcelocation, "inventory"));
+@@ -414,11 +421,13 @@ public class RenderItem implements IResourceManagerReloadListener
+             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+             GlStateManager.pushMatrix();
+ 
++            /*
+             if (Reflector.ForgeHooksClient_handleCameraTransforms.exists())
+             {
+                 bakedmodel = (IBakedModel)Reflector.call(Reflector.ForgeHooksClient_handleCameraTransforms, bakedmodel, transform, leftHanded);
+             }
+             else
++            */
+             {
+                 ItemCameraTransforms itemcameratransforms = bakedmodel.getItemCameraTransforms();
+                 ItemCameraTransforms.applyTransformSide(itemcameratransforms.getTransform(transform), leftHanded);
+@@ -468,11 +477,13 @@ public class RenderItem implements IResourceManagerReloadListener
+         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+         this.setupGuiTransform(x, y, bakedmodel.isGui3d());
+ 
++        /*
+         if (Reflector.ForgeHooksClient_handleCameraTransforms.exists())
+         {
+             bakedmodel = (IBakedModel)Reflector.call(Reflector.ForgeHooksClient_handleCameraTransforms, bakedmodel, ItemCameraTransforms.TransformType.GUI, false);
+         }
+         else
++        */
+         {
+             bakedmodel.getItemCameraTransforms().applyTransform(ItemCameraTransforms.TransformType.GUI);
+         }
+@@ -531,10 +542,12 @@ public class RenderItem implements IResourceManagerReloadListener
+                     }
+                 });
+ 
++                /*
+                 if (Reflector.IForgeRegistryEntry_Impl_getRegistryName.exists())
+                 {
+                     crashreportcategory.addDetail("Registry Name", ReflectorForge.getDetailItemRegistryName(p_184391_2_.getItem()));
+                 }
++                */
+ 
+                 crashreportcategory.addDetail("Item Aux", new ICrashReportDetail<String>()
+                 {
+@@ -588,7 +601,7 @@ public class RenderItem implements IResourceManagerReloadListener
+                 GlStateManager.enableBlend();
+             }
+ 
+-            if (ReflectorForge.isItemDamaged(stack))
++            if (stack.isItemDamaged()) // Remove ReflectorForge reference
+             {
+                 GlStateManager.disableLighting();
+                 GlStateManager.disableDepth();
+@@ -603,6 +616,7 @@ public class RenderItem implements IResourceManagerReloadListener
+                 int i = Math.round(13.0F - f * 13.0F / f1);
+                 int j = MathHelper.hsvToRGB(f2 / 3.0F, 1.0F, 1.0F);
+ 
++                /*
+                 if (Reflector.ForgeItem_getDurabilityForDisplay.exists() && Reflector.ForgeItem_getRGBDurabilityForDisplay.exists())
+                 {
+                     double d0 = Reflector.callDouble(stack.getItem(), Reflector.ForgeItem_getDurabilityForDisplay, stack);
+@@ -610,12 +624,14 @@ public class RenderItem implements IResourceManagerReloadListener
+                     i = Math.round(13.0F - (float)d0 * 13.0F);
+                     j = k;
+                 }
++                */
+ 
+                 if (Config.isCustomColors())
+                 {
+                     j = CustomColors.getDurabilityColor(f2, j);
+                 }
+ 
++                /*
+                 if (Reflector.ForgeItem_getDurabilityForDisplay.exists() && Reflector.ForgeItem_getRGBDurabilityForDisplay.exists())
+                 {
+                     double d1 = Reflector.callDouble(stack.getItem(), Reflector.ForgeItem_getDurabilityForDisplay, stack);
+@@ -623,6 +639,7 @@ public class RenderItem implements IResourceManagerReloadListener
+                     i = Math.round(13.0F - (float)d1 * 13.0F);
+                     j = l;
+                 }
++                */
+ 
+                 if (Config.isCustomColors())
+                 {
+@@ -1303,10 +1320,12 @@ public class RenderItem implements IResourceManagerReloadListener
+         this.registerBlock(Blocks.STRUCTURE_BLOCK, TileEntityStructure.Mode.CORNER.getModeId(), "structure_block");
+         this.registerBlock(Blocks.STRUCTURE_BLOCK, TileEntityStructure.Mode.DATA.getModeId(), "structure_block");
+ 
++        /*
+         if (Reflector.ModelLoader_onRegisterItems.exists())
+         {
+             Reflector.call(Reflector.ModelLoader_onRegisterItems, this.itemModelMesher);
+         }
++        */
+     }
+ 
+     public void onResourceManagerReload(IResourceManager resourceManager)
+diff --git a/src/minecraft/net/minecraft/client/renderer/WorldVertexBufferUploader.java b/src/minecraft/net/minecraft/client/renderer/WorldVertexBufferUploader.java
+index d631625..ff5020b 100644
+--- a/src/minecraft/net/minecraft/client/renderer/WorldVertexBufferUploader.java
++++ b/src/minecraft/net/minecraft/client/renderer/WorldVertexBufferUploader.java
+@@ -23,19 +23,21 @@ public class WorldVertexBufferUploader
+             int i = vertexformat.getSize();
+             ByteBuffer bytebuffer = bufferBuilderIn.getByteBuffer();
+             List<VertexFormatElement> list = vertexformat.getElements();
+-            boolean flag = Reflector.ForgeVertexFormatElementEnumUseage_preDraw.exists();
+-            boolean flag1 = Reflector.ForgeVertexFormatElementEnumUseage_postDraw.exists();
++            //boolean flag = Reflector.ForgeVertexFormatElementEnumUseage_preDraw.exists();
++            //boolean flag1 = Reflector.ForgeVertexFormatElementEnumUseage_postDraw.exists();
+ 
+             for (int j = 0; j < list.size(); ++j)
+             {
+                 VertexFormatElement vertexformatelement = list.get(j);
+                 VertexFormatElement.EnumUsage vertexformatelement$enumusage = vertexformatelement.getUsage();
+ 
++                /*
+                 if (flag)
+                 {
+                     Reflector.callVoid(vertexformatelement$enumusage, Reflector.ForgeVertexFormatElementEnumUseage_preDraw, vertexformat, j, i, bytebuffer);
+                 }
+                 else
++                */
+                 {
+                     int k = vertexformatelement.getType().getGlConstant();
+                     int l = vertexformatelement.getIndex();
+@@ -87,11 +89,13 @@ public class WorldVertexBufferUploader
+                 VertexFormatElement vertexformatelement1 = list.get(j1);
+                 VertexFormatElement.EnumUsage vertexformatelement$enumusage1 = vertexformatelement1.getUsage();
+ 
++                /*
+                 if (flag1)
+                 {
+                     Reflector.callVoid(vertexformatelement$enumusage1, Reflector.ForgeVertexFormatElementEnumUseage_postDraw, vertexformat, j1, i, bytebuffer);
+                 }
+                 else
++                */
+                 {
+                     int i1 = vertexformatelement1.getIndex();
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuad.java b/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuad.java
+index 286514b..7ed2474 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuad.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/BakedQuad.java
+@@ -11,7 +11,7 @@ import net.minecraftforge.client.model.pipeline.IVertexProducer;
+ import net.optifine.model.QuadBounds;
+ import net.optifine.reflect.Reflector;
+ 
+-public class BakedQuad implements IVertexProducer
++public class BakedQuad /*implements IVertexProducer*/
+ {
+     /**
+      * Joined 4 vertex records, each stores packed data according to the VertexFormat of the quad. Vanilla minecraft
+@@ -22,7 +22,7 @@ public class BakedQuad implements IVertexProducer
+     protected EnumFacing face;
+     protected TextureAtlasSprite sprite;
+     private int[] vertexDataSingle = null;
+-    protected boolean applyDiffuseLighting = Reflector.ForgeHooksClient_fillNormal.exists();
++    protected boolean applyDiffuseLighting = false; //
+     protected VertexFormat format = DefaultVertexFormats.ITEM;
+     private QuadBounds quadBounds;
+     private boolean quadEmissiveChecked;
+@@ -113,10 +113,12 @@ public class BakedQuad implements IVertexProducer
+         return aint;
+     }
+ 
++    /* Forge-only method
+     public void pipe(IVertexConsumer p_pipe_1_)
+     {
+         Reflector.callVoid(Reflector.LightUtil_putBakedQuad, p_pipe_1_, this);
+     }
++    */
+ 
+     public VertexFormat getFormat()
+     {
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+index 6f400ad..0a23c7c 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/FaceBakery.java
+@@ -61,18 +61,20 @@ public class FaceBakery
+ 
+         if (p_makeBakedQuad_8_)
+         {
++            /*
+             if (Reflector.ForgeHooksClient_applyUVLock.exists())
+             {
+                 blockfaceuv = (BlockFaceUV)Reflector.call(Reflector.ForgeHooksClient_applyUVLock, p_makeBakedQuad_3_.blockFaceUV, p_makeBakedQuad_5_, p_makeBakedQuad_6_);
+             }
+             else
++            */
+             {
+                 blockfaceuv = this.applyUVLock(p_makeBakedQuad_3_.blockFaceUV, p_makeBakedQuad_5_, (ModelRotation)p_makeBakedQuad_6_);
+             }
+         }
+ 
+-        boolean flag = p_makeBakedQuad_9_ && !Reflector.ForgeHooksClient_fillNormal.exists();
+-        int[] aint = this.makeQuadVertexData(blockfaceuv, p_makeBakedQuad_4_, p_makeBakedQuad_5_, this.getPositionsDiv16(p_makeBakedQuad_1_, p_makeBakedQuad_2_), p_makeBakedQuad_6_, p_makeBakedQuad_7_, flag);
++        //boolean flag = p_makeBakedQuad_9_ && !Reflector.ForgeHooksClient_fillNormal.exists();
++        int[] aint = this.makeQuadVertexData(blockfaceuv, p_makeBakedQuad_4_, p_makeBakedQuad_5_, this.getPositionsDiv16(p_makeBakedQuad_1_, p_makeBakedQuad_2_), p_makeBakedQuad_6_, p_makeBakedQuad_7_, p_makeBakedQuad_9_); //
+         EnumFacing enumfacing = getFacingFromVertexData(aint);
+ 
+         if (p_makeBakedQuad_7_ == null)
+@@ -80,12 +82,14 @@ public class FaceBakery
+             this.applyFacing(aint, enumfacing);
+         }
+ 
++        /*
+         if (Reflector.ForgeHooksClient_fillNormal.exists())
+         {
+             Reflector.call(Reflector.ForgeHooksClient_fillNormal, aint, enumfacing);
+             return new BakedQuad(aint, p_makeBakedQuad_3_.tintIndex, enumfacing, p_makeBakedQuad_4_, p_makeBakedQuad_9_, DefaultVertexFormats.ITEM);
+         }
+         else
++        */
+         {
+             return new BakedQuad(aint, p_makeBakedQuad_3_.tintIndex, enumfacing, p_makeBakedQuad_4_);
+         }
+@@ -256,11 +260,13 @@ public class FaceBakery
+         }
+         else
+         {
++            /*
+             if (Reflector.ForgeHooksClient_transform.exists())
+             {
+                 Reflector.call(Reflector.ForgeHooksClient_transform, p_rotateVertex_1_, p_rotateVertex_4_.getMatrix());
+             }
+             else
++            */
+             {
+                 this.rotateScale(p_rotateVertex_1_, new Vector3f(0.5F, 0.5F, 0.5F), ((ModelRotation)p_rotateVertex_4_).matrix(), new Vector3f(1.0F, 1.0F, 1.0F));
+             }
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ItemOverrideList.java b/src/minecraft/net/minecraft/client/renderer/block/model/ItemOverrideList.java
+index 7ebceb9..f0726d8 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ItemOverrideList.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ItemOverrideList.java
+@@ -72,6 +72,7 @@ public class ItemOverrideList
+         return null;
+     }
+ 
++    /* Unused
+     public IBakedModel handleItemState(IBakedModel p_handleItemState_1_, ItemStack p_handleItemState_2_, @Nullable World p_handleItemState_3_, @Nullable EntityLivingBase p_handleItemState_4_)
+     {
+         if (!p_handleItemState_2_.isEmpty() && p_handleItemState_2_.getItem().hasCustomProperties())
+@@ -87,6 +88,7 @@ public class ItemOverrideList
+ 
+         return p_handleItemState_1_;
+     }
++    */
+ 
+     public ImmutableList<ItemOverride> getOverrides()
+     {
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+index 6982005..d747ede 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelBakery.java
+@@ -152,11 +152,13 @@ public class ModelBakery
+             {
+                 try
+                 {
++                    /*
+                     if (Reflector.ForgeItem_delegate.exists())
+                     {
+                         this.registerVariant(modelblockdefinition, modelresourcelocation);
+                     }
+                     else
++                    */
+                     {
+                         this.variants.put(modelresourcelocation, modelblockdefinition.getVariant(modelresourcelocation.getVariant()));
+                     }
+@@ -248,11 +250,13 @@ public class ModelBakery
+         {
+             inputstream = resource.getInputStream();
+ 
++            /*
+             if (Reflector.ForgeModelBlockDefinition_parseFromReader2.exists())
+             {
+                 modelblockdefinition = (ModelBlockDefinition)Reflector.call(Reflector.ForgeModelBlockDefinition_parseFromReader2, new InputStreamReader(inputstream, com.google.common.base.Charsets.UTF_8), location);
+             }
+             else
++            */
+             {
+                 modelblockdefinition = ModelBlockDefinition.parseFromReader(new InputStreamReader(inputstream, com.google.common.base.Charsets.UTF_8));
+             }
+@@ -511,10 +515,12 @@ public class ModelBakery
+     {
+         ResourceLocation resourcelocation = new ResourceLocation(location);
+ 
++        /*
+         if (Reflector.ForgeHooksClient.exists())
+         {
+             resourcelocation = new ResourceLocation(location.replaceAll("#.*", ""));
+         }
++        */
+ 
+         return new ResourceLocation(resourcelocation.getNamespace(), "item/" + resourcelocation.getPath());
+     }
+@@ -625,10 +631,12 @@ public class ModelBakery
+             ResourceLocation resourcelocation = entry.getValue();
+             ModelResourceLocation modelresourcelocation = new ModelResourceLocation(entry.getKey(), "inventory");
+ 
++            /*
+             if (Reflector.ForgeHooksClient.exists())
+             {
+                 modelresourcelocation = (ModelResourceLocation)Reflector.call(Reflector.ModelLoader_getInventoryVariant, entry.getKey());
+             }
++            */
+ 
+             ModelBlock modelblock = this.models.get(resourcelocation);
+ 
+@@ -739,10 +747,12 @@ public class ModelBakery
+                     TextureAtlasSprite textureatlassprite1 = this.sprites.get(new ResourceLocation(p_bakeModel_1_.resolveTextureName(blockpartface.texture)));
+                     boolean flag = true;
+ 
++                    /*
+                     if (Reflector.ForgeHooksClient.exists())
+                     {
+                         flag = TRSRTransformation.isInteger(p_bakeModel_2_.getMatrix());
+                     }
++                    */
+ 
+                     if (blockpartface.cullFace != null && flag)
+                     {
+@@ -759,10 +769,12 @@ public class ModelBakery
+         }
+     }
+ 
++    /* Unused
+     private BakedQuad makeBakedQuad(BlockPart blockPartt, BlockPartFace blockPartFaceIn, TextureAtlasSprite sprite, EnumFacing face, ModelRotation transform, boolean uvLocked)
+     {
+         return Reflector.ForgeHooksClient.exists() ? this.makeBakedQuad(blockPartt, blockPartFaceIn, sprite, face, transform, uvLocked) : this.faceBakery.makeBakedQuad(blockPartt.positionFrom, blockPartt.positionTo, blockPartFaceIn, sprite, face, transform, blockPartt.partRotation, uvLocked, blockPartt.shade);
+     }
++    */
+ 
+     protected BakedQuad makeBakedQuad(BlockPart p_makeBakedQuad_1_, BlockPartFace p_makeBakedQuad_2_, TextureAtlasSprite p_makeBakedQuad_3_, EnumFacing p_makeBakedQuad_4_, ITransformation p_makeBakedQuad_5_, boolean p_makeBakedQuad_6_)
+     {
+@@ -1060,6 +1072,7 @@ public class ModelBakery
+         this.multipartVariantMap.put(p_registerMultipartVariant_1_, p_registerMultipartVariant_2_);
+     }
+ 
++    /* Only used in Forge
+     public static void registerItemVariants(Item p_registerItemVariants_0_, ResourceLocation... p_registerItemVariants_1_)
+     {
+         IRegistryDelegate iregistrydelegate = (IRegistryDelegate)Reflector.getFieldValue(p_registerItemVariants_0_, Reflector.ForgeItem_delegate);
+@@ -1074,6 +1087,7 @@ public class ModelBakery
+             (customVariantNames.get(iregistrydelegate)).add(resourcelocation.toString());
+         }
+     }
++    */
+ 
+     static
+     {
+diff --git a/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java b/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
+index 483ac6e..5e45253 100644
+--- a/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
++++ b/src/minecraft/net/minecraft/client/renderer/block/model/ModelRotation.java
+@@ -13,7 +13,7 @@ import net.optifine.reflect.Reflector;
+ import org.lwjgl.util.vector.Matrix4f;
+ import org.lwjgl.util.vector.Vector3f;
+ 
+-public enum ModelRotation implements IModelState, ITransformation
++public enum ModelRotation implements /*IModelState,*/ ITransformation // Remove Forge-only interface
+ {
+     X0_Y0(0, 0),
+     X0_Y90(0, 90),
+@@ -112,6 +112,7 @@ public enum ModelRotation implements IModelState, ITransformation
+         return MAP_ROTATIONS.get(Integer.valueOf(combineXY(MathHelper.normalizeAngle(x, 360), MathHelper.normalizeAngle(y, 360))));
+     }
+ 
++    /* Forge-only methods
+     public Optional<TRSRTransformation> apply(Optional <? extends IModelPart > p_apply_1_)
+     {
+         return Reflector.ForgeHooksClient_applyTransform_MR.exists() ? (Optional)Reflector.call(Reflector.ForgeHooksClient_applyTransform_MR, this, p_apply_1_) : (Optional)Reflector.call(Reflector.ForgeHooksClient_applyTransform_M4, this.getMatrix(), p_apply_1_);
+@@ -128,6 +129,7 @@ public enum ModelRotation implements IModelState, ITransformation
+             return Reflector.ForgeHooksClient_getMatrix.exists() ? (javax.vecmath.Matrix4f)Reflector.call(Reflector.ForgeHooksClient_getMatrix, this) : new javax.vecmath.Matrix4f(this.matrix());
+         }
+     }
++    */
+ 
+     public EnumFacing rotate(EnumFacing p_rotate_1_)
+     {
+diff --git a/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java b/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
+index 994b0c1..b1b5266 100644
+--- a/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
++++ b/src/minecraft/net/minecraft/client/renderer/chunk/RenderChunk.java
+@@ -68,7 +68,6 @@ public class RenderChunk
+     public static final BlockRenderLayer[] ENUM_WORLD_BLOCK_LAYERS = BlockRenderLayer.values();
+     private final BlockRenderLayer[] blockLayersSingle = new BlockRenderLayer[1];
+     private final boolean isMipmaps = Config.isMipmaps();
+-    private final boolean fixBlockLayer = !Reflector.BetterFoliageClient.exists();
+     private boolean playerUpdate = false;
+     public int regionX;
+     public int regionZ;
+@@ -202,8 +201,6 @@ public class RenderChunk
+             chunkcacheof.renderStart();
+             boolean[] aboolean = new boolean[ENUM_WORLD_BLOCK_LAYERS.length];
+             BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+-            boolean flag = Reflector.ForgeBlock_canRenderInLayer.exists();
+-            boolean flag1 = Reflector.ForgeHooksClient_setRenderLayer.exists();
+ 
+             for (BlockPosM blockposm : BlockPosM.getAllInBoxMutableOptifine(blockpos, blockpos1)) // Name change for compile error
+             {
+@@ -215,7 +212,7 @@ public class RenderChunk
+                     lvt_9_1_.setOpaqueCube(blockposm);
+                 }
+ 
+-                if (ReflectorForge.blockHasTileEntity(iblockstate))
++                if (block.hasTileEntity()) //
+                 {
+                     TileEntity tileentity = chunkcacheof.getTileEntity(blockposm, Chunk.EnumCreateEntityType.CHECK);
+ 
+@@ -239,11 +236,13 @@ public class RenderChunk
+ 
+                 BlockRenderLayer[] ablockrenderlayer;
+ 
++                /*
+                 if (flag)
+                 {
+                     ablockrenderlayer = ENUM_WORLD_BLOCK_LAYERS;
+                 }
+                 else
++                */
+                 {
+                     ablockrenderlayer = this.blockLayersSingle;
+                     ablockrenderlayer[0] = block.getRenderLayer();
+@@ -253,6 +252,7 @@ public class RenderChunk
+                 {
+                     BlockRenderLayer blockrenderlayer = ablockrenderlayer[j];
+ 
++                    /*
+                     if (flag)
+                     {
+                         boolean flag2 = Reflector.callBoolean(block, Reflector.ForgeBlock_canRenderInLayer, iblockstate, blockrenderlayer);
+@@ -267,6 +267,7 @@ public class RenderChunk
+                     {
+                         Reflector.callVoid(Reflector.ForgeHooksClient_setRenderLayer, blockrenderlayer);
+                     }
++                    */
+ 
+                     blockrenderlayer = this.fixBlockLayer(iblockstate, blockrenderlayer);
+                     int k = blockrenderlayer.ordinal();
+@@ -294,10 +295,12 @@ public class RenderChunk
+                     }
+                 }
+ 
++                /*
+                 if (flag1)
+                 {
+                     Reflector.callVoid(Reflector.ForgeHooksClient_setRenderLayer, null);
+                 }
++                */
+             }
+ 
+             for (BlockRenderLayer blockrenderlayer1 : ENUM_WORLD_BLOCK_LAYERS)
+@@ -604,11 +607,13 @@ public class RenderChunk
+             }
+         }
+ 
++        /*
+         if (!this.fixBlockLayer)
+         {
+             return layer;
+         }
+         else
++        */
+         {
+             if (this.isMipmaps)
+             {
+@@ -662,10 +667,12 @@ public class RenderChunk
+         BlockPos blockpos1 = posIn.add(16, 16, 16);
+         ChunkCache chunkcache = this.createRegionRenderCache(this.world, blockpos, blockpos1, 1);
+ 
++        /*
+         if (Reflector.MinecraftForgeClient_onRebuildChunk.exists())
+         {
+             Reflector.call(Reflector.MinecraftForgeClient_onRebuildChunk, this.world, posIn, chunkcache);
+         }
++        */
+ 
+         ChunkCacheOF chunkcacheof = new ChunkCacheOF(chunkcache, blockpos, blockpos1, 1);
+         return chunkcacheof;
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/RenderItemFrame.java b/src/minecraft/net/minecraft/client/renderer/entity/RenderItemFrame.java
+index 598c709..92368ff 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/RenderItemFrame.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/RenderItemFrame.java
+@@ -127,7 +127,7 @@ public class RenderItemFrame extends Render<EntityItemFrame>
+             int i = flag ? itemFrame.getRotation() % 4 * 2 : itemFrame.getRotation();
+             GlStateManager.rotate((float)i * 360.0F / 8.0F, 0.0F, 0.0F, 1.0F);
+ 
+-            if (!Reflector.postForgeBusEvent(Reflector.RenderItemInFrameEvent_Constructor, itemFrame, this))
++            //if (!Reflector.postForgeBusEvent(Reflector.RenderItemInFrameEvent_Constructor, itemFrame, this))
+             {
+                 if (flag)
+                 {
+@@ -136,7 +136,7 @@ public class RenderItemFrame extends Render<EntityItemFrame>
+                     float f = 0.0078125F;
+                     GlStateManager.scale(0.0078125F, 0.0078125F, 0.0078125F);
+                     GlStateManager.translate(-64.0F, -64.0F, 0.0F);
+-                    MapData mapdata = ReflectorForge.getMapData(Items.FILLED_MAP, itemstack, itemFrame.world);
++                    MapData mapdata = Items.FILLED_MAP.getMapData(itemstack, itemFrame.world);
+                     GlStateManager.translate(0.0F, 0.0F, -1.0F);
+ 
+                     if (mapdata != null)
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java b/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
+index 4a72ee5..859a3d3 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/RenderLivingBase.java
+@@ -97,7 +97,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+      */
+     public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks)
+     {
+-        if (!Reflector.RenderLivingEvent_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Pre_Constructor, entity, this, partialTicks, x, y, z))
++        //if (!Reflector.RenderLivingEvent_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Pre_Constructor, entity, this, partialTicks, x, y, z))
+         {
+             if (animateModelLiving)
+             {
+@@ -109,10 +109,12 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+             this.mainModel.swingProgress = this.getSwingProgress(entity, partialTicks);
+             this.mainModel.isRiding = entity.isRiding();
+ 
++            /*
+             if (Reflector.ForgeEntity_shouldRiderSit.exists())
+             {
+                 this.mainModel.isRiding = entity.isRiding() && entity.getRidingEntity() != null && Reflector.callBoolean(entity.getRidingEntity(), Reflector.ForgeEntity_shouldRiderSit);
+             }
++            */
+ 
+             this.mainModel.isChild = entity.isChild();
+ 
+@@ -281,10 +283,12 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+             GlStateManager.popMatrix();
+             super.doRender(entity, x, y, z, entityYaw, partialTicks);
+ 
++            /*
+             if (Reflector.RenderLivingEvent_Post_Constructor.exists())
+             {
+                 Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Post_Constructor, entity, this, partialTicks, x, y, z);
+             }
++            */
+         }
+     }
+ 
+@@ -610,7 +614,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+ 
+     public void renderName(T entity, double x, double y, double z)
+     {
+-        if (!Reflector.RenderLivingEvent_Specials_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Specials_Pre_Constructor, entity, this, x, y, z))
++        //if (!Reflector.RenderLivingEvent_Specials_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Specials_Pre_Constructor, entity, this, x, y, z))
+         {
+             if (this.canRenderName(entity))
+             {
+@@ -625,10 +629,12 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
+                 }
+             }
+ 
++            /*
+             if (Reflector.RenderLivingEvent_Specials_Post_Constructor.exists())
+             {
+                 Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Specials_Post_Constructor, entity, this, x, y, z);
+             }
++            */
+         }
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java b/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
+index 49ef239..a0c2544 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
+@@ -242,10 +242,12 @@ public class RenderManager
+         this.skinMap.put("slim", new RenderPlayer(this, true));
+         PlayerItemsLayer.register(this.skinMap);
+ 
++        /*
+         if (Reflector.RenderingRegistry_loadEntityRenderers.exists())
+         {
+             Reflector.call(Reflector.RenderingRegistry_loadEntityRenderers, this, this.entityRenderMap);
+         }
++        */
+     }
+ 
+     public void setRenderPosition(double renderPosXIn, double renderPosYIn, double renderPosZIn)
+@@ -296,6 +298,7 @@ public class RenderManager
+             IBlockState iblockstate = worldIn.getBlockState(new BlockPos(livingPlayerIn));
+             Block block = iblockstate.getBlock();
+ 
++            /*
+             if (Reflector.callBoolean(block, Reflector.ForgeBlock_isBed, iblockstate, worldIn, new BlockPos(livingPlayerIn), (EntityLivingBase)livingPlayerIn))
+             {
+                 EnumFacing enumfacing = (EnumFacing)Reflector.call(block, Reflector.ForgeBlock_getBedDirection, iblockstate, worldIn, new BlockPos(livingPlayerIn));
+@@ -303,7 +306,7 @@ public class RenderManager
+                 this.playerViewY = (float)(i * 90 + 180);
+                 this.playerViewX = 0.0F;
+             }
+-            else if (block == Blocks.BED)
++            else*/ if (block == Blocks.BED)
+             {
+                 int j = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
+                 this.playerViewY = (float)(j * 90 + 180);
+diff --git a/src/minecraft/net/minecraft/client/renderer/entity/layers/LayerArmorBase.java b/src/minecraft/net/minecraft/client/renderer/entity/layers/LayerArmorBase.java
+index 7b7fb78..db7006d 100644
+--- a/src/minecraft/net/minecraft/client/renderer/entity/layers/LayerArmorBase.java
++++ b/src/minecraft/net/minecraft/client/renderer/entity/layers/LayerArmorBase.java
+@@ -63,10 +63,12 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
+             {
+                 T t = this.getModelFromSlot(slotIn);
+ 
++                /*
+                 if (Reflector.ForgeHooksClient.exists())
+                 {
+                     t = this.getArmorModelHook(entityLivingBaseIn, itemstack, slotIn, t);
+                 }
++                */
+ 
+                 t.setModelAttributes(this.renderer.getMainModel());
+                 t.setLivingAnimations(entityLivingBaseIn, limbSwing, limbSwingAmount, partialTicks);
+@@ -75,16 +77,19 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
+ 
+                 if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, slotIn, (String)null))
+                 {
++                    /*
+                     if (Reflector.ForgeHooksClient_getArmorTexture.exists())
+                     {
+                         this.renderer.bindTexture(this.getArmorResource(entityLivingBaseIn, itemstack, slotIn, (String)null));
+                     }
+                     else
++                    */
+                     {
+                         this.renderer.bindTexture(this.getArmorResource(itemarmor, flag));
+                     }
+                 }
+ 
++                /*
+                 if (Reflector.ForgeHooksClient_getArmorTexture.exists())
+                 {
+                     if (ReflectorForge.armorHasOverlay(itemarmor, itemstack))
+@@ -112,6 +117,7 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
+ 
+                     return;
+                 }
++                */
+ 
+                 switch (itemarmor.getArmorMaterial())
+                 {
+@@ -234,6 +240,7 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
+         return p_getArmorModelHook_4_;
+     }
+ 
++    /* Unused method
+     public ResourceLocation getArmorResource(Entity p_getArmorResource_1_, ItemStack p_getArmorResource_2_, EntityEquipmentSlot p_getArmorResource_3_, String p_getArmorResource_4_)
+     {
+         ItemArmor itemarmor = (ItemArmor)p_getArmorResource_2_.getItem();
+@@ -259,4 +266,5 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
+ 
+         return resourcelocation;
+     }
++    */
+ }
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/LayeredColorMaskTexture.java b/src/minecraft/net/minecraft/client/renderer/texture/LayeredColorMaskTexture.java
+index 6673986..0dfac40 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/LayeredColorMaskTexture.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/LayeredColorMaskTexture.java
+@@ -75,7 +75,7 @@ public class LayeredColorMaskTexture extends AbstractTexture
+                         if (s != null)
+                         {
+                             iresource1 = resourceManager.getResource(new ResourceLocation(s));
+-                            BufferedImage bufferedimage2 = Reflector.MinecraftForgeClient_getImageLayer.exists() ? (BufferedImage)Reflector.call(Reflector.MinecraftForgeClient_getImageLayer, new ResourceLocation(s), resourceManager) : TextureUtil.readBufferedImage(iresource1.getInputStream());
++                            BufferedImage bufferedimage2 = /*Reflector.MinecraftForgeClient_getImageLayer.exists() ? (BufferedImage)Reflector.call(Reflector.MinecraftForgeClient_getImageLayer, new ResourceLocation(s), resourceManager) :*/ TextureUtil.readBufferedImage(iresource1.getInputStream());
+ 
+                             if (bufferedimage2.getWidth() == bufferedimage.getWidth() && bufferedimage2.getHeight() == bufferedimage.getHeight() && bufferedimage2.getType() == 6)
+                             {
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+index 32c1150..0f8131e 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureMap.java
+@@ -125,7 +125,7 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+     {
+         this.mapRegisteredSprites.clear();
+         this.counterIndexInMap.reset();
+-        Reflector.callVoid(Reflector.ForgeHooksClient_onTextureStitchedPre, this);
++        //Reflector.callVoid(Reflector.ForgeHooksClient_onTextureStitchedPre, this);
+         iconCreatorIn.registerSprites(this);
+ 
+         if (this.mipmapLevels >= 4)
+@@ -200,13 +200,11 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+                 catch (RuntimeException runtimeexception)
+                 {
+                     LOGGER.error("Unable to parse metadata from {}", resourcelocation, runtimeexception);
+-                    ReflectorForge.FMLClientHandler_trackBrokenTexture(resourcelocation, runtimeexception.getMessage());
+                     continue;
+                 }
+                 catch (IOException ioexception)
+                 {
+                     LOGGER.error("Using missing texture, unable to load " + resourcelocation + ", " + ioexception.getClass().getName());
+-                    ReflectorForge.FMLClientHandler_trackMissingTexture(resourcelocation);
+                     continue;
+                 }
+                 finally
+@@ -403,7 +401,7 @@ public class TextureMap extends AbstractTexture implements ITickableTextureObjec
+             Config.getMinecraft().getTextureManager().bindTexture(LOCATION_BLOCKS_TEXTURE);
+         }
+ 
+-        Reflector.callVoid(Reflector.ForgeHooksClient_onTextureStitchedPost, this);
++        //Reflector.callVoid(Reflector.ForgeHooksClient_onTextureStitchedPost, this);
+         this.updateIconGrid(stitcher.getCurrentWidth(), stitcher.getCurrentHeight());
+ 
+         if (Config.equals(System.getProperty("saveTextureMap"), "true"))
+diff --git a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+index 31952f8..2ddf588 100644
+--- a/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
++++ b/src/minecraft/net/minecraft/client/renderer/texture/TextureUtil.java
+@@ -160,10 +160,12 @@ public class TextureUtil
+     {
+         Object object = TextureUtil.class;
+ 
++        /*
+         if (Reflector.SplashScreen.exists())
+         {
+             object = Reflector.SplashScreen.getTargetClass();
+         }
++        */
+ 
+         synchronized (object)
+         {
+diff --git a/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java b/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
+index e4ce4ea..5fd1da6 100644
+--- a/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
++++ b/src/minecraft/net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher.java
+@@ -63,8 +63,10 @@ public class TileEntityRendererDispatcher
+     public double entityY;
+     public double entityZ;
+     public TileEntity tileEntityRendered;
++    /* Forge-only
+     private Tessellator batchBuffer = new Tessellator(2097152);
+     private boolean drawingBatch = false;
++    */
+ 
+     private TileEntityRendererDispatcher()
+     {
+@@ -132,10 +134,12 @@ public class TileEntityRendererDispatcher
+         {
+             boolean flag = true;
+ 
++            /*
+             if (Reflector.ForgeTileEntity_hasFastRenderer.exists())
+             {
+                 flag = !this.drawingBatch || !Reflector.callBoolean(tileentityIn, Reflector.ForgeTileEntity_hasFastRenderer);
+             }
++            */
+ 
+             if (flag)
+             {
+@@ -198,11 +202,13 @@ public class TileEntityRendererDispatcher
+             {
+                 this.tileEntityRendered = tileEntityIn;
+ 
++                /*
+                 if (this.drawingBatch && Reflector.callBoolean(tileEntityIn, Reflector.ForgeTileEntity_hasFastRenderer))
+                 {
+                     tileentityspecialrenderer.renderTileEntityFast(tileEntityIn, x, y, z, partialTicks, destroyStage, p_192854_10_, this.batchBuffer.getBuffer());
+                 }
+                 else
++                */
+                 {
+                     tileentityspecialrenderer.render(tileEntityIn, x, y, z, partialTicks, destroyStage, p_192854_10_);
+                 }
+@@ -234,6 +240,7 @@ public class TileEntityRendererDispatcher
+         return this.fontRenderer;
+     }
+ 
++    /* Forge-only methods?
+     public void preDrawBatch()
+     {
+         this.batchBuffer.getBuffer().begin(7, DefaultVertexFormats.BLOCK);
+@@ -275,4 +282,5 @@ public class TileEntityRendererDispatcher
+         RenderHelper.enableStandardItemLighting();
+         this.drawingBatch = false;
+     }
++    */
+ }
+diff --git a/src/minecraft/net/minecraft/client/resources/DefaultResourcePack.java b/src/minecraft/net/minecraft/client/resources/DefaultResourcePack.java
+index 2c47b73..8b02474 100644
+--- a/src/minecraft/net/minecraft/client/resources/DefaultResourcePack.java
++++ b/src/minecraft/net/minecraft/client/resources/DefaultResourcePack.java
+@@ -62,6 +62,7 @@ public class DefaultResourcePack implements IResourcePack
+     private InputStream getResourceStream(ResourceLocation location)
+     {
+         String s = "/assets/" + location.getNamespace() + "/" + location.getPath();
++        /*
+         InputStream inputstream = ReflectorForge.getOptiFineResourceStream(s);
+ 
+         if (inputstream != null)
+@@ -69,6 +70,7 @@ public class DefaultResourcePack implements IResourcePack
+             return inputstream;
+         }
+         else
++        */
+         {
+             try
+             {
+diff --git a/src/minecraft/net/minecraft/client/settings/GameSettings.java b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+index 99c882f..762b791 100644
+--- a/src/minecraft/net/minecraft/client/settings/GameSettings.java
++++ b/src/minecraft/net/minecraft/client/settings/GameSettings.java
+@@ -293,7 +293,7 @@ public class GameSettings
+ 
+     public GameSettings(Minecraft mcIn, File mcDataDir)
+     {
+-        this.setForgeKeybindProperties();
++        //this.setForgeKeybindProperties();
+         this.keyBindings = (KeyBinding[])ArrayUtils.addAll(new KeyBinding[] {this.keyBindAttack, this.keyBindUseItem, this.keyBindForward, this.keyBindLeft, this.keyBindBack, this.keyBindRight, this.keyBindJump, this.keyBindSneak, this.keyBindSprint, this.keyBindDrop, this.keyBindInventory, this.keyBindChat, this.keyBindPlayerList, this.keyBindPickBlock, this.keyBindCommand, this.keyBindScreenshot, this.keyBindTogglePerspective, this.keyBindSmoothCamera, this.keyBindFullscreen, this.keyBindSpectatorOutlines, this.keyBindSwapHands, this.keyBindSaveToolbar, this.keyBindLoadToolbar, this.keyBindAdvancements}, this.keyBindsHotbar);
+         this.difficulty = EnumDifficulty.NORMAL;
+         this.lastServer = "";
+@@ -335,7 +335,7 @@ public class GameSettings
+ 
+     public GameSettings()
+     {
+-        this.setForgeKeybindProperties();
++        //this.setForgeKeybindProperties();
+         this.keyBindings = (KeyBinding[])ArrayUtils.addAll(new KeyBinding[] {this.keyBindAttack, this.keyBindUseItem, this.keyBindForward, this.keyBindLeft, this.keyBindBack, this.keyBindRight, this.keyBindJump, this.keyBindSneak, this.keyBindSprint, this.keyBindDrop, this.keyBindInventory, this.keyBindChat, this.keyBindPlayerList, this.keyBindPickBlock, this.keyBindCommand, this.keyBindScreenshot, this.keyBindTogglePerspective, this.keyBindSmoothCamera, this.keyBindFullscreen, this.keyBindSpectatorOutlines, this.keyBindSwapHands, this.keyBindSaveToolbar, this.keyBindLoadToolbar, this.keyBindAdvancements}, this.keyBindsHotbar);
+         this.difficulty = EnumDifficulty.NORMAL;
+         this.lastServer = "";
+@@ -573,12 +573,14 @@ public class GameSettings
+             this.anaglyph = !this.anaglyph;
+             this.mc.refreshResources();
+ 
++            /*
+             if (Reflector.FMLClientHandler_refreshResources.exists())
+             {
+                 Object object = Reflector.call(Reflector.FMLClientHandler_instance);
+                 IResourceType iresourcetype = (IResourceType)Reflector.VanillaResourceType_TEXTURES.getValue();
+                 Reflector.call(object, Reflector.FMLClientHandler_refreshResources, iresourcetype);
+             }
++            */
+         }
+ 
+         if (settingsOption == GameSettings.Options.GRAPHICS)
+@@ -1355,6 +1357,7 @@ public class GameSettings
+                             {
+                                 if (s1.equals("key_" + keybinding.getKeyDescription()))
+                                 {
++                                    /*
+                                     if (Reflector.KeyModifier_valueFromString.exists())
+                                     {
+                                         if (s2.indexOf(58) != -1)
+@@ -1370,6 +1373,7 @@ public class GameSettings
+                                         }
+                                     }
+                                     else
++                                    */
+                                     {
+                                         keybinding.setKeyCode(Integer.parseInt(s2));
+                                     }
+@@ -1454,6 +1458,7 @@ public class GameSettings
+      */
+     public void saveOptions()
+     {
++        /*
+         if (Reflector.FMLClientHandler.exists())
+         {
+             Object object = Reflector.call(Reflector.FMLClientHandler_instance);
+@@ -1463,6 +1468,7 @@ public class GameSettings
+                 return;
+             }
+         }
++        */
+ 
+         PrintWriter printwriter = null;
+ 
+@@ -1540,6 +1546,7 @@ public class GameSettings
+ 
+             for (KeyBinding keybinding : this.keyBindings)
+             {
++                /*
+                 if (Reflector.ForgeKeyBinding_getKeyModifier.exists())
+                 {
+                     String s = "key_" + keybinding.getKeyDescription() + ":" + keybinding.getKeyCode();
+@@ -1548,6 +1555,7 @@ public class GameSettings
+                     printwriter.println(object1 != object2 ? s + ":" + object1 : s);
+                 }
+                 else
++                */
+                 {
+                     printwriter.println("key_" + keybinding.getKeyDescription() + ":" + keybinding.getKeyCode());
+                 }
+@@ -3550,6 +3558,7 @@ public class GameSettings
+         return -1;
+     }
+ 
++    /*
+     private void setForgeKeybindProperties()
+     {
+         if (Reflector.KeyConflictContext_IN_GAME.exists())
+@@ -3574,6 +3583,7 @@ public class GameSettings
+             }
+         }
+     }
++    */
+ 
+     public void onGuiClosed()
+     {
+diff --git a/src/minecraft/net/minecraft/crash/CrashReport.java b/src/minecraft/net/minecraft/crash/CrashReport.java
+index 27792de..7e6d3f5 100644
+--- a/src/minecraft/net/minecraft/crash/CrashReport.java
++++ b/src/minecraft/net/minecraft/crash/CrashReport.java
+@@ -132,11 +132,13 @@ public class CrashReport
+             }
+         });
+ 
++        /*
+         if (Reflector.FMLCommonHandler_enhanceCrashReport.exists())
+         {
+             Object object = Reflector.call(Reflector.FMLCommonHandler_instance);
+             Reflector.callString(object, Reflector.FMLCommonHandler_enhanceCrashReport, this, this.systemDetailsCategory);
+         }
++        */
+     }
+ 
+     /**
+@@ -247,7 +249,6 @@ public class CrashReport
+ 
+         StringBuilder stringbuilder = new StringBuilder();
+         stringbuilder.append("---- Minecraft Crash Report ----\n");
+-        Reflector.call(Reflector.CoreModManager_onCrash, stringbuilder);
+         stringbuilder.append("// ");
+         stringbuilder.append(getWittyComment());
+         stringbuilder.append("\n\n");
+diff --git a/src/minecraft/net/minecraft/entity/EntityLiving.java b/src/minecraft/net/minecraft/entity/EntityLiving.java
+index 787cbe2..1ca94ab 100644
+--- a/src/minecraft/net/minecraft/entity/EntityLiving.java
++++ b/src/minecraft/net/minecraft/entity/EntityLiving.java
+@@ -212,7 +212,7 @@ public abstract class EntityLiving extends EntityLivingBase
+     public void setAttackTarget(@Nullable EntityLivingBase entitylivingbaseIn)
+     {
+         this.attackTarget = entitylivingbaseIn;
+-        Reflector.callVoid(Reflector.ForgeHooks_onLivingSetAttackTarget, this, entitylivingbaseIn);
++        //Reflector.callVoid(Reflector.ForgeHooks_onLivingSetAttackTarget, this, entitylivingbaseIn);
+     }
+ 
+     /**
+@@ -673,10 +673,12 @@ public abstract class EntityLiving extends EntityLivingBase
+         this.world.profiler.startSection("looting");
+         boolean flag = this.world.getGameRules().getBoolean("mobGriefing");
+ 
++        /*
+         if (Reflector.ForgeEventFactory_getMobGriefingEvent.exists())
+         {
+             flag = Reflector.callBoolean(Reflector.ForgeEventFactory_getMobGriefingEvent, this.world, this);
+         }
++        */
+ 
+         if (!this.world.isRemote && this.canPickUpLoot() && !this.dead && flag)
+         {
+@@ -818,13 +820,14 @@ public abstract class EntityLiving extends EntityLivingBase
+     protected void despawnEntity()
+     {
+         Object object = null;
+-        Object object1 = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
+-        Object object2 = Reflector.getFieldValue(Reflector.Event_Result_DENY);
++        //Object object1 = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
++        //Object object2 = Reflector.getFieldValue(Reflector.Event_Result_DENY);
+ 
+         if (this.persistenceRequired)
+         {
+             this.idleTime = 0;
+         }
++        /*
+         else if ((this.idleTime & 31) == 31 && (object = Reflector.call(Reflector.ForgeEventFactory_canEntityDespawn, this)) != object1)
+         {
+             if (object == object2)
+@@ -836,6 +839,7 @@ public abstract class EntityLiving extends EntityLivingBase
+                 this.setDead();
+             }
+         }
++        */
+         else
+         {
+             Entity entity = this.world.getClosestPlayerToEntity(this, -1.0D);
+@@ -1156,6 +1160,7 @@ public abstract class EntityLiving extends EntityLivingBase
+ 
+     public static EntityEquipmentSlot getSlotForItemStack(ItemStack stack)
+     {
++        /*
+         if (Reflector.ForgeItem_getEquipmentSlot.exists())
+         {
+             EntityEquipmentSlot entityequipmentslot = (EntityEquipmentSlot)Reflector.call(stack.getItem(), Reflector.ForgeItem_getEquipmentSlot, stack);
+@@ -1165,6 +1170,7 @@ public abstract class EntityLiving extends EntityLivingBase
+                 return entityequipmentslot;
+             }
+         }
++        */
+ 
+         if (stack.getItem() != Item.getItemFromBlock(Blocks.PUMPKIN) && stack.getItem() != Items.SKULL)
+         {
+@@ -1180,10 +1186,12 @@ public abstract class EntityLiving extends EntityLivingBase
+             {
+                 boolean flag = stack.getItem() == Items.SHIELD;
+ 
++                /*
+                 if (Reflector.ForgeItem_isShield.exists())
+                 {
+                     flag = Reflector.callBoolean(stack.getItem(), Reflector.ForgeItem_isShield, stack, null);
+                 }
++                */
+ 
+                 return flag ? EntityEquipmentSlot.OFFHAND : EntityEquipmentSlot.MAINHAND;
+             }
+diff --git a/src/minecraft/net/minecraft/server/integrated/IntegratedServer.java b/src/minecraft/net/minecraft/server/integrated/IntegratedServer.java
+index 025f618..4f58e40 100644
+--- a/src/minecraft/net/minecraft/server/integrated/IntegratedServer.java
++++ b/src/minecraft/net/minecraft/server/integrated/IntegratedServer.java
+@@ -95,9 +95,9 @@ public class IntegratedServer extends MinecraftServer
+     public void loadAllWorlds(String saveName, String worldNameIn, long seed, WorldType type, String generatorOptions)
+     {
+         this.convertMapIfNeeded(saveName);
+-        boolean flag = Reflector.DimensionManager.exists();
++        //boolean flag = Reflector.DimensionManager.exists(); always false
+ 
+-        if (!flag)
++        //if (!flag)
+         {
+             this.worlds = new WorldServer[3];
+             this.timeOfLastDimensionTick = new long[this.worlds.length][100];
+@@ -116,6 +116,7 @@ public class IntegratedServer extends MinecraftServer
+             worldinfo.setWorldName(worldNameIn);
+         }
+ 
++        /*
+         if (flag)
+         {
+             WorldServer worldserver = this.isDemo() ? (WorldServer)((WorldServer)(new WorldServerDemo(this, isavehandler, worldinfo, 0, this.profiler)).init()) : (WorldServer)(new WorldServer(this, isavehandler, worldinfo, 0, this.profiler)).init();
+@@ -149,6 +150,7 @@ public class IntegratedServer extends MinecraftServer
+             }
+         }
+         else
++        */
+         {
+             for (int l = 0; l < this.worlds.length; ++l)
+             {
+@@ -210,6 +212,7 @@ public class IntegratedServer extends MinecraftServer
+         LOGGER.info("Generating keypair");
+         this.setKeyPair(CryptManager.generateKeyPair());
+ 
++        /*
+         if (Reflector.FMLCommonHandler_handleServerAboutToStart.exists())
+         {
+             Object object = Reflector.call(Reflector.FMLCommonHandler_instance);
+@@ -219,10 +222,12 @@ public class IntegratedServer extends MinecraftServer
+                 return false;
+             }
+         }
++        */
+ 
+         this.loadAllWorlds(this.getFolderName(), this.getWorldName(), this.worldSettings.getSeed(), this.worldSettings.getTerrainType(), this.worldSettings.getGeneratorOptions());
+         this.setMOTD(this.getServerOwner() + " - " + this.worlds[0].getWorldInfo().getWorldName());
+ 
++        /*
+         if (Reflector.FMLCommonHandler_handleServerStarting.exists())
+         {
+             Object object1 = Reflector.call(Reflector.FMLCommonHandler_instance);
+@@ -234,6 +239,7 @@ public class IntegratedServer extends MinecraftServer
+ 
+             Reflector.callVoid(object1, Reflector.FMLCommonHandler_handleServerStarting, this);
+         }
++        */
+ 
+         return true;
+     }
+@@ -513,7 +519,7 @@ public class IntegratedServer extends MinecraftServer
+      */
+     public void initiateShutdown()
+     {
+-        if (!Reflector.MinecraftForge.exists() || this.isServerRunning())
++        //if (!Reflector.MinecraftForge.exists() || this.isServerRunning())
+         {
+             Futures.getUnchecked(this.addScheduledTask(new Runnable()
+             {
+diff --git a/src/minecraft/net/minecraft/src/Config.java b/src/minecraft/net/minecraft/src/Config.java
+index 5ecbfd3..dbbd85a 100644
+--- a/src/minecraft/net/minecraft/src/Config.java
++++ b/src/minecraft/net/minecraft/src/Config.java
+@@ -150,7 +150,7 @@ public class Config
+             gameSettings = p_initGameSettings_0_;
+             desktopDisplayMode = Display.getDesktopDisplayMode();
+             updateAvailableProcessors();
+-            ReflectorForge.putLaunchBlackboard("optifine.ForgeSplashCompatible", Boolean.TRUE);
++            //ReflectorForge.putLaunchBlackboard("optifine.ForgeSplashCompatible", Boolean.TRUE);
+         }
+     }
+ 
+diff --git a/src/minecraft/net/minecraft/util/ScreenShotHelper.java b/src/minecraft/net/minecraft/util/ScreenShotHelper.java
+index ba5cbd4..74c5834 100644
+--- a/src/minecraft/net/minecraft/util/ScreenShotHelper.java
++++ b/src/minecraft/net/minecraft/util/ScreenShotHelper.java
+@@ -97,6 +97,7 @@ public class ScreenShotHelper
+             file2 = file2.getCanonicalFile();
+             Object object = null;
+ 
++            /*
+             if (Reflector.ForgeHooksClient_onScreenshot.exists())
+             {
+                 object = Reflector.call(Reflector.ForgeHooksClient_onScreenshot, bufferedimage, file2);
+@@ -108,12 +109,14 @@ public class ScreenShotHelper
+ 
+                 file2 = (File)Reflector.call(object, Reflector.ScreenshotEvent_getScreenshotFile);
+             }
++            */
+ 
+             ImageIO.write(bufferedimage, "png", file2);
+             ITextComponent itextcomponent = new TextComponentString(file2.getName());
+             itextcomponent.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file2.getAbsolutePath()));
+             itextcomponent.getStyle().setUnderlined(Boolean.valueOf(true));
+ 
++            /* Object is now always null
+             if (object != null)
+             {
+                 ITextComponent itextcomponent1 = (ITextComponent)Reflector.call(object, Reflector.ScreenshotEvent_getResultMessage);
+@@ -123,6 +126,7 @@ public class ScreenShotHelper
+                     return itextcomponent1;
+                 }
+             }
++            */
+ 
+             return new TextComponentTranslation("screenshot.success", new Object[] {itextcomponent});
+         }
+diff --git a/src/minecraft/net/minecraft/world/WorldEntitySpawner.java b/src/minecraft/net/minecraft/world/WorldEntitySpawner.java
+index c8c0235..f09819c 100644
+--- a/src/minecraft/net/minecraft/world/WorldEntitySpawner.java
++++ b/src/minecraft/net/minecraft/world/WorldEntitySpawner.java
+@@ -122,19 +122,21 @@ public final class WorldEntitySpawner
+             {
+                 if ((!enumcreaturetype.getPeacefulCreature() || spawnPeacefulMobs) && (enumcreaturetype.getPeacefulCreature() || spawnHostileMobs) && (!enumcreaturetype.getAnimal() || spawnOnSetTickRate))
+                 {
+-                    int l4 = Reflector.ForgeWorld_countEntities.exists() ? Reflector.callInt(worldServerIn, Reflector.ForgeWorld_countEntities, enumcreaturetype, true) : worldServerIn.countEntities(enumcreaturetype.getCreatureClass());
++                    int l4 = /*Reflector.ForgeWorld_countEntities.exists() ? Reflector.callInt(worldServerIn, Reflector.ForgeWorld_countEntities, enumcreaturetype, true) :*/ worldServerIn.countEntities(enumcreaturetype.getCreatureClass());
+                     int i5 = enumcreaturetype.getMaxNumberOfCreature() * this.countChunkPos / MOB_COUNT_DIV;
+ 
+                     if (l4 <= i5)
+                     {
+                         Collection<ChunkPos> collection = this.eligibleChunksForSpawning;
+ 
++                        /* Well this is an interesting method.
+                         if (Reflector.ForgeHooksClient.exists())
+                         {
+                             ArrayList<ChunkPos> arraylist = Lists.newArrayList(collection);
+                             Collections.shuffle(arraylist);
+                             collection = arraylist;
+                         }
++                        */
+ 
+                         label179:
+ 
+@@ -191,11 +193,13 @@ public final class WorldEntitySpawner
+ 
+                                                     if (entityliving == null)
+                                                     {
++                                                        /*
+                                                         if (Reflector.ForgeBiomeSpawnListEntry_newInstance.exists())
+                                                         {
+                                                             entityliving = (EntityLiving)Reflector.call(biome$spawnlistentry, Reflector.ForgeBiomeSpawnListEntry_newInstance, worldServerIn);
+                                                         }
+                                                         else
++                                                        */
+                                                         {
+                                                             entityliving = biome$spawnlistentry.entityClass.getConstructor(World.class).newInstance(worldServerIn);
+                                                         }
+@@ -210,13 +214,13 @@ public final class WorldEntitySpawner
+                                                 }
+ 
+                                                 entityliving.setLocationAndAngles((double)f, (double)i3, (double)f1, worldServerIn.rand.nextFloat() * 360.0F, 0.0F);
+-                                                boolean flag2 = Reflector.ForgeEventFactory_canEntitySpawn.exists() ? ReflectorForge.canEntitySpawn(entityliving, worldServerIn, f, (float)i3, f1) : entityliving.getCanSpawnHere() && entityliving.isNotColliding();
++                                                boolean flag2 = /*Reflector.ForgeEventFactory_canEntitySpawn.exists() ? ReflectorForge.canEntitySpawn(entityliving, worldServerIn, f, (float)i3, f1) :*/ entityliving.getCanSpawnHere() && entityliving.isNotColliding();
+ 
+                                                 if (flag2)
+                                                 {
+                                                     this.mapSampleEntitiesByClass.remove(biome$spawnlistentry.entityClass);
+ 
+-                                                    if (!ReflectorForge.doSpecialSpawn(entityliving, worldServerIn, f, i3, f1))
++                                                    //if (!ReflectorForge.doSpecialSpawn(entityliving, worldServerIn, f, i3, f1))
+                                                     {
+                                                         ientitylivingdata = entityliving.onInitialSpawn(worldServerIn.getDifficultyForLocation(new BlockPos(entityliving)), ientitylivingdata);
+                                                     }
+@@ -231,7 +235,7 @@ public final class WorldEntitySpawner
+                                                         entityliving.setDead();
+                                                     }
+ 
+-                                                    int j4 = Reflector.ForgeEventFactory_getMaxSpawnPackSize.exists() ? Reflector.callInt(Reflector.ForgeEventFactory_getMaxSpawnPackSize, entityliving) : entityliving.getMaxSpawnedInChunk();
++                                                    int j4 = /*Reflector.ForgeEventFactory_getMaxSpawnPackSize.exists() ? Reflector.callInt(Reflector.ForgeEventFactory_getMaxSpawnPackSize, entityliving) :*/ entityliving.getMaxSpawnedInChunk();
+ 
+                                                     if (j2 >= j4)
+                                                     {
+@@ -319,7 +323,7 @@ public final class WorldEntitySpawner
+         {
+             BlockPos blockpos = p_canCreatureTypeSpawnBody_2_.down();
+             IBlockState iblockstate1 = p_canCreatureTypeSpawnBody_1_.getBlockState(blockpos);
+-            boolean flag = Reflector.ForgeBlock_canCreatureSpawn.exists() ? Reflector.callBoolean(iblockstate1.getBlock(), Reflector.ForgeBlock_canCreatureSpawn, iblockstate1, p_canCreatureTypeSpawnBody_1_, blockpos, p_canCreatureTypeSpawnBody_0_) : iblockstate1.isTopSolid();
++            boolean flag = /*Reflector.ForgeBlock_canCreatureSpawn.exists() ? Reflector.callBoolean(iblockstate1.getBlock(), Reflector.ForgeBlock_canCreatureSpawn, iblockstate1, p_canCreatureTypeSpawnBody_1_, blockpos, p_canCreatureTypeSpawnBody_0_) :*/ iblockstate1.isTopSolid();
+ 
+             if (!flag)
+             {
+@@ -372,11 +376,13 @@ public final class WorldEntitySpawner
+ 
+                             try
+                             {
++                                /*
+                                 if (Reflector.ForgeBiomeSpawnListEntry_newInstance.exists())
+                                 {
+                                     entityliving = (EntityLiving)Reflector.call(biome$spawnlistentry, Reflector.ForgeBiomeSpawnListEntry_newInstance, worldIn);
+                                 }
+                                 else
++                                */
+                                 {
+                                     entityliving = biome$spawnlistentry.entityClass.getConstructor(World.class).newInstance(worldIn);
+                                 }
+@@ -387,6 +393,7 @@ public final class WorldEntitySpawner
+                                 continue;
+                             }
+ 
++                            /*
+                             if (Reflector.ForgeEventFactory_canEntitySpawn.exists())
+                             {
+                                 Object object = Reflector.call(Reflector.ForgeEventFactory_canEntitySpawn, entityliving, worldIn, (float)j + 0.5F, blockpos.getY(), (float)k + 0.5F, false);
+@@ -396,6 +403,7 @@ public final class WorldEntitySpawner
+                                     continue;
+                                 }
+                             }
++                            */
+ 
+                             entityliving.setLocationAndAngles((double)((float)j + 0.5F), (double)blockpos.getY(), (double)((float)k + 0.5F), randomIn.nextFloat() * 360.0F, 0.0F);
+                             worldIn.spawnEntity(entityliving);
+diff --git a/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java b/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
+index 83970d4..900da09 100644
+--- a/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
++++ b/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
+@@ -56,10 +56,12 @@ public class ExtendedBlockStorage
+ 
+     public void set(int x, int y, int z, IBlockState state)
+     {
++        /*
+         if (Reflector.IExtendedBlockState.isInstance(state))
+         {
+             state = (IBlockState)Reflector.call(state, Reflector.IExtendedBlockState_getClean);
+         }
++        */
+ 
+         IBlockState iblockstate = this.get(x, y, z);
+         Block block = iblockstate.getBlock();
+diff --git a/src/minecraft/net/minecraftforge/common/model/ITransformation.java b/src/minecraft/net/minecraftforge/common/model/ITransformation.java
+index 767aba2..eee03ad 100644
+--- a/src/minecraft/net/minecraftforge/common/model/ITransformation.java
++++ b/src/minecraft/net/minecraftforge/common/model/ITransformation.java
+@@ -5,7 +5,7 @@ import net.minecraft.util.EnumFacing;
+ 
+ public interface ITransformation
+ {
+-    Matrix4f getMatrix();
++    //Matrix4f getMatrix(); Unused by us
+ 
+     EnumFacing rotate(EnumFacing var1);
+ 
+diff --git a/src/minecraft/net/optifine/ConnectedTextures.java b/src/minecraft/net/optifine/ConnectedTextures.java
+index 09f898c..231bcdd 100644
+--- a/src/minecraft/net/optifine/ConnectedTextures.java
++++ b/src/minecraft/net/optifine/ConnectedTextures.java
+@@ -1862,10 +1862,12 @@ public class ConnectedTextures
+         }
+         else
+         {
++            /*
+             if (Reflector.ForgeBlock_getExtendedState.exists())
+             {
+                 neighbourState = (IBlockState)Reflector.call(neighbourState.getBlock(), Reflector.ForgeBlock_getExtendedState, neighbourState, iblockaccess, blockPos);
+             }
++            */
+ 
+             EnumFacing enumfacing = getFacing(side);
+             List list = ibakedmodel.getQuads(neighbourState, enumfacing, 0L);
+diff --git a/src/minecraft/net/optifine/CustomColors.java b/src/minecraft/net/optifine/CustomColors.java
+index da753c2..99bfd8e 100644
+--- a/src/minecraft/net/optifine/CustomColors.java
++++ b/src/minecraft/net/optifine/CustomColors.java
+@@ -161,7 +161,7 @@ public class CustomColors
+             }
+             else
+             {
+-                return Reflector.ForgeBiome_getWaterColorMultiplier.exists() ? Reflector.callInt(biome, Reflector.ForgeBiome_getWaterColorMultiplier) : biome.getWaterColor();
++                return /*Reflector.ForgeBiome_getWaterColorMultiplier.exists() ? Reflector.callInt(biome, Reflector.ForgeBiome_getWaterColorMultiplier) :*/ biome.getWaterColor();
+             }
+         }
+         public boolean isColorConstant()
+diff --git a/src/minecraft/net/optifine/CustomItemProperties.java b/src/minecraft/net/optifine/CustomItemProperties.java
+index 0cda20f..d698958 100644
+--- a/src/minecraft/net/optifine/CustomItemProperties.java
++++ b/src/minecraft/net/optifine/CustomItemProperties.java
+@@ -1207,6 +1207,7 @@ public class CustomItemProperties
+         ResourceLocation resourcelocation = getModelLocation(model);
+         ModelResourceLocation modelresourcelocation = new ModelResourceLocation(resourcelocation, "inventory");
+ 
++        /*
+         if (Reflector.ModelLoader.exists())
+         {
+             try
+@@ -1230,11 +1231,13 @@ public class CustomItemProperties
+             }
+         }
+         else
++        */
+         {
+             modelBakery.loadItemModel(resourcelocation.toString(), modelresourcelocation, resourcelocation);
+         }
+     }
+ 
++    /* Unused
+     private static void checkNull(Object obj, String msg) throws NullPointerException
+     {
+         if (obj == null)
+@@ -1242,9 +1245,10 @@ public class CustomItemProperties
+             throw new NullPointerException(msg);
+         }
+     }
++    */
+ 
+     private static ResourceLocation getModelLocation(String modelName)
+     {
+-        return Reflector.ModelLoader.exists() && !modelName.startsWith("mcpatcher/") && !modelName.startsWith("optifine/") ? new ResourceLocation("models/" + modelName) : new ResourceLocation(modelName);
++        return /*Reflector.ModelLoader.exists() && !modelName.startsWith("mcpatcher/") && !modelName.startsWith("optifine/") ? new ResourceLocation("models/" + modelName) :*/ new ResourceLocation(modelName);
+     }
+ }
+diff --git a/src/minecraft/net/optifine/DynamicLights.java b/src/minecraft/net/optifine/DynamicLights.java
+index e78a50a..f86d501 100644
+--- a/src/minecraft/net/optifine/DynamicLights.java
++++ b/src/minecraft/net/optifine/DynamicLights.java
+@@ -107,6 +107,7 @@ public class DynamicLights
+         initialized = true;
+         mapEntityLightLevels.clear();
+         mapItemLightLevels.clear();
++        /* astring will always be 0
+         String[] astring = ReflectorForge.getForgeModIds();
+ 
+         for (int i = 0; i < astring.length; ++i)
+@@ -124,6 +125,7 @@ public class DynamicLights
+                 ;
+             }
+         }
++        */
+ 
+         if (mapEntityLightLevels.size() > 0)
+         {
+diff --git a/src/minecraft/net/optifine/SpriteDependencies.java b/src/minecraft/net/optifine/SpriteDependencies.java
+index 2d68580..70042b8 100644
+--- a/src/minecraft/net/optifine/SpriteDependencies.java
++++ b/src/minecraft/net/optifine/SpriteDependencies.java
+@@ -51,7 +51,7 @@ public class SpriteDependencies
+                 {
+                     String s = "circular dependency: " + sprite.getIconName() + " -> " + textureatlassprite.getIconName();
+                     ResourceLocation resourcelocation1 = textureMap.getResourceLocation(sprite);
+-                    ReflectorForge.FMLClientHandler_trackBrokenTexture(resourcelocation1, s);
++                    //ReflectorForge.FMLClientHandler_trackBrokenTexture(resourcelocation1, s);
+                     break;
+                 }
+ 
+diff --git a/src/minecraft/net/optifine/config/ConnectedParser.java b/src/minecraft/net/optifine/config/ConnectedParser.java
+index b81142a..0d1087e 100644
+--- a/src/minecraft/net/optifine/config/ConnectedParser.java
++++ b/src/minecraft/net/optifine/config/ConnectedParser.java
+@@ -1363,11 +1363,11 @@ public class ConnectedParser
+ 
+     private Class getEntityClass(ResourceLocation loc)
+     {
+-        return Reflector.ForgeEntityList_getClass.exists() ? (Class)Reflector.call(Reflector.ForgeEntityList_getClass, loc) : (Class)EntityList.REGISTRY.getObject(loc);
++        return /*Reflector.ForgeEntityList_getClass.exists() ? (Class)Reflector.call(Reflector.ForgeEntityList_getClass, loc) :*/ (Class)EntityList.REGISTRY.getObject(loc);
+     }
+ 
+     private int getEntityTypeId(Class type)
+     {
+-        return Reflector.ForgeEntityList_getID.exists() ? Reflector.callInt(Reflector.ForgeEntityList_getID, type) : EntityList.REGISTRY.getIDForObject(type);
++        return /*Reflector.ForgeEntityList_getID.exists() ? Reflector.callInt(Reflector.ForgeEntityList_getID, type) :*/ EntityList.REGISTRY.getIDForObject(type);
+     }
+ }
+diff --git a/src/minecraft/net/optifine/override/ChunkCacheOF.java b/src/minecraft/net/optifine/override/ChunkCacheOF.java
+index 953c819..ba08905 100644
+--- a/src/minecraft/net/optifine/override/ChunkCacheOF.java
++++ b/src/minecraft/net/optifine/override/ChunkCacheOF.java
+@@ -201,8 +201,10 @@ public class ChunkCacheOF implements IBlockAccess
+         return this.chunkCache.isAirBlock(pos);
+     }
+ 
++    /* Forge-only method
+     public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+     {
+         return Reflector.callBoolean(this.chunkCache, Reflector.ForgeChunkCache_isSideSolid, pos, side, _default);
+     }
++    */
+ }
+diff --git a/src/minecraft/net/optifine/reflect/Reflector.java b/src/minecraft/net/optifine/reflect/Reflector.java
+index d8ddf48..92fb6c6 100644
+--- a/src/minecraft/net/optifine/reflect/Reflector.java
++++ b/src/minecraft/net/optifine/reflect/Reflector.java
+@@ -128,6 +128,7 @@ import org.apache.logging.log4j.Logger;
+ public class Reflector
+ {
+     private static final Logger LOGGER = LogManager.getLogger();
++    /* Remove all reflector classes for Forge that don't exist.
+     private static boolean logForge = logEntry("*** Reflector Forge ***");
+     public static ReflectorClass BetterFoliageClient = new ReflectorClass("mods.betterfoliage.client.BetterFoliageClient");
+     public static ReflectorClass ChunkWatchEvent_UnWatch = new ReflectorClass("net.minecraftforge.event.world.ChunkWatchEvent$UnWatch");
+@@ -379,6 +380,7 @@ public class Reflector
+     public static ReflectorField VanillaResourceType_TEXTURES = new ReflectorField(VanillaResourceType, "TEXTURES");
+     public static ReflectorClass WorldEvent_Load = new ReflectorClass("net.minecraftforge.event.world.WorldEvent$Load");
+     public static ReflectorConstructor WorldEvent_Load_Constructor = new ReflectorConstructor(WorldEvent_Load, new Class[] {World.class});
++    */
+     private static boolean logVanilla = logEntry("*** Reflector Vanilla ***");
+     public static ReflectorClass ChunkProviderClient = new ReflectorClass(ChunkProviderClient.class);
+     public static ReflectorField ChunkProviderClient_chunkMapping = new ReflectorField(ChunkProviderClient, Long2ObjectMap.class);
+@@ -470,9 +472,11 @@ public class Reflector
+     public static ReflectorClass ModelWolf = new ReflectorClass(ModelWolf.class);
+     public static ReflectorField ModelWolf_tail = new ReflectorField(ModelWolf, ModelRenderer.class, 6);
+     public static ReflectorField ModelWolf_mane = new ReflectorField(ModelWolf, ModelRenderer.class, 7);
++    /* Not present on our classpath
+     public static ReflectorClass OptiFineClassTransformer = new ReflectorClass("optifine.OptiFineClassTransformer");
+     public static ReflectorField OptiFineClassTransformer_instance = new ReflectorField(OptiFineClassTransformer, "instance");
+     public static ReflectorMethod OptiFineClassTransformer_getOptiFineResource = new ReflectorMethod(OptiFineClassTransformer, "getOptiFineResource");
++    */
+     public static ReflectorClass RenderBoat = new ReflectorClass(RenderBoat.class);
+     public static ReflectorField RenderBoat_modelBoat = new ReflectorField(RenderBoat, ModelBase.class);
+     public static ReflectorClass RenderEvokerFangs = new ReflectorClass(RenderEvokerFangs.class);
+@@ -1043,6 +1047,7 @@ public class Reflector
+         }
+     }
+ 
++    /* Forge-only
+     public static boolean postForgeBusEvent(ReflectorConstructor constr, Object... params)
+     {
+         Object object = newInstance(constr, params);
+@@ -1079,6 +1084,7 @@ public class Reflector
+             }
+         }
+     }
++    */
+ 
+     public static Object newInstance(ReflectorConstructor constr, Object... params)
+     {
+diff --git a/src/minecraft/net/optifine/reflect/ReflectorForge.java b/src/minecraft/net/optifine/reflect/ReflectorForge.java
+index d47094b..b24db4d 100644
+--- a/src/minecraft/net/optifine/reflect/ReflectorForge.java
++++ b/src/minecraft/net/optifine/reflect/ReflectorForge.java
+@@ -23,6 +23,7 @@ import net.minecraft.world.storage.MapData;
+ 
+ public class ReflectorForge
+ {
++    /* Comment this whole class out so it can still be referenced with imports but can't actually be used
+     public static Object EVENT_RESULT_ALLOW = Reflector.getFieldValue(Reflector.Event_Result_ALLOW);
+     public static Object EVENT_RESULT_DENY = Reflector.getFieldValue(Reflector.Event_Result_DENY);
+     public static Object EVENT_RESULT_DEFAULT = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
+@@ -195,4 +196,5 @@ public class ReflectorForge
+             }
+         };
+     }
++    */
+ }
+diff --git a/src/minecraft/net/optifine/shaders/BlockAliases.java b/src/minecraft/net/optifine/shaders/BlockAliases.java
+index 9ccf2c0..5ad77b3 100644
+--- a/src/minecraft/net/optifine/shaders/BlockAliases.java
++++ b/src/minecraft/net/optifine/shaders/BlockAliases.java
+@@ -72,12 +72,14 @@ public class BlockAliases
+ 
+         if (shaderPack != null)
+         {
++            /*
+             if (Reflector.Loader_getActiveModList.exists() && Minecraft.getMinecraft().getResourcePackRepository() == null)
+             {
+                 Config.dbg("[Shaders] Delayed loading of block mappings after resources are loaded");
+                 updateOnResourcesReloaded = true;
+             }
+             else
++            */
+             {
+                 List<List<BlockAlias>> list = new ArrayList<List<BlockAlias>>();
+                 String s = "/shaders/block.properties";
+@@ -88,7 +90,7 @@ public class BlockAliases
+                     loadBlockAliases(inputstream, s, list);
+                 }
+ 
+-                loadModBlockAliases(list);
++                //loadModBlockAliases(list);
+ 
+                 if (list.size() > 0)
+                 {
+@@ -98,6 +100,7 @@ public class BlockAliases
+         }
+     }
+ 
++    /*
+     private static void loadModBlockAliases(List<List<BlockAlias>> listBlockAliases)
+     {
+         String[] astring = ReflectorForge.getForgeModIds();
+@@ -118,6 +121,7 @@ public class BlockAliases
+             }
+         }
+     }
++    */
+ 
+     private static void loadBlockAliases(InputStream in, String path, List<List<BlockAlias>> listBlockAliases)
+     {
+diff --git a/src/minecraft/net/optifine/shaders/EntityAliases.java b/src/minecraft/net/optifine/shaders/EntityAliases.java
+index 83ca6df..0914eea 100644
+--- a/src/minecraft/net/optifine/shaders/EntityAliases.java
++++ b/src/minecraft/net/optifine/shaders/EntityAliases.java
+@@ -51,12 +51,14 @@ public class EntityAliases
+ 
+         if (shaderPack != null)
+         {
++            /*
+             if (Reflector.Loader_getActiveModList.exists() && Config.getResourceManager() == null)
+             {
+                 Config.dbg("[Shaders] Delayed loading of entity mappings after resources are loaded");
+                 updateOnResourcesReloaded = true;
+             }
+             else
++            */
+             {
+                 List<Integer> list = new ArrayList<Integer>();
+                 String s = "/shaders/entity.properties";
+@@ -67,7 +69,7 @@ public class EntityAliases
+                     loadEntityAliases(inputstream, s, list);
+                 }
+ 
+-                loadModEntityAliases(list);
++                //loadModEntityAliases(list);
+ 
+                 if (list.size() > 0)
+                 {
+@@ -77,6 +79,7 @@ public class EntityAliases
+         }
+     }
+ 
++    /*
+     private static void loadModEntityAliases(List<Integer> listEntityAliases)
+     {
+         String[] astring = ReflectorForge.getForgeModIds();
+@@ -97,6 +100,7 @@ public class EntityAliases
+             }
+         }
+     }
++    */
+ 
+     private static void loadEntityAliases(InputStream in, String path, List<Integer> listEntityAliases)
+     {
+diff --git a/src/minecraft/net/optifine/shaders/ItemAliases.java b/src/minecraft/net/optifine/shaders/ItemAliases.java
+index 317828c..87c20b1 100644
+--- a/src/minecraft/net/optifine/shaders/ItemAliases.java
++++ b/src/minecraft/net/optifine/shaders/ItemAliases.java
+@@ -52,12 +52,14 @@ public class ItemAliases
+ 
+         if (shaderPack != null)
+         {
++            /*
+             if (Reflector.Loader_getActiveModList.exists() && Config.getResourceManager() == null)
+             {
+                 Config.dbg("[Shaders] Delayed loading of item mappings after resources are loaded");
+                 updateOnResourcesReloaded = true;
+             }
+             else
++            */
+             {
+                 List<Integer> list = new ArrayList<Integer>();
+                 String s = "/shaders/item.properties";
+@@ -68,7 +70,7 @@ public class ItemAliases
+                     loadItemAliases(inputstream, s, list);
+                 }
+ 
+-                loadModItemAliases(list);
++                //loadModItemAliases(list);
+ 
+                 if (list.size() > 0)
+                 {
+@@ -78,6 +80,7 @@ public class ItemAliases
+         }
+     }
+ 
++    /*
+     private static void loadModItemAliases(List<Integer> listItemAliases)
+     {
+         String[] astring = ReflectorForge.getForgeModIds();
+@@ -98,6 +101,7 @@ public class ItemAliases
+             }
+         }
+     }
++    */
+ 
+     private static void loadItemAliases(InputStream in, String path, List<Integer> listItemAliases)
+     {
+diff --git a/src/minecraft/net/optifine/shaders/Shaders.java b/src/minecraft/net/optifine/shaders/Shaders.java
+index 4773952..5ef4c76 100644
+--- a/src/minecraft/net/optifine/shaders/Shaders.java
++++ b/src/minecraft/net/optifine/shaders/Shaders.java
+@@ -883,11 +883,13 @@ public class Shaders
+         {
+             DefaultVertexFormats.updateVertexFormats();
+ 
++            /*
+             if (Reflector.LightUtil.exists())
+             {
+                 Reflector.LightUtil_itemConsumer.setValue((Object)null);
+                 Reflector.LightUtil_tessellator.setValue((Object)null);
+             }
++            */
+ 
+             updateBlockLightLevel();
+         }
+diff --git a/src/minecraft/net/optifine/shaders/ShadersRender.java b/src/minecraft/net/optifine/shaders/ShadersRender.java
+index 869ae36..715fda7 100644
+--- a/src/minecraft/net/optifine/shaders/ShadersRender.java
++++ b/src/minecraft/net/optifine/shaders/ShadersRender.java
+@@ -275,10 +275,12 @@ public class ShadersRender
+             GlStateManager.pushMatrix();
+             minecraft.profiler.endStartSection("shadow entities");
+ 
++            /*
+             if (Reflector.ForgeHooksClient_setRenderPass.exists())
+             {
+                 Reflector.callVoid(Reflector.ForgeHooksClient_setRenderPass, Integer.valueOf(0));
+             }
++            */
+ 
+             renderglobal.renderEntities(entity, frustum, partialTicks);
+             Shaders.checkGLError("shadow entities");
+@@ -315,6 +317,7 @@ public class ShadersRender
+                 Shaders.checkGLError("shadow translucent");
+             }
+ 
++            /*
+             if (Reflector.ForgeHooksClient_setRenderPass.exists())
+             {
+                 RenderHelper.enableStandardItemLighting();
+@@ -324,6 +327,7 @@ public class ShadersRender
+                 RenderHelper.disableStandardItemLighting();
+                 Shaders.checkGLError("shadow entities 1");
+             }
++            */
+ 
+             GlStateManager.shadeModel(7424);
+             GlStateManager.depthMask(true);
+-- 
+2.35.3
+

@@ -1,0 +1,69 @@
+From ed5252540bc846879b9cd2160b42c8e4fee15d9f Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Thu, 18 Aug 2022 10:26:31 -0400
+Subject: [PATCH] Remove unused queue in Chunk class
+
+---
+ src/minecraft/net/minecraft/world/chunk/Chunk.java | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/minecraft/net/minecraft/world/chunk/Chunk.java b/src/minecraft/net/minecraft/world/chunk/Chunk.java
+index 28c99d2..c2a7b54 100644
+--- a/src/minecraft/net/minecraft/world/chunk/Chunk.java
++++ b/src/minecraft/net/minecraft/world/chunk/Chunk.java
+@@ -107,7 +107,6 @@ public class Chunk
+      * Contains the current round-robin relight check index, and is implied as the relight check location as well.
+      */
+     private int queuedLightChecks;
+-    private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
+     public boolean unloadQueued;
+ 
+     public Chunk(World worldIn, int x, int z)
+@@ -118,7 +117,6 @@ public class Chunk
+         this.updateSkylightColumns = new boolean[256];
+         this.tileEntities = Maps.<BlockPos, TileEntity>newHashMap();
+         this.queuedLightChecks = 4096;
+-        this.tileEntityPosQueue = Queues.<BlockPos>newConcurrentLinkedQueue();
+         this.entityLists = (ClassInheritanceMultiMap[])(new ClassInheritanceMultiMap[16]);
+         this.world = worldIn;
+         this.x = x;
+@@ -869,10 +867,12 @@ public class Chunk
+                 tileentity = this.createNewTileEntity(pos);
+                 this.world.setTileEntity(pos, tileentity);
+             }
++            /*
+             else if (creationMode == Chunk.EnumCreateEntityType.QUEUED)
+             {
+                 this.tileEntityPosQueue.add(pos);
+             }
++            */
+         }
+         else if (tileentity.isInvalid())
+         {
+@@ -1151,6 +1151,7 @@ public class Chunk
+             this.checkLight();
+         }
+ 
++        /*
+         while (!this.tileEntityPosQueue.isEmpty())
+         {
+             BlockPos blockpos = this.tileEntityPosQueue.poll();
+@@ -1162,6 +1163,7 @@ public class Chunk
+                 this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
+             }
+         }
++        */
+     }
+ 
+     public boolean isPopulated()
+@@ -1602,7 +1604,6 @@ public class Chunk
+     public static enum EnumCreateEntityType
+     {
+         IMMEDIATE,
+-        QUEUED,
+         CHECK;
+     }
+ }
+-- 
+2.35.3
+

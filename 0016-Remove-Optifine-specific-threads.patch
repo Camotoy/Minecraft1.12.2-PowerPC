@@ -1,4 +1,4 @@
-From 66a35664fa5dd95eeb6fa237020aa519c28533fb Mon Sep 17 00:00:00 2001
+From 8c1fac211bd7eaef58acd4f089fe4d778090cd72 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 21:42:22 -0400
 Subject: [PATCH] Remove Optifine-specific threads

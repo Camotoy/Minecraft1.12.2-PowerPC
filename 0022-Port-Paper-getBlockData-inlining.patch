@@ -1,0 +1,51 @@
+From e4d8982e4fe0dfddbe4359a8dfb36882b011c8c0 Mon Sep 17 00:00:00 2001
+From: Camotoy <20743703+Camotoy@users.noreply.github.com>
+Date: Sat, 20 Aug 2022 12:06:30 -0400
+Subject: [PATCH] Port Paper getBlockData inlining
+
+https://github.com/PaperMC/Paper/blob/ver/1.12.2/Spigot-Server-Patches/0089-Optimize-isValidLocation-getType-and-getBlockData-fo.patch
+---
+ src/minecraft/net/minecraft/world/chunk/Chunk.java          | 6 ++++++
+ .../minecraft/world/chunk/storage/ExtendedBlockStorage.java | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/minecraft/net/minecraft/world/chunk/Chunk.java b/src/minecraft/net/minecraft/world/chunk/Chunk.java
+index c2a7b54..1f0bb0d 100644
+--- a/src/minecraft/net/minecraft/world/chunk/Chunk.java
++++ b/src/minecraft/net/minecraft/world/chunk/Chunk.java
+@@ -552,6 +552,7 @@ public class Chunk
+         {
+             try
+             {
++                /*
+                 if (y >= 0 && y >> 4 < this.storageArrays.length)
+                 {
+                     ExtendedBlockStorage extendedblockstorage = this.storageArrays[y >> 4];
+@@ -561,6 +562,11 @@ public class Chunk
+                         return extendedblockstorage.get(x & 15, y & 15, z & 15);
+                     }
+                 }
++                */
++                final int i = y >> 4;
++                if (y >= 0 && i < this.storageArrays.length && this.storageArrays[i] != null) {
++                    return this.storageArrays[i].data.get((y & 15) << 8 | (z & 15) << 4 | x & 15);
++                }
+ 
+                 return Blocks.AIR.getDefaultState();
+             }
+diff --git a/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java b/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
+index 173d4de..83970d4 100644
+--- a/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
++++ b/src/minecraft/net/minecraft/world/chunk/storage/ExtendedBlockStorage.java
+@@ -24,7 +24,7 @@ public class ExtendedBlockStorage
+      * Chunk from random tick updates for performance reasons.
+      */
+     private int tickRefCount;
+-    private final BlockStateContainer data;
++    public final BlockStateContainer data; // Access widener
+ 
+     /** The NibbleArray containing a block of Block-light data. */
+     private NibbleArray blockLight;
+-- 
+2.35.3
+

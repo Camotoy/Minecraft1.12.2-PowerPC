@@ -1,4 +1,4 @@
-From aa53a1b98e9b04a34cec22a5db61db7f342964f1 Mon Sep 17 00:00:00 2001
+From a510081c3ee5ce956e6b4ceb0409b0a0b1db9192 Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 17:00:26 -0400
 Subject: [PATCH] Fall back on image reading if fails

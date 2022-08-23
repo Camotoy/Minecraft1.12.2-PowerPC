@@ -1,4 +1,4 @@
-From a6454a4c1126a22d3236a1c683b2bece5dd7ade0 Mon Sep 17 00:00:00 2001
+From 94a774334cc1923733afa9bc9a2230f43d25fd6b Mon Sep 17 00:00:00 2001
 From: Camotoy <20743703+Camotoy@users.noreply.github.com>
 Date: Wed, 17 Aug 2022 16:43:32 -0400
 Subject: [PATCH] Replace LongSupplier instance
