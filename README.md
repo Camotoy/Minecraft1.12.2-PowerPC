@@ -10,14 +10,14 @@ I personally symlink my assets folder over.
 - Open up the Minecraft jar in jars/versions/1.12.2 and paste in the contents of the MOD Optifine jar you just created. I'm going to call this the MegaJar.
 - `bash cleanup.sh`
 - `bash decompile.sh` again
-- Copy everything in the `jars` folder in this repository to `lib` in the MCP folder.
+- Copy everything in the `jars` folder EXCEPT for the LWJGL jars in this repository to `lib` in the MCP folder.
 - Delete the `src/minecraft/optifine` (NOT `src/minecraft/net/optifine`) as these classes are not used for our purposes
 - Create a git repository in the MCP directory, add everything in `src/minecraft` and commit
 - Apply the patches in this repository - if you add them to the MCP directory then it's probably `git am *.patch`
 - Download RetroLambda: https://oss.sonatype.org/content/groups/public/net/orfjackal/retrolambda/retrolambda/
 - Create a folder on your PowerPC machine for this madness
 - Add an assets folder. For now, the easiest way to get an assets folder is running 1.12.2 on another computer and then copying `.minecraft/assets` to your PowerPC computer.
-- Create a libraries folder and add everything from `jars` here, and download all the links and extract/add them there.
+- Create a libraries folder and add everything from `jars` here (and copy the LWJGL jars from this repository), and download all the links and extract/add them there.
 - Create a natives folder and copy everything from `natives` here to there.
 - Create a startup.sh script that looks something like this:
 
